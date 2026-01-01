@@ -1,0 +1,776 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: Cisco Secure Access Zero Trust User Devices API
+  description: |-
+    Get the certificate information and user summaries for the zero trust user devices.
+    Revoke the certificates on the zero trust user device.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: admin/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: ACME Client Certificates
+  - name: Secure Access
+
+paths:
+
+  /ztna/users/{userId}/devices/{deviceId}/certificates:
+    get:
+      summary: List Certificates for Device
+      description: Get the latest ACME-issued certificate for the zero trust user and device.
+      tags:
+        - ACME Client Certificates
+        - Secure Access
+      operationId: getZtaDeviceCertificates
+      security:
+        - oauthFlow:
+            - admin.ztna.devices:read
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          $ref: '#/components/responses/deviceCertificateResponse'
+        '400':
+          $ref: '#/components/responses/invalidRequestError'
+        '401':
+          $ref: '#/components/responses/unauthorizedError'
+        '403':
+          $ref: '#/components/responses/forbiddenError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+        #'400':
+        #  $ref: '#/components/responses/statusBadRequest'
+        #'404':
+        #  $ref: '#/components/responses/statusNotFound'
+        #'500':
+        #  $ref: '#/components/responses/statusInternalServerError'
+        #'503':
+        #  $ref: '#/components/responses/statusServiceUnavailable'
+
+  /ztna/users/{userId}/deviceCertificates:
+
+    get:
+      summary: List Certificates for User
+      description: Get the latest ACME-issued device certificates for the zero trust user.
+      tags:
+        - ACME Client Certificates
+        - Secure Access
+      operationId: getZtaAllDeviceCertificates
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      security:
+        - oauthFlow:
+            - admin.ztna.certificates:read
+      responses:
+        '200':
+          $ref: '#/components/responses/userDeviceCertificatesResponse'
+        '400':
+          $ref: '#/components/responses/invalidRequestError'
+        '401':
+          $ref: '#/components/responses/unauthorizedError'
+        '403':
+          $ref: '#/components/responses/forbiddenError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+        #'503':
+        #  $ref: '#/components/responses/statusServiceUnavailable'
+
+  /ztna/userSummaries:
+    get:
+      description: Get the status and counts of device certificates for the zero trust users.
+      summary: Get Counts Device Certificates
+      tags:
+        - ACME Client Certificates
+        - Secure Access
+      operationId: getCountsZtaDeviceCertificates
+      security:
+        - oauthFlow:
+            - admin.ztna.users:read
+      parameters:
+        - $ref: '#/components/parameters/userIds'
+      responses:
+        '200':
+          $ref: '#/components/responses/userSummariesResponse'
+        '400':
+          $ref: '#/components/responses/invalidRequestError'
+        '401':
+          $ref: '#/components/responses/unauthorizedError'
+        '403':
+          $ref: '#/components/responses/forbiddenError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+        #'503':
+        #  $ref: '#/components/responses/statusServiceUnavailable'
+
+  /ztna/users/{userId}/devices/{deviceId}:
+    delete:
+      description: Revoke active ACME-issued certificates and remove the zero trust user device.
+      summary: Revoke Certificates for Device
+      tags:
+        - ACME Client Certificates
+        - Secure Access
+      operationId: deleteZtaDeviceCertificates
+      security:
+        - oauthFlow:
+            - admin.ztna.enrollment:write
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+        '400':
+          $ref: '#/components/responses/invalidRequestError'
+        '401':
+          $ref: '#/components/responses/unauthorizedError'
+        '403':
+          $ref: '#/components/responses/forbiddenError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+        #'503':
+        #  $ref: '#/components/responses/statusServiceUnavailable'
+
+components:
+
+  headers:
+
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+
+  parameters:
+
+    #serviceType:
+    #  name: serviceType
+    #  in: path
+    #  required: true
+    #  schema:
+    #    $ref: '#/components/schemas/serviceType'
+
+    deviceId:
+      name: deviceId
+      description: The ID of the user device.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/deviceId'
+
+    userId:
+      name: userId
+      description: The ID of the user.
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/userId'
+
+    #agentId:
+    #  name: agentId
+    #  in: path
+    #  required: true
+    #  schema:
+    #    $ref: '#/components/schemas/agentId'
+
+    #groupId:
+    #  name: groupId
+    #  in: path
+    #  required: true
+    #  schema:
+    #    $ref: '#/components/schemas/groupId'
+
+    userIds:
+      name: userIds
+      in: query
+      description: A comma-separated list of user IDs.
+      required: true
+      schema:
+        $ref: '#/components/schemas/userIds'
+      style: form
+      explode: false
+      example: ['54321', '98765', '232323']
+
+    #revokedBy:
+    #  name: revokedBy
+    #  in: query
+    #  description: Filter the collection on the date when the certificate was revoked.
+    #  required: true
+    #  schema:
+    #     $ref: '#/components/schemas/revokedBy'
+
+    #revocationReason:
+    #  name: revocationReason
+    #  in: query
+    #  required: true
+    #  schema:
+    #     $ref: '#/components/schemas/revocationReason'
+
+  securitySchemes:
+
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            admin.ztna.certificates:read: 'Read the certificate metadata for the users.'
+            admin.ztna.users:read: 'Read the user summaries.'
+            admin.ztna.devices:read: 'Read the certificate metadata for the user device'
+            admin.ztna.enrollment:write: 'Revoke the certificates for the user device'
+
+  schemas:
+
+    organizationId:
+      type: integer
+      description: The unique identifier for the organization.
+      readOnly: true
+      example: 2390145
+
+    #serviceType:
+    #  type: string
+    #  enum:
+    #    - ztnaClient
+    #    - ztnaAppConnector
+    #  description: The type of service that is requesting the CA certificate chain.
+
+    deviceId:
+      type: string
+      description: The unique identifier of the user device.
+      readOnly: true
+      example: 0ace1b5f6104a466
+
+    userId:
+      type: string
+      description: The unique identifier for the user.
+      readOnly: true
+      example: '1251001730'
+
+    userIds:
+      description: The list of user IDs.
+      type: array
+      items:
+        $ref: '#/components/schemas/userId'
+      minItems: 1
+      maxItems: 100
+
+    #agentId:
+    #  type: string
+    #  description: The unique identifier of the resource connector.
+    #  readOnly: true
+    #  example: '1251001730'
+
+    certificateId:
+      description: The unique identifier of the ACME-issued certificate.
+      type: string
+
+    #groupId:
+    #  type: string
+    #  description: The unique identifier of the resource connector group.
+    #  readOnly: true
+    #  example: '14127'
+
+    #revokedBy:
+    #  type: string
+    #  description: The unique identifier for the user that is revoking the device's certificates.
+    #  readOnly: true
+    #  example: '615621379'
+
+    #revocationReason:
+    #  type: string
+    #  description: The reason for revoking the user device's certificates.
+    #  enum:
+    #    - KEY_COMPROMISE
+    #    - CA_COMPROMISE
+    #    - AFFILIATION_CHANGED
+    #   - SUPERSEDED
+    #    - CESSATION_OF_OPERATION
+    #    - CERTIFICATE_HOLD
+    #    - REMOVE_FROM_CRL
+    #    - PRIVILEGES_WITHDRAWN
+    #    - AA_COMPROMISE
+    #  readOnly: true
+    # example: PRIVILEGES_WITHDRAWN
+
+    certificates:
+      description: A list of ACME-issued certificates issued for the user device. Only the most recently issued certificate is present.
+      type: array
+      items:
+        $ref: '#/components/schemas/certificate'
+
+    certificate:
+      type: object
+      description: The properties of the device certificate.
+      required:
+        - certificateId
+        - status
+        - createdAt
+        - expiresAt
+      properties:
+        certificateId:
+          $ref: '#/components/schemas/certificateId'
+        status:
+          description: The status of the ACME-issued certificate.
+          type: string
+          enum:
+            - active
+            - expired
+            - revoked
+        createdAt:
+          description: The date and time (in ISO 8601 format) when the ACME-issued certificate was created.
+          type: string
+          format: date-time
+          example: '2024-07-02T18:46:38Z'
+        expiresAt:
+          description: The date and time (in ISO 8601 format) when the ACME-issued certificate expires.
+          type: string
+          format: date-time
+          example: '2024-07-02T18:46:38Z'
+        revokedAt:
+          description: The date and time (in ISO 8601 format) when the ACME-issued certificate was revoked.
+          type: string
+          format: date-time
+          example: '2024-07-02T18:46:38Z'
+      example:
+        certificateId: '54321'
+        status: active
+        createdAt: '2024-05-15T21:36:32Z'
+        expiresAt: '2024-07-15T21:36:32Z'
+
+    deviceCertificateInfo:
+      type: object
+      description: The ID and certificates for the user device.
+      properties:
+        deviceId:
+          $ref: '#/components/schemas/deviceId'
+        certificates:
+          $ref: '#/components/schemas/certificates'
+      example:
+        deviceId: 0ace1b5f6104a466
+        certificates:
+          - certificateId: '54321'
+            status: active
+            createdAt: "2023-08-15T21:36:32Z"
+            expiresAt: "2023-09-15T21:36:32Z"
+
+    userDeviceCertificateInfo:
+      type: object
+      description: The properties of the device certificate.
+      properties:
+        userId:
+          $ref: '#/components/schemas/userId'
+        devices:
+          description: The list of devices that belong to the zero trust user.
+          type: array
+          items:
+            $ref: '#/components/schemas/deviceCertificateInfo'
+      example:
+        userId: "12345"
+        devices:
+          - deviceId: 0ace1b5f6104a466
+            certificates:
+              - certificateId: "54321"
+                status: active
+                createdAt: "2023-08-15T21:36:32Z"
+                expiresAt: "2023-09-15T21:36:32Z"
+          - deviceId: 104a4660ace1b5f6
+            certificates:
+              - certificateId: "98765"
+                status: revoked
+                createdAt: "2023-06-25T21:36:32Z"
+                expiresAt: "2023-07-25T21:36:32Z"
+                revokedAt: "2023-07-19T21:36:32Z"
+
+    userSummary:
+      description: The properties of the device certificates for the user.
+      type: object
+      properties:
+        userId:
+          $ref: '#/components/schemas/userId'
+        deviceCertificateCounts:
+          type: object
+          required: [active]
+          description: The properties of the certificates for the user device.
+          properties:
+            active:
+              description: The number of user devices where the most recently issued certificate is active.
+              type: integer
+            expired:
+              description: The number of user devices where the recently issued certificate is expired.
+              type: integer
+            revoked:
+              description: The number of user devices where the Recently issued certificate is revoked.
+              type: integer
+      example:
+        userId: 324525a
+        deviceCertificateCounts:
+          active: 5
+          expired: 0
+          revoked: 0
+
+    userSummaries:
+      description: The status and counts of the device certificates for the users.
+      type: object
+      properties:
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        users:
+          description: The list of zero trust users and the state and count of device certificates.
+          type: array
+          items:
+            $ref: '#/components/schemas/userSummary'
+      example:
+        organizationId: 2390145
+        users:
+          - userId: "54321"
+            deviceCertificateCounts:
+              active: 2
+              expired: 0
+              revoked: 1
+          - userId: "98765"
+            deviceCertificateCounts:
+              active: 3
+              expired: 1
+              revoked: 0
+          - userId: "232323"
+            deviceCertificateCounts:
+              active: 5
+              expired: 0
+              revoked: 0
+
+    cert-chain:
+      description: The CA Certificate Chain.
+      type: string
+      format: pem
+
+    #serviceStatus:
+    #  description: Health status of a service acme-metadata-server depends on.
+    #  type: object
+    #  required:
+    #    - status
+    #  properties:
+    #    status:
+    #      type: string
+    #      description: Either healthy or unhealthy.
+    #    description:
+    #      type: string
+    #      description: Details about why the service is unhealthy, if it is.
+
+    #healthCheck:
+    #  description: Health Status.
+    #  type: object
+    #  required:
+    #    - database
+    #    - apiv3
+    #    - authsvc
+    #  properties:
+    #    status:
+    #      description: Overall health of acme-metadata-server. Healthy if all dependent services are healthy, otherwise unhealthy.
+    #      type: string
+    #    services:
+    #      description: A collection of services acme-metadata-server depends mapped to their health statuses.
+    #      type: object
+    #      properties:
+    #        database:
+    #          $ref: '#/components/schemas/serviceStatus'
+    #        apiv3:
+    #          $ref: '#/components/schemas/serviceStatus'
+    #        authsvc:
+    #          $ref: '#/components/schemas/serviceStatus'
+    #  example:
+    #    status: healthy
+    #    services:
+    #      database:
+    #        status: healthy
+    #      apiv3:
+    #        status: healthy
+    #      authsvc:
+    #        status: healthy
+
+    #UnhealthyStatusError:
+    #  type: object
+    #  description: Unhealthy Status Error
+    #  properties:
+    #    status:
+    #      description: Overall health of acme-metadata-server. unhealthy on error.
+    #      type: string
+    #    services:
+    #      description: A collection of services acme-metadata-server depends mapped to their health statuses.
+    #      type: object
+    #      properties:
+    #        database:
+    #          $ref: '#/components/schemas/serviceStatus'
+    #        apiv3:
+    #          $ref: '#/components/schemas/serviceStatus'
+    #        authsvc:
+    #          $ref: '#/components/schemas/serviceStatus'
+    #  example:
+    #    status: unhealthy
+    #    services:
+    #      database:
+    #        status: unhealthy
+    #        description: "Database query timed out"
+    #      apiv3:
+    #        status: healthy
+    #      authsvc:
+    #        status: healthy
+
+    Error:
+      type: object
+      description: The descriptive error message.
+      properties:
+        error:
+          type: string
+      example:
+        error: The descriptive error message.
+
+  responses:
+
+    invalidRequestError:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              description:
+                type: string
+            example:
+              message: error
+              description: Bad Request
+
+    unauthorizedError:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+        #WWW-Authenticate:
+        #  schema:
+        #   type: string
+        #  description: A challenge response for the intended resource.
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The request is not authorized.
+            properties:
+              message:
+                type: string
+                example: success
+                enum: [success, error]
+              description:
+                type: string
+            example:
+              message: error
+              description: Unauthorized request
+
+    forbiddenError:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The request is forbidden.
+            properties:
+              message:
+                type: string
+                example: success
+                enum: [success, error]
+              description:
+                type: string
+            example:
+              message: error
+              description: Forbidden
+
+    notFoundError:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The request failed because the resource doesn't exist.
+            properties:
+              message:
+                type: string
+                example: error
+                enum: [success, error]
+              description:
+                type: string
+            example:
+              message: error
+              description: Not Found
+
+    internalServerError:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Internal Server Error
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+    deviceCertificateResponse:
+      description: ZTNA Device Certificate Response
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/deviceCertificateInfo'
+
+    userDeviceCertificatesResponse:
+      description: ZTNA User Device Certificates Response
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/userDeviceCertificateInfo'
+
+    userSummariesResponse:
+      description: The counts and status of the device certificates.
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/userSummaries'
+
+    #deviceCertRevocationResponse:
+    #  description: Device certificates successfully revoked.
+    #  content: {}
+
+    caCertChainResponse:
+      description: CA certificate chain
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/x-pem-file:
+          schema:
+            $ref: '#/components/schemas/cert-chain'
+
+    #healthCheckResponse:
+    #  description: Health Status Response
+    #  content:
+    #    application/json:
+    #      schema:
+    #        $ref: '#/components/schemas/healthCheck'
+
+    #statusBadRequest:
+    #  description: Bad Request
+    #  content:
+    #    application/json:
+    #      schema:
+    #        $ref: "#/components/schemas/Error"
+
+    #statusConflict:
+    #  description: Conflict
+    #  content:
+    #    application/json:
+    #      schema:
+    #        $ref: "#/components/schemas/Error"
+
+    #statusInternalServerError:
+    #  description: Internal Server Error
+    #  content:
+    #    application/json:
+    #      schema:
+    #        $ref: "#/components/schemas/Error"
+
+    #statusNotFound:
+    #  description: Not Found
+    #  content:
+    #    application/json:
+    #      schema:
+    #        $ref: "#/components/schemas/Error"
+
+    #statusServiceUnavailable:
+    #  description: Service Unavailable
+    #  content:
+    #    application/json:
+    #      schema:
+    #        $ref: '#/components/schemas/Error'
+
+    #unhealthyStatusError:
+    #  description: Unhealthy Status Error
+    #  content:
+    #    application/json:
+    #      schema:
+    #        $ref: "#/components/schemas/UnhealthyStatusError"

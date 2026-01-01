@@ -1,0 +1,390 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Application Categories API
+  version: 1.0.0
+  description: Get the Application Category settings configured in the organization.
+  contact:
+    name: Cloud Security Developer Community
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+tags:
+  - name: Application Categories
+    description: The Application Category settings.
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+
+  /applicationCategories:
+
+    get:
+      tags:
+        - Application Categories
+        - Secure Access
+      summary: List Application Categories
+      description: Get the Application Categories for the organization.
+      operationId: getApplicationCategories
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      security:
+        - oauthFlow:
+            - policies.applicationCategories:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListApplicationCategoriesResponse'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    page:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+
+    limit: 
+      name: limit
+      in: query
+      description: The number of items on a page. The maximum items that are allowed on a page in the response are 100.
+      required: false
+      schema:
+        type: integer
+        default: 10
+        format: int32
+        minimum: 1
+        maximum: 100
+      example: 20
+
+  responses:
+
+    badRequest:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+
+    unauthorized:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+
+    forbidden:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+
+    notFound:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+
+    serverError:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/serverError'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            policies.applicationCategories:read: 'Read Application Category settings'
+
+  schemas:
+
+    ListApplicationCategoriesResponse:
+      type: array
+      description: The list of Application Categories configured in the organization.
+      items:
+        type: object
+        description: The properties of the Application Category setting.
+        properties:
+          id:
+            $ref: '#/components/schemas/id'
+          name:
+            $ref: '#/components/schemas/name'
+          description:
+            $ref: '#/components/schemas/description'
+          createdAt:
+            $ref: '#/components/schemas/createdAt'
+          modifiedAt:
+            $ref: '#/components/schemas/modifiedAt'
+          actions:
+            $ref: '#/components/schemas/applicationActions'
+          applicationsCount:
+            $ref: '#/components/schemas/applicationsCount'
+      example:
+        - id: 46
+          name: Ad Publishing
+          description: The meaningful description for the application category.
+          createdAt: 1694332176
+          modifiedAt: 1694332176
+          actions:
+            - actionId: 0
+              name: block
+              displayName: Block
+            - actionId: 1
+              name: allow
+              displayName: Allow
+          applicationsCount: 338
+
+    id:
+      type: integer
+      description: The ID of the Application Category setting.
+      example: 1234567
+
+    description:
+      type: string
+      description: The text that describes the Application Category setting.
+      example: The application for securing the AI model.
+
+    name:
+      type: string
+      description: The name of the Application Category.
+      example: Ad Publishing
+
+    createdAt:
+      type: integer
+      description: The date and time (in seconds since the Unix Epoch) when the system created the Application Category setting.
+      example: 1490206249
+
+    modifiedAt:
+      type: integer
+      description: The date and time (in seconds since the Unix Epoch) when the system modified the Application Category setting.
+      example: 1520476127
+
+    applicationActions:
+      type: array
+      items:
+        type: object
+        description: The properties of the action.
+        properties:
+          actionId:
+            type: integer
+            description: The ID of the application action.
+            example: 123567
+          name:
+            type: string
+            description: The name of the application action.
+            example: test application
+          displayName:
+            type: string
+            description: The display name of the application action.
+            example: action one
+
+    applicationsCount:
+      type: integer
+      description: The number of applications associated with the Application Category.
+      example: 100
+
+    badRequest:
+      description: Bad Request
+      type: object
+      properties:
+        status:
+          type: object
+          description: Validation Error
+          properties:
+            code:
+              type: integer
+              example: 400
+              description: HTTP status error code
+            text:
+              type: string
+              example: Bad Request
+              description: HTTP status error text
+        data:
+          type: object
+          description: Validation Error
+          properties:
+            message:
+              type: string
+              example: Bad Request
+              description: Error message
+
+    unauthorized:
+      description: Unauthorized
+      type: object
+      properties:
+        status:
+          type: object
+          description: Unauthorized
+          properties:
+            code:
+              type: integer
+              example: 401
+              description: HTTP status error code
+            text:
+              type: string
+              example: Unauthorized
+              description: HTTP status error text
+        data:
+          type: object
+          description: Unauthorized
+          properties:
+            message:
+              type: string
+              example: Unauthorized
+              description: Error message
+
+    forbidden:
+      description: Forbidden
+      type: object
+      properties:
+        status:
+          type: object
+          description: Forbidden
+          properties:
+            code:
+              type: integer
+              example: 403
+              description: HTTP status error code
+            text:
+              type: string
+              example: Forbidden
+              description: HTTP status error text
+        data:
+          type: object
+          description: Forbidden
+          properties:
+            message:
+              type: string
+              example: Forbidden
+              description: Error message
+
+    notFound:
+      description: Not Found
+      type: object
+      properties:
+        status:
+          type: object
+          description: Resource Not Found
+          properties:
+            code:
+              type: integer
+              example: 404
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Not Found'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Resource Not Found
+          properties:
+            message:
+              type: string
+              example: Not Found
+              description: Error message
+
+    serverError:
+      description: Internal Server Error
+      type: object
+      properties:
+        status:
+          type: object
+          description: Internal Server Error
+          properties:
+            code:
+              type: integer
+              example: 500
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Internal Server Error'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Internal Server Error
+          properties:
+            message:
+              type: string
+              example: Internal Server Error
+              description: Error message

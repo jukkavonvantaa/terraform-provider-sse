@@ -1,0 +1,418 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Content Categories API
+  version: 1.0.0
+  description: Get the Content Category settings in the Secure Access organization.
+  contact:
+    name: Cloud Security Developer Community
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+tags:
+  - name: Content Categories
+    description: The Content Category settings.
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+
+  /categorySettings:
+
+    get:
+      tags:
+        - Content Categories
+        - Secure Access
+      operationId: getCategorySettings
+      summary: List Content Categories
+      description: Get all Content Category settings in the organization.
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      security:
+        - oauthFlow:
+            - policies.contentCategories:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListContentCategorySettingsResponse'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    page:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+
+    limit: 
+      name: limit
+      in: query
+      description: The number of items on a page. The maximum items that are allowed on a page in the response are 100.
+      required: false
+      schema:
+        type: integer
+        default: 10
+        format: int32
+        minimum: 1
+        maximum: 100
+      example: 20
+
+  responses:
+
+    badRequest:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+
+    unauthorized:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+
+    forbidden:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+
+    notFound:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+
+    serverError:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/serverError'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            policies.contentCategories:read: 'Read Content Category settings'
+
+  schemas:
+
+    contentCategoryCreatedAt:
+      type: integer
+      description: The date and time (in seconds since the Unix Epoch) when the system created the Content Category setting.
+      example: 1490206249
+
+    contentCategoryModifiedAt:
+      type: integer
+      description: The date and time (in seconds since the Unix Epoch) when the system modified the Content Category setting.
+      example: 1520476127
+
+    contentCategoryId:
+      type: integer
+      description: The ID of the Content Category setting.
+      example: 1234567
+
+    contentCategoryName:
+      type: string
+      description: The name of the Content Category setting.
+      example: content category setting one
+
+    ListContentCategorySettingsResponse:
+      type: array
+      description: The list of the Content Category settings in the organization.
+      items:
+        $ref: '#/components/schemas/contentCategorySetting'
+
+    organizationId:
+      type: integer
+      description: The ID of the organization.
+      example: 2345678
+
+    isDefault:
+      type: boolean
+      example: true
+      description: Specifies whether the setting is the default setting.
+
+    isSwgDefault:
+      type: boolean
+      description: Specifies whether the Security profile for the secure web gateway (SWG) is the default Security profile.
+      example: true
+
+    markedForDeletion:
+      type: boolean
+      description: Specifies whether the system marks the setting for deletion.
+      example: false
+
+    bundleTypeId:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+      example: 2
+      description: |-
+        The ID of the bundle type.
+
+    categoryBits:
+          type: string
+          description: The number of bits in the Content Category.
+          example: 'fffffffffffff000fffffffff8800000000000090106049004c46'
+
+    warnCategoryBits:
+          type: string
+          description: The number of bits in Content Category for a Warn action.
+          example: 'fffffffffffff000fffffffff8800000000000090106049004c46'
+
+    contentCategorySetting:
+      type: object
+      description: The properties of the Content Category settings.
+      properties:
+        id:
+          $ref: '#/components/schemas/contentCategoryId'
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        isDefault:
+          $ref: '#/components/schemas/isDefault'
+        name:
+          $ref: '#/components/schemas/contentCategoryName'
+        categoryBits:
+          $ref: '#/components/schemas/categoryBits'
+        type:
+          type: string
+          description: The type of the Content Category setting.
+          enum:
+            - mixed
+          example: mixed
+        createdAt:
+          $ref: '#/components/schemas/contentCategoryCreatedAt'
+        modifiedAt:
+          $ref: '#/components/schemas/contentCategoryModifiedAt'
+        markedForDeletion:
+          $ref: '#/components/schemas/markedForDeletion'
+        bundleTypeId:
+          $ref: '#/components/schemas/bundleTypeId'
+        isSwgDefault:
+          $ref: '#/components/schemas/isSwgDefault'
+        warnCategoryBits:
+          $ref: '#/components/schemas/warnCategoryBits'
+      example:
+        id: 14758855
+        organizationId: 1
+        isDefault: true
+        name: content category setting one
+        categoryBits: 'fffffffffffff000fffffffff8800000000000090106049004c46'
+        type: mixed
+        createdAt: 1520476127
+        modifiedAt: 1520476129
+        markedForDeletion: false
+        bundleTypeId: 1
+        isSwgDefault: false
+        warnCategoryBits: '0'
+
+    badRequest:
+      description: Bad Request
+      type: object
+      properties:
+        status:
+          type: object
+          description: Validation Error
+          properties:
+            code:
+              type: integer
+              example: 400
+              description: HTTP status error code
+            text:
+              type: string
+              example: Bad Request
+              description: HTTP status error text
+        data:
+          type: object
+          description: Validation Error
+          properties:
+            message:
+              type: string
+              example: Bad Request
+              description: Error message
+
+    unauthorized:
+      description: Unauthorized
+      type: object
+      properties:
+        status:
+          type: object
+          description: Unauthorized
+          properties:
+            code:
+              type: integer
+              example: 401
+              description: HTTP status error code
+            text:
+              type: string
+              example: Unauthorized
+              description: HTTP status error text
+        data:
+          type: object
+          description: Unauthorized
+          properties:
+            message:
+              type: string
+              example: Unauthorized
+              description: Error message
+
+    forbidden:
+      description: Forbidden
+      type: object
+      properties:
+        status:
+          type: object
+          description: Forbidden
+          properties:
+            code:
+              type: integer
+              example: 403
+              description: HTTP status error code
+            text:
+              type: string
+              example: Forbidden
+              description: HTTP status error text
+        data:
+          type: object
+          description: Forbidden
+          properties:
+            message:
+              type: string
+              example: Forbidden
+              description: Error message
+
+    notFound:
+      description: Not Found
+      type: object
+      properties:
+        status:
+          type: object
+          description: Resource Not Found
+          properties:
+            code:
+              type: integer
+              example: 404
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Not Found'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Resource Not Found
+          properties:
+            message:
+              type: string
+              example: Not Found
+              description: Error message
+
+    serverError:
+      description: Internal Server Error
+      type: object
+      properties:
+        status:
+          type: object
+          description: Internal Server Error
+          properties:
+            code:
+              type: integer
+              example: 500
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Internal Server Error'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Internal Server Error
+          properties:
+            message:
+              type: string
+              example: Internal Server Error
+              description: Error message

@@ -1,0 +1,2764 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  version: 1.0.1
+  title: Cisco Secure Access Network and Service Objects API
+  description: Manage the Network and Service Objects in the organization.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url:  https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+
+tags:
+  - name: Network Objects
+    description: Manage the Network Objects in the organization.
+  - name: Network Object Groups
+    description: Manage the Network Object Groups in the organization.
+  - name: Service Objects
+    description: Manage the Service Objects in the organization.
+  - name: Service Object Groups
+    description: Manage the Service Object Groups in the organization.
+  - name: Unified Objects
+    description: List the Objects and Object Groups in the organization.
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+
+  '/objects/unifiedNetworkObjects':
+    get:
+      tags:
+        - Unified Objects
+        - Secure Access
+      summary: List Network Objects and Network Groups
+      operationId: listUnifiedNetworkObjects
+      description: Get the Network Objects and Network Object Groups in the organization.
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/description'
+        - $ref: '#/components/parameters/noValue'
+        - $ref: '#/components/parameters/unifiedNetworkObjectType'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    $ref: '#/components/schemas/count'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  results:
+                    type: array
+                    description: The list of Network Objects and Network Object Groups.
+                    items:
+                      anyOf:
+                        - allOf:
+                            - $ref: '#/components/schemas/NetworkObjectResponseSchema'
+                            - type: object
+                              properties:
+                                type:
+                                  $ref: '#/components/schemas/unifiedNetworkObjectType'
+                        - allOf:
+                            - $ref: '#/components/schemas/NetworkObjectGroupResponseSchema'
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  description: The type of the Network Object Group.
+                                  example: group
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/unifiedServiceObjects':
+    get:
+      tags:
+        - Unified Objects
+        - Secure Access
+      summary: List Service Objects and Service Groups
+      operationId: listUnifiedServiceObjects
+      description: Get the Service Objects and Service Object Groups in the organization.
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/description'
+        - $ref: '#/components/parameters/noValue'
+        - $ref: '#/components/parameters/unifiedServiceObjectType'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:read
+      responses:
+        '200':
+            description: OK
+            headers:
+              Content-Type:
+                $ref: '#/components/headers/Content-Type'
+              Date:
+                $ref: '#/components/headers/Date'
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    count:
+                      $ref: '#/components/schemas/count'
+                    limit:
+                      $ref: '#/components/schemas/limit'
+                    offset:
+                      $ref: '#/components/schemas/offset'
+                    results:
+                      type: array
+                      items:
+                        anyOf:
+                          - allOf:
+                            - $ref: '#/components/schemas/ServiceObjectResponseSchema'
+                            - type: object
+                              properties:
+                                type:
+                                  $ref: '#/components/schemas/unifiedServiceObjectType'
+                          - allOf:
+                            - $ref: '#/components/schemas/ServiceObjectGroupResponseSchema'
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  description: The type of the Service Object Group.
+                                  example: group
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjects':
+    get:
+      tags:
+        - Network Objects
+        - Secure Access
+      summary: List Network Objects
+      description: Get the Network Objects in the organization.
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/description'
+        - $ref: '#/components/parameters/noType'
+        - $ref: '#/components/parameters/noValue'
+      operationId: listNetworkObjects
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count, limit, offset, results]
+                description: The metadata about the Network Objects in the collection and the list of Network Objects.
+                properties:
+                  count:
+                    $ref: '#/components/schemas/count'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  results:
+                    type: array
+                    description: The list of items in the response.
+                    items:
+                      $ref: '#/components/schemas/NetworkObjectResponseSchema'
+              example:
+                count: 4
+                limit: 10
+                offset: 0
+                results:
+                  - id: 15884
+                    name: demo object
+                    description: description for demo object
+                    value:
+                      type: network
+                      addresses:
+                        - '192.68.1.0/24'
+                    url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjects/15884'
+                    created_at: '2024-11-13T20:51:14Z'
+                    modified_at: '2024-11-13T20:51:14Z'
+                    modified_by: '12089817'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags:
+        - Network Objects
+        - Secure Access
+      summary: Create Network Object
+      description: Create a Network Object in the organization.
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:write
+      operationId: createNetworkObject
+      requestBody:
+        $ref: '#/components/requestBodies/NetworkObject'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObjectResponseSchema'
+              example:
+                id: 15894
+                name: test create network object one
+                description: test description for network object one.
+                value:
+                  type: network
+                  addresses:
+                    - '192.68.1.0/24'
+                url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjects/15894'
+                created_at: '2024-11-19T22:05:41.343Z'
+                modified_at: '2024-11-19T22:05:41.343Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjects/upload':
+    post:
+      tags:
+        - Network Objects
+        - Secure Access
+      summary: Upload Network Objects
+      operationId: createUploadNetworkObjects
+      description: Upload a CSV file with the properties that are required for creating the Network Objects.
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:write
+      requestBody:
+        $ref: '#/components/requestBodies/CsvObjects'
+      responses:
+        '201':
+          $ref: '#/components/responses/UploadResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjects/validate':
+    post:
+      tags:
+        - Network Objects
+        - Secure Access
+      summary: Validate Network Objects
+      operationId: createValidateNetworkObjects
+      description: >-
+        Validate a CSV file that includes the properties for creating the Network Objects.
+        The system validates the properties for each Network Object in the file and returns a list of the validation errors.
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:write
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CsvObject'
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    $ref: '#/components/schemas/nameNetworkObject'
+                  description:
+                    $ref: '#/components/schemas/descriptionNetworkObject'
+                  value:
+                    type: object
+                    description: The value of the Network Object, which is represented by the network properties.
+                    oneOf:
+                      - $ref: '#/components/schemas/NetworkValueType'
+                      - $ref: '#/components/schemas/FqdnValueType'
+                    example:
+                      type: network
+                      addresses:
+                        - '192.68.1.0/24'
+      responses:
+        '200':
+          $ref: '#/components/responses/ValidateResponse'
+        '400':
+          $ref: '#/components/responses/Validate400Response'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjects/references':
+    get:
+      tags:
+        - Network Objects
+        - Secure Access
+      summary: List References for Network Objects
+      description: |-
+        Get the references for the Network Objects in the organization.
+        A reference is an access rule or Network Object Group that includes a Network Object.
+      parameters:
+        - $ref: '#/components/parameters/values'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:read
+      operationId: getReferencesForNetworkObjects
+      responses:
+        '200':
+          $ref: '#/components/responses/CollectionReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjects/{networkObjectId}':
+    get:
+      tags: 
+        - Network Objects
+        - Secure Access
+      summary: Get Network Object
+      description: Get a Network Object in the organization.
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:read
+      operationId: getNetworkObject
+      parameters:
+      - $ref: '#/components/parameters/networkObjectId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObjectResponseSchema'
+              example:
+                id: 15894
+                name: test create network object one
+                description: test description for network object one.
+                value:
+                  type: network
+                  addresses:
+                    - '192.68.1.0/24'
+                url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjects/15894'
+                created_at: '2024-11-19T22:05:41Z'
+                modified_at: '2024-11-19T22:05:41Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+      - Network Objects
+      - Secure Access
+      summary: Update Network Object
+      description: Update a Network Object in the organization.
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:write
+      operationId: updateNetworkObject
+      parameters:
+      - $ref: '#/components/parameters/networkObjectId'
+      requestBody:
+        $ref: '#/components/requestBodies/NetworkObject'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObjectResponseSchema'
+              example:
+                id: 15894
+                name: new name for network object one
+                description: new description for network object one.
+                value:
+                  type: network
+                  addresses:
+                    - '192.68.1.0/24'
+                url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjects/15894'
+                created_at: '2024-11-19T22:05:41Z'
+                modified_at: '2024-11-19T22:17:42.449Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Network Objects
+        - Secure Access
+      summary: Delete Network Object
+      description: Delete a Network Object in the organization.
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:write
+      operationId: deleteNetworkObject
+      parameters:
+      - $ref: '#/components/parameters/networkObjectId'
+      responses:
+        '204':
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjects/{networkObjectId}/references':
+    get:
+      tags:
+        - Network Objects
+        - Secure Access
+      summary: Get References for Network Object
+      description: |-
+        Get the references for the Network Object in the organization.
+        A reference is an access rule or Network Object Group that includes a Network Object.
+      parameters:
+        - $ref: '#/components/parameters/networkObjectId'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjects:read
+      operationId: getReferencesForNetworkObject
+      responses:
+        '200':
+          $ref: '#/components/responses/ObjectReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjectGroups':
+    get:
+      tags:
+        - Network Object Groups
+        - Secure Access
+      summary: List Network Object Groups
+      description: Get the Network Object Groups for the organization.
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/description'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjectGroups:read
+      operationId: getNetworkObjectGroups
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count, limit, offset, results]
+                description: The metadata about the Network Object Groups in the collection and the list of Network Object Groups.
+                properties: 
+                  count:
+                    $ref: '#/components/schemas/count'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  results:
+                    type: array
+                    description: The list of Network Object Groups that are returned in the response.
+                    items:
+                      $ref: '#/components/schemas/NetworkObjectGroupResponseSchema'
+              example:
+                count: 7
+                limit: 10
+                offset: 0
+                results:
+                  - id: 4509
+                    name: group one
+                    description: A description about a network object group.
+                    objects:
+                      - id: 15884
+                        name: demo object
+                    groups: []
+                    values: []
+                    url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjectGroups/4509'
+                    created_at: '2024-11-18T15:47:59Z'
+                    modified_at: '2024-11-18T15:47:59Z'
+                    modified_by: '11702836'
+                  - id: 4415
+                    name: demo2
+                    description: "description about a demo"
+                    objects:
+                      - id: 15742
+                        name: demo1
+                    groups:
+                      - id: 4263
+                        name: group one
+                    values: []
+                    url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjectGroups/4415'
+                    created_at: '2024-11-07T06:47:08Z'
+                    modified_at: '2024-11-07T06:47:08Z'
+                    modified_by: '12293829'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags:
+        - Network Object Groups
+        - Secure Access
+      summary: Create Network Object Group
+      description: Create a Network Object Group in the organization.
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjectGroups:write
+      operationId: createNetworkObjectGroup
+      requestBody:
+        $ref: '#/components/requestBodies/NetworkObjectGroup'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObjectGroupResponseSchema'
+              example:
+                id: 4511
+                name: network object group one
+                description: description for network object group one
+                objects:
+                  - id: 15884
+                  - name: demo object
+                groups: []
+                values: []
+                url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjectGroups/4511'
+                created_at: '2024-11-20T13:13:43.094Z'
+                modified_at: '2024-11-20T13:13:43.094Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjectGroups/references':
+    get:
+      tags:
+        - Network Object Groups
+        - Secure Access
+      summary: List References for Network Object Groups
+      description: |-
+        Get the references for the Network Object Groups in the organization.
+        A reference is an access rule or other Network Object Group that includes a Network Object Group.
+      parameters:
+        - $ref: '#/components/parameters/values'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjectGroups:read
+      operationId: getReferencesForNetworkObjectGroups
+      responses:
+        '200':
+          $ref: '#/components/responses/CollectionReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjectGroups/{networkObjectGroupId}':
+    get:
+      tags:
+        - Network Object Groups
+        - Secure Access
+      summary: Get Network Object Group
+      description: Get a Network Object Group in the organization.
+      parameters:
+        - $ref: '#/components/parameters/networkObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjectGroups:read
+      operationId: getNetworkObjectGroup
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObjectGroupResponseSchema'
+              example:
+                id: 4511
+                name: network object group one
+                description: description for network object group one
+                objects:
+                  - id: 15884
+                    name: demo object
+                groups: []
+                values: []
+                url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjectGroups/4511'
+                created_at: '2024-11-20T13:13:43Z'
+                modified_at: '2024-11-20T13:13:43Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+      - Network Object Groups
+      - Secure Access
+      summary: Update Network Object Group
+      description: Update a Network Object Group in the organization.
+      parameters:
+        - $ref: '#/components/parameters/networkObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjectGroups:write
+      operationId: updateNetworkObjectGroup
+      requestBody:
+        $ref: '#/components/requestBodies/NetworkObjectGroup'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObjectGroupResponseSchema'
+              example:
+                id: 4511
+                name: updated network object group one
+                description: updated description network object group one.
+                objects:
+                  - id: 15884
+                    name: demo object
+                groups: []
+                values:
+                  - type: host
+                    addresses:
+                      - '1.193.5.4'
+                url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjectGroups/4511'
+                created_at: '2024-11-20T13:13:43Z'
+                modified_at: '2024-11-20T13:37:01.17Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Network Object Groups
+        - Secure Access
+      summary: Delete Network Object Group
+      description: Delete a Network Object Group in the organization.
+      parameters:
+        - $ref: '#/components/parameters/networkObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjectGroups:write
+      operationId: deleteNetworkObjectGroup
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/networkObjectGroups/{networkObjectGroupId}/references':
+    get:
+      tags:
+        - Network Object Groups
+        - Secure Access
+      summary: Get References for Network Object Group
+      description: |-
+        Get the references for the Network Object Group in the organization.
+        A reference is an access rule or other Network Object Group that includes a Network Object Group.
+      parameters:
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/networkObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.networkObjectGroups:read
+      operationId: getReferencesForNetworkObjectGroup
+      responses:
+        '200':
+          $ref: '#/components/responses/ObjectReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjects':
+    get:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: List Service Objects
+      description: Get the Service Objects in the organization.
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/description'
+        - $ref: '#/components/parameters/soValue'
+        - $ref: '#/components/parameters/soType'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:read
+      operationId: getServiceObjects
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The metadata about the Service Objects in the collection and the list of Service Objects.
+                properties:
+                  count:
+                    $ref: '#/components/schemas/count'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  results:
+                    type: array
+                    description: The list of objects in the response.
+                    items:
+                      $ref: '#/components/schemas/ServiceObjectResponseSchema'
+                    example:
+                      - id: 15906
+                        name: new service object one
+                        description: description for service object one
+                        value:
+                          protocol: tcp
+                          ports:
+                            - '6589'
+                        url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjects/15906'
+                        created_at: '2024-11-20T14:09:19.686Z'
+                        modified_at: '2024-11-20T14:09:19.686Z'
+                        modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+              example:
+                count: 1
+                limit: 10
+                offset: 0
+                results:
+                  - id: 37
+                    name: Service object name
+                    description: Service Object description
+                    value:
+                      protocol: tcp
+                      ports:
+                        - '4567'
+                    url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjects/37'
+                    created_at: '2024-10-06T19:54:19Z'
+                    modified_at: '2024-10-06T19:54:19Z'
+                    modified_by: '12089817'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: Create Service Object
+      description: Create a Service Object for the organization.
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:write
+      operationId: createServiceObject
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceObject'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceObjectResponseSchema'
+              example:
+                id: 15906
+                name: new service object one
+                description: description for service object one
+                value:
+                  protocol: tcp
+                  ports:
+                    - '6589'
+                url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjects/15906'
+                created_at: '2024-11-20T14:09:19.686Z'
+                modified_at: '2024-11-20T14:09:19.686Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjects/upload':
+    post:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: Upload Service Objects
+      operationId: createUploadServiceObjects
+      description: Upload a CSV file with the properties that are required for creating the Service Objects.
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:write
+      requestBody:
+        $ref: '#/components/requestBodies/CsvObjects'
+      responses:
+        '201':
+          $ref: '#/components/responses/UploadResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjects/validate':
+    post:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: Validate Service Objects
+      operationId: createValidateServiceObjects
+      description: >-
+        Validate a CSV file that includes the properties for creating the Service Objects.
+        The system validates the properties for each Service Object in the file and returns a list of the validation errors.
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:write
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The CSV file with the properties that are required to create the Service Objects.
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    $ref: '#/components/schemas/nameServiceObject'
+                  description:
+                    $ref: '#/components/schemas/descriptionServiceObject'
+                  value:
+                    $ref: '#/components/schemas/ServiceValueType'
+      responses:
+        '200':
+          $ref: '#/components/responses/ValidateResponse'
+        '400':
+          $ref: '#/components/responses/Validate400Response'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjects/references':
+    get:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: List References for Service Objects
+      description: |-
+        Get the references for the Service Objects in the organization.
+        A reference is an access rule or Service Object Group that includes a Service Object.
+      parameters:
+        - $ref: '#/components/parameters/values'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:read
+      operationId: getReferencesForServiceObjects
+      responses:
+        '200':
+          $ref: '#/components/responses/CollectionReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjects/{serviceObjectId}':
+    get:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: Get Service Object
+      description: Get a Service Object in the organization.
+      parameters:
+      - $ref: '#/components/parameters/serviceObjectId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:read
+      operationId: getServiceObject
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceObjectResponseSchema'
+              example:
+                id: 15906
+                name: new service object one
+                description: description for service object one
+                value:
+                  protocol: tcp
+                  ports:
+                    - '6589'
+                url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjects/15906'
+                created_at: '2024-11-20T14:09:19.686Z'
+                modified_at: '2024-11-20T14:09:19.686Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+      - Service Objects
+      - Secure Access
+      summary: Update Service Object
+      description: Update a Service Object in the organization.
+      parameters:
+      - $ref: '#/components/parameters/serviceObjectId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:write
+      operationId: updateServiceObject
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceObject'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceObjectResponseSchema'
+              example:
+                id: 15906
+                name: new service object one
+                description: description for service object one
+                value:
+                  protocol: tcp
+                  ports:
+                    - '6589'
+                url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjects/15906'
+                created_at: '2024-11-20T14:09:19.686Z'
+                modified_at: '2024-11-20T14:09:19.686Z'
+                modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: Delete Service Object
+      description: Delete a Service Object in the organization.
+      parameters:
+      - $ref: '#/components/parameters/serviceObjectId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:write
+      operationId: deleteServiceObject
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjects/{serviceObjectId}/references':
+    get:
+      tags:
+        - Service Objects
+        - Secure Access
+      summary: Get References for Service Object
+      description: |-
+        Get the references for a Service Object in the organization.
+        A reference is an access rule or Service Object Group that includes a Service Object.
+      parameters:
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/serviceObjectId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjects:read
+      operationId: getReferencesForServiceObject
+      responses:
+        '200':
+          $ref: '#/components/responses/ObjectReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjectGroups':
+    get:
+      tags:
+        - Service Object Groups
+        - Secure Access
+      summary: List Service Object Groups
+      description: Get the Service Object Groups in the organization.
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/name'
+        - $ref: '#/components/parameters/description'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjectGroups:read
+      operationId: getServiceObjectGroups
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The metadata about the Service Object Groups in the collection and the list of Service Object Groups.
+                properties:
+                  count:
+                    $ref: '#/components/schemas/count'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  results:
+                    type: array
+                    description: The list of objects in the response.
+                    items:
+                      $ref: '#/components/schemas/ServiceObjectGroupResponseSchema'
+                    example:
+                      - id: 4451
+                        name: test_new service object group
+                        description: The description of the service object group.
+                        objects:
+                          - id: 15723
+                            name: new service object
+                        groups: []
+                        values: []
+                        url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjectGroups/4451'
+                        created_at: '2024-11-07T21:30:07Z'
+                        modified_at: '2024-11-07T21:30:07Z'
+                        modified_by: '11702836'
+              example:
+                count: 5
+                limit: 10
+                offset: 0
+                results:
+                  - id: 4451
+                    name: test_new service object group
+                    description: The description of the service object group.
+                    objects:
+                      - id: 15723
+                        name: new service object
+                    groups: []
+                    values: []
+                    url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjectGroups/4451'
+                    created_at: '2024-11-07T21:30:07Z'
+                    modified_at: '2024-11-07T21:30:07Z'
+                    modified_by: '11702836'
+                  - id: 4347
+                    name: new service group
+                    description: The description of the service object group.
+                    objects: []
+                    groups:
+                      - id: 4265
+                        name: tests one grp
+                    values: []
+                    url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjectGroups/4347'
+                    created_at: '2024-11-01T20:55:41Z'
+                    modified_at: '2024-11-01T20:55:41Z'
+                    modified_by: '11702836'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags:
+        - Service Object Groups
+        - Secure Access
+      summary: Create Service Object Group
+      description: Create a Service Object Group in the organization.
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjectGroups:write
+      operationId: createServiceObjectGroup
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceObjectGroup'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceObjectGroupResponseSchema'
+              example:
+                id: 4282
+                name: service group one
+                description: The description of the service object group.
+                objects: []
+                groups:
+                  - id: 37
+                    name: test 1 group
+                values: []
+                url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjectGroups/4282'
+                created_at: '2024-10-29T08:37:50Z'
+                modified_at: '2024-10-29T08:37:50Z'
+                modified_by: '12089817'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjectGroups/references':
+    get:
+      tags:
+        - Service Object Groups
+        - Secure Access
+      summary: List References for Service Object Groups
+      description: |-
+        Get all references for the Service Object Groups in the organization.
+        A reference is an access rule or other Service Object Group that includes a Service Object Group.
+      parameters:
+        - $ref: '#/components/parameters/values'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjectGroups:read
+      operationId: getReferencesForServiceObjectGroups
+      responses:
+        '200':
+          $ref: '#/components/responses/CollectionReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjectGroups/{serviceObjectGroupId}':
+    get:
+      tags:
+        - Service Object Groups
+        - Secure Access
+      summary: Get Service Object Group
+      description: Get a Service Object Group in the organization.
+      parameters:
+        - $ref: '#/components/parameters/serviceObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjectGroups:read
+      operationId: getServiceObjectGroup
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceObjectGroupResponseSchema'
+              example:
+                id: 4282
+                name: service group one
+                description: The description of the service object group.
+                objects: []
+                groups:
+                  - id: 37
+                    name: test 1 group
+                values: []
+                url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjectGroups/4282'
+                created_at: '2024-10-29T08:37:50Z'
+                modified_at: '2024-10-29T08:37:50Z'
+                modified_by: '12089817'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+      - Service Object Groups
+      - Secure Access
+      summary: Update Service Object Group
+      description: Update a Service Object Group in the organization.
+      parameters:
+        - $ref: '#/components/parameters/serviceObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjectGroups:write
+      operationId: updateServiceObjectGroup
+      requestBody:
+        $ref: '#/components/requestBodies/ServiceObjectGroup'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceObjectGroupResponseSchema'
+              example:
+                id: 4282
+                name: service group one
+                description: The description of the service object group.
+                objects: []
+                groups:
+                  - id: 37
+                    name: test 1 group
+                values: []
+                url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjectGroups/4282'
+                created_at: '2024-10-29T08:37:50Z'
+                modified_at: '2024-10-29T08:37:50Z'
+                modified_by: '12089817'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Service Object Groups
+        - Secure Access
+      summary: Delete Service Object Group
+      description: Delete a Service Object Group in the organization.
+      parameters:
+        - $ref: '#/components/parameters/serviceObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjectGroups:write
+      operationId: deleteServiceObjectGroup
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/objects/serviceObjectGroups/{serviceObjectGroupId}/references':
+    get:
+      tags:
+        - Service Object Groups
+        - Secure Access
+      summary: Get References for Service Object Group
+      description: |-
+        Get the references for a Service Object Group in the organization.
+        A reference is an access rule or other Service Object Group that includes a Service Object Group.
+      parameters:
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/serviceObjectGroupId'
+      security:
+        - oauthFlow:
+          - policies.objects.serviceObjectGroups:read
+      operationId: getReferencesForServiceObjectGroup
+      responses:
+        '200':
+          $ref: '#/components/responses/ObjectReferenceResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: Client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.sse.cisco.com/auth/v2/token'
+          scopes:
+            policies.objects.networkObjects:read: 'Read the Network Object resources'
+            policies.objects.networkObjectGroups:read: 'Read the Network Object Group resources'
+            policies.objects.networkObjects:write: 'Write the Network Object resources'
+            policies.objects.networkObjectGroups:write: 'Write the Network Object Group resources'
+            policies.objects.serviceObjects:read: 'Read the Service Object resources'
+            policies.objects.serviceObjectGroups:read: 'Read the Service Object Groups resources'
+            policies.objects.serviceObjects:write: 'Write the Service Object resources'
+            policies.objects.serviceObjectGroups:write: 'Write the Service Object Group resources'
+
+  parameters:
+
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: |-
+        The place to start reading in the collection. The offset starts at 0.
+        If the `limit` is 10, the offset for the next response is 10. The default value is 0.
+      schema:
+        type: integer
+        default: 0
+      example: 25
+
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: |-
+        The maximum number of items from the collection to return in the response. The default value is 10.
+      schema:
+        type: integer
+        default: 10
+      example: 1000
+
+    name:
+      name: name
+      in: query
+      required: false
+      description: The name of an object.
+      schema:
+        type: string
+        default: ""
+
+    description:
+      name: description
+      in: query
+      required: false
+      description: A meaningful description for an object.
+      schema:
+        type: string
+        default: ""
+
+    noType:
+      name: type
+      in: query
+      required: false
+      description: The type of the Network Object.
+      schema:
+        type: string
+        enum: 
+          - host
+          - network
+          - range
+        example: network
+
+    unifiedNetworkObjectType:
+      name: type
+      in: query
+      description: |-
+        The types of the Network Objects and Network Object Groups.
+        A string with a single value of the Network Object's type or `group`, or a comma-separated string that includes the
+        values of the types for the Network Objects and the type of `group`.
+        Valid values of the object types are: `host`, `network`, `range`, or `fqdn`.
+      schema:
+        type: string
+      example: 'host,group'
+
+    noValue:
+      name: value
+      in: query
+      required: false
+      description: The list of addresses to query the Network Object.
+      schema:
+        type: string
+        example: '192.168.1.2'
+
+    soType:
+      name: type
+      in: query
+      required: false
+      description: The type of the Service Object.
+      schema:
+        type: string
+        enum: 
+          - tcp
+          - udp
+          - icmp
+          - any
+        example: tcp
+
+    unifiedServiceObjectType:
+      name: type
+      in: query
+      description: |-
+        The types of the Service Objects and Service Object Groups.
+        A string with a single value of the Service Object's protocol or `group`, or a comma-separated string that includes
+        the values of the protocols for the Service Objects and the type of `group`.
+        Valid values of the protocols are: `tcp`, `udp`, `icmp`, or `any`.
+      schema:
+        type: string
+        example: 'group,any'
+
+    soValue:
+      name: value
+      in: query
+      required: false
+      description: The list of ports to query the value of the Service Object.
+      schema:
+        type: string
+      example: '8080'
+
+    networkObjectId:
+      name: networkObjectId
+      in: path
+      description: The ID of the Network Object.
+      required: true
+      schema:
+        type: integer
+      example: 123456
+
+    networkObjectGroupId:
+      name: networkObjectGroupId
+      in: path
+      description: The ID of the Network Object Group.
+      required: true
+      schema:
+        type: integer
+      example: 123456
+
+    serviceObjectId:
+      name: serviceObjectId
+      in: path
+      description: The ID of the Service Object.
+      required: true
+      schema:
+        type: integer
+      example: 123456
+
+    serviceObjectGroupId:
+      name: serviceObjectGroupId
+      in: path
+      description: The ID of the Service Object Group.
+      required: true
+      schema:
+        type: integer
+      example: 123456
+
+    values:
+      name: values
+      in: query
+      description: The IDs for the objects or groups.
+      required: false
+      schema:
+        type: array
+        description: The list of IDs for the objects or groups.
+        items:
+          type: integer
+          description: The ID of the object or group.
+      example:
+        - 76534
+        - 1234
+
+  requestBodies:
+
+    CsvObjects:
+      description: Create the Objects with the properties in the CSV file.
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            $ref: '#/components/schemas/CsvObject'
+
+    NetworkObject:
+      description: Create the Network Object with the properties.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NetworkObjectRequestSchema'
+          example:
+            name: test create network object one
+            value:
+              type: network
+              addresses:
+                - '192.68.1.0/24'
+            description: test description for network object one.
+
+    NetworkObjectGroup:
+      description: Create the Network Object Group with the properties.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NetworkObjectGroupRequestSchema'
+          example:
+            name: network object group one
+            description: description for network object group one
+            objectIds:
+              - 15884
+            groupIds: []
+            values:
+              - type: host
+                addresses: [192.68.1.0/24]
+              - type: range
+                addresses: [10.10.0.0-10.10.2.0]
+
+    ServiceObject:
+      description: Create the Service Object with the properties.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServiceObjectRequestSchema'
+          example:
+            id: 15906
+            name: update service object one
+            description: updated description for service object one
+            value:
+              protocol: tcp
+              ports:
+                - '10002'
+            url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjects/15906'
+            created_at: '2024-11-20T14:09:20Z'
+            modified_at: '2024-11-20T14:20:16.54Z'
+            modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+
+    ServiceObjectGroup:
+      description: |-
+        Create the Service Object Group with the properties.
+        **Note:** If you set the `protocol` to `icmp`, the value of the `ports` field is not read.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ServiceObjectGroupRequestSchema'
+          example:
+            name: new service object group five
+            description: description for service object group five
+            objectIds:
+              - 15906
+            groupIds: []
+            values:
+              - protocol: tcp
+                ports:
+                  - '9780'
+              - protocol: icmp
+                ports: []
+
+  responses:
+
+    UploadResponse:
+      description: OK
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The metadata for the properties of the objects that were uploaded.
+            properties:
+              message:
+                type: string
+                description: The message that describes the status of the upload of the objects.
+                example: Objects created successfully.
+              count:
+                type: integer
+                example: 2
+                description: The total number of objects that were uploaded and created.
+              objectIds:
+                type: array
+                description: The list of IDs for the objects.
+                items:
+                  type: integer
+                  description: The ID of the object.
+                  example: 1234
+                example: 
+                  - 213
+                  - 1234
+
+    ValidateResponse:
+      description: OK
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The metadata for the properties of the objects that were validated.
+            properties:
+              message:
+                type: string
+                description: The message that describes the status of the validation of the objects.
+                example: valid CSV file
+
+    # Validation errors in the CSV file.
+    Validate400Response:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: The CSV file was validated and had errors.
+              errors:
+                type: array
+                description: The row in the CSV file where the error occurred when validating the CSV file and the list of errors.
+                items:
+                  type: object
+                  description: The properties of the error.
+                  properties:
+                    row:
+                      type: integer
+                      example: 2
+                      description: >-
+                        The number of the row where the error occurred in the CSV file.
+                        The CSV file uses one-based indexing.
+                    errors:
+                      type: array
+                      description: The list of errors.
+                      items:
+                        type: object
+                        description: The properties of the error.
+                        properties:
+                          code:
+                            type: string
+                            example: err310
+                            description: The error code for the missing name.
+                          field:
+                            type: string
+                            example: value
+                            description: The name of the invalid column.
+                          reason:
+                            type: string
+                            example: name is missing
+                            description: The reason why the field is invalid.
+
+    CollectionReferenceResponse:
+      description: OK
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The metadata and properties of the references.
+            required: [count, limit, offset, results]
+            properties:
+              count:
+                type: integer
+                description: The number of references in the response.
+                example: 3
+              limit:
+                $ref: '#/components/schemas/limit'
+              offset:
+                $ref: '#/components/schemas/offset'
+              results:
+                type: array
+                description: The list of properties for the object references.
+                items:
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/idReference'
+                    rules:
+                     $ref: '#/components/schemas/rules'
+                    groups:
+                     $ref: '#/components/schemas/groups'
+          example:
+            count: 11
+            limit: 20
+            offset: 0
+            results:
+              - id: 13
+                rules: []
+                groups:
+                  - id: 4263
+                    name: test
+              - id: 14
+                rules:
+                  - id: 1036500
+                    name: test destination network one
+                groups:
+                  - id: 4285
+                    name: test group three
+
+    ObjectReferenceResponse:
+      description:  OK
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The properties of the object reference.
+            required: [id, rules, groups]
+            properties:
+              id:
+                $ref: '#/components/schemas/idReference'
+              rules:
+                $ref: '#/components/schemas/rules'
+              groups:
+                $ref: '#/components/schemas/groups'
+          example:
+            id: 15884
+            rules: []
+            groups:
+              - id: 4509
+                name: group one
+
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/400ErrorObject'
+
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/401ErrorObject'
+
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/403ErrorObject'
+
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/404ErrorObject'
+
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/500ErrorObject'
+
+  schemas:
+
+    CsvObject:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: A CSV file that includes the objects.
+
+    created_at:
+      type: string
+      format: date-time
+      description: The date and time when the object was created, specified in the ISO 8601 format.
+      example: '2021-10-02T20:00:00Z'
+
+    modified_at:
+      type: string
+      format: date-time
+      description: The date and time when the object was updated, specified in the ISO 8601 format.
+      example: '2021-11-02T20:00:00Z'
+
+    modified_by:
+      type: string
+      description: The hash of the ID for the user account that modified the object.
+      example: '12089817'
+
+    rules:
+      type: array
+      description: The list of the references for the rules.
+      items:
+        $ref: '#/components/schemas/ReferencedRulesResponseSchema'
+
+    groups:
+      type: array
+      description: The list of the references for the groups.
+      items:
+        $ref: '#/components/schemas/ReferencedGroupsResponseSchema'
+
+    count:
+      type: integer
+      description: The number of items that are returned in the response.
+      example: 2
+
+    limit:
+      type: integer
+      description: The maximum number of items from the collection that are returned in the response.
+      example: 100
+
+    offset:
+      type: integer
+      description: The place (index) to start reading in the collection.
+      example: 0
+
+    idReference:
+      type: integer
+      description: The ID of the object.
+      example: 123456
+
+    idNetworkObject:
+      type: integer
+      description: The ID of the Network Object.
+      example: 123456
+
+    nameNetworkObject:
+      type: string
+      description: The name of the Network Object.
+      example: A network object
+
+    descriptionNetworkObject:
+      type: string
+      description: The description of the Network Object.
+      example: network object description
+
+    unifiedServiceObjectType:
+      type: string
+      description: The type of the Service Objects and Service Object Groups.
+      enum:
+        - tcp
+        - udp
+        - icmp
+        - any
+        - group
+      example: any
+
+    unifiedNetworkObjectType:
+      type: string
+      description: The type of the Network Objects and Network Object Groups.
+      enum:
+        - network
+        - range
+        - host
+        - fqdn
+        - group
+      example: group
+
+    NetworkObjectResponseSchema:
+      type: object
+      description: The properties of the Network Object response.
+      required:
+        - name
+        - value
+      properties:
+        id:
+          $ref: '#/components/schemas/idNetworkObject'
+        name:
+          $ref: '#/components/schemas/nameNetworkObject'
+        description:
+          $ref: '#/components/schemas/descriptionNetworkObject'
+        value:
+          type: object
+          description: The value of the Network Object, which is represented by the network properties.
+          oneOf:
+            - $ref: '#/components/schemas/NetworkValueType'
+            - $ref: '#/components/schemas/FqdnValueType'
+        url:
+          type: string
+          description: The URL for the Network Object.
+          example: 'http://api.sse.cisco.com/v1/objects/network/1245'
+        created_at:
+          $ref: '#/components/schemas/created_at' 
+        modified_at:
+          $ref: '#/components/schemas/modified_at' 
+        modified_by:
+          $ref: '#/components/schemas/modified_by' 
+      example:
+        id: 15884
+        name: demo object
+        description: description for demo object
+        value:
+          type: network
+          addresses:
+            - 192.68.1.0/24
+        url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjects/15884'
+        created_at: '2024-11-13T20:51:14Z'
+        modified_at: '2024-11-13T20:51:14Z'
+        modified_by: '12089817'
+
+    NetworkObjectRequestSchema:
+      type: object
+      description: The properties of the Network Object request body.
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+          description: The name of the Network Object.
+          example: Company network
+        description:
+          type: string
+          description: The description of the Network Object.
+          example: network object description
+        value:
+          type: object
+          description: >-
+            The values of the Network Object for the network, host, range, or fully-qualified domain name (FQDN).
+          oneOf:
+          - $ref: '#/components/schemas/NetworkValueType'
+          - $ref: '#/components/schemas/FqdnValueType'
+      example:
+        name: test create network object one
+        value:
+          type: network
+          addresses:
+            - '192.68.1.0/24'
+        description: test description for network object one.
+
+    ReferencedRulesResponseSchema:
+      type: object
+      description: The properties of the rule.
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          description: The ID of the rule.
+          example: 76534
+        name:
+          type: string
+          description: The name of the rule.
+          example: Rule Name
+      example:
+        name: the rule name
+        id: 76534
+
+    ReferencedGroupsResponseSchema:
+      type: object
+      description: The properties of the group.
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          description: The ID of the group.
+          example: 76534
+        name:
+          type: string
+          description: The name of the group.
+          example: Group Name
+      example:
+        id: 76543
+        name: The group name
+
+    NetworkValueType:
+      type: object
+      description: The properties of the network.
+      required:
+        - type
+        - addresses
+      properties:
+        type:
+          type: string
+          description: The network type.
+          enum:
+          - network
+          - host
+          - range
+          example: range
+            # ip","name":"name1","addresses":"1.2.3.4"}
+            # {"id":objectid2,"type":"ip-range","name":"name2","addresses":"1.2.3.5-1.2.3.6"}
+            # {"id":objectid3,"type":"cidr","name":"name3","addresses":"10.100.10.00/24"}
+            # {"id":objectid4,"type":"wildcard
+        addresses:
+          type: array
+          description: |-
+            The list of IP addresses or IP address ranges for the network.
+            Separate the range of IPv4 addresses with a hyphen (**-**).
+          maxItems: 1
+          minItems: 1
+          items:
+            type: string
+            example: '10.10.0.0-10.10.2.0'
+      example:
+        type: network
+        addresses:
+          - '192.68.1.0/24'
+
+    FqdnValueType:
+      type: object
+      description: The properties of the fully-qualified domain name (FQDN).
+      required:
+      - type
+      - value
+      properties:
+        type:
+          type: string
+          description: The type of the domain name.
+          enum:
+          - fqdn
+        addresses:
+          type: array
+          description: The list of domains.
+          maxItems: 1
+          minItems: 1
+          items:
+            type: string
+            example: 'www.cisco.com'
+          example:
+            - 'www.cisco.com'
+
+    valuesNetworkObjectGroups:
+      type: array
+      description: The list of the non-reusable Network Object values in the Network Object Groups.
+      items:
+        anyOf:
+          - $ref: '#/components/schemas/NetworkValueType'
+          - $ref: '#/components/schemas/FqdnValueType'
+      example:
+        - type: network
+          addresses:
+            - '192.68.1.0/24'
+
+    idNetworkObjectGroup:
+      type: integer
+      description: The ID of the Network Object Group.
+      example: 123456
+
+    nameNetworkObjectGroup:
+      type: string
+      description: The name of the Network Object Group.
+      example: A network object group
+
+    descriptionNetworkObjectGroup:
+      type: string
+      description: The description for the Network Object Group.
+      example: A network object description
+
+    #typeNetworkObjectGroup:
+    #  type: string
+    #  description: The type of the Network Object Group.
+    #  example: group
+
+    NetworkObjectGroupRequestSchema:
+      type: object
+      description: Create the Network Object with the properties.
+      required: [name, objectIds, groupIds, values]
+      properties:
+        name:
+          $ref: '#/components/schemas/nameNetworkObjectGroup'
+        description:
+          $ref: '#/components/schemas/descriptionNetworkObjectGroup'
+        objectIds:
+          type: array
+          description: The list of IDs for the Network Objects.
+          items:
+            type: integer
+            description: The ID of the Network Object.
+            example: 1234556
+          example: 
+            - 124566
+            - 143423
+        groupIds:
+          type: array
+          description: The list of IDs for the Network Object Groups.
+          items:
+            type: integer
+            description: The ID of the Network Object Group.
+            example: 1234556
+          example:
+            - 123453
+            - 123455
+        values:
+          $ref: '#/components/schemas/valuesNetworkObjectGroups'
+      example:
+        name: network object group one
+        description: description for network object group one
+        objectIds:
+          - 15884
+        groupIds: []
+        values:
+          - type: host
+            addresses: [192.68.1.0/24]
+          - type: range
+            addresses: [10.10.0.0-10.10.2.0]
+
+    NetworkObjectGroupResponseSchema:
+      type: object
+      description: The properties of the Network Object Group response.
+      required: [id, name, objects, groups, values, url]
+      properties:
+        id:
+         $ref: '#/components/schemas/idNetworkObjectGroup'
+        name:
+          $ref: '#/components/schemas/nameNetworkObjectGroup'
+        description:
+          $ref: '#/components/schemas/descriptionNetworkObjectGroup'
+        objects:
+          type: array
+          description: The list of Network Objects.
+          items:
+            type: object
+            description: The properties of the Network Objects.
+            properties:
+              id:
+                $ref: '#/components/schemas/idNetworkObject'
+              name:
+                $ref: '#/components/schemas/nameNetworkObject'
+        groups:
+          type: array
+          description: The list of Network Object Groups.
+          items:
+            type: object
+            description: The properties of the Network Object Groups.
+            properties:
+              id:
+                 $ref: '#/components/schemas/idNetworkObjectGroup'
+              name:
+                $ref: '#/components/schemas/nameNetworkObjectGroup'
+        values:
+          $ref: '#/components/schemas/valuesNetworkObjectGroups'
+        url:
+          type: string
+          description: The URL for the Network Object Group.
+          example: 'http://api.sse.cisco.com/v1/groups/network/1245'
+        created_at:
+          $ref: '#/components/schemas/created_at' 
+        modified_at:
+          $ref: '#/components/schemas/modified_at' 
+        modified_by:
+          $ref: '#/components/schemas/modified_by' 
+      example:
+        id: 4509
+        name: group one
+        description: ''
+        objects:
+          - id: 15884
+            name: demo object
+        groups:
+          - id: 4263
+            name: group one
+        values: []
+        url: 'https://api.sse.cisco.com/policies/v2/objects/networkObjectGroups/4509'
+        created_at: '2024-11-18T15:47:59Z'
+        modified_at: '2024-11-18T15:47:59Z'
+        modified_by: '11702836'
+
+    idServiceObject:
+      type: integer
+      description: The ID of the Service Object.
+      example: 123456
+
+    nameServiceObject:
+      type: string
+      description: The name of the Service Object.
+      example: mycompany service object group name
+
+    descriptionServiceObject:
+      type: string
+      description: The description of the Service Object.
+      example: mycompany service object group description
+
+    ServiceObjectRequestSchema:
+      type: object
+      description: The properties of the Service Object for the request.
+      required:
+        - name
+      properties:
+        name:
+          $ref: '#/components/schemas/nameServiceObject'
+        description:
+          $ref: '#/components/schemas/descriptionServiceObject'
+        value:
+          $ref: '#/components/schemas/ServiceValueType'
+      example:
+        name: new service object one
+        description: description for service object one
+        value:
+          protocol: tcp
+          ports:
+            - '6589'
+
+    ServiceObjectResponseSchema:
+      type: object
+      description: The properties of the Service Object response.
+      required: [id, name, value, url]
+      properties:
+        id:
+          $ref: '#/components/schemas/idServiceObject'
+        name:
+           $ref: '#/components/schemas/nameServiceObject'
+        description:
+          $ref: '#/components/schemas/descriptionServiceObject'
+        value:
+          $ref: '#/components/schemas/ServiceValueType'
+        url:
+          type: string
+          description: The URL for the Service Object.
+          example: 'http://api.sse.cisco.com/v1/objects/services/1245'
+        created_at:
+          $ref: '#/components/schemas/created_at'
+        modified_at:
+          $ref: '#/components/schemas/modified_at'
+        modified_by:
+          $ref: '#/components/schemas/modified_by'
+      example:
+        id: 15906
+        name: new service object one
+        description: description for service object one
+        value:
+          protocol: tcp
+          ports:
+            - '6589'
+        url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjects/15906'
+        created_at: '2024-11-20T14:09:19.686Z'
+        modified_at: '2024-11-20T14:09:19.686Z'
+        modified_by: '85e0c78b608a4336adb50d7bafdf6032'
+
+    ServiceValueType:
+      type: object
+      description: The properties of the Service.
+      required: [protocol, ports]
+      properties:
+        protocol:
+          type: string
+          description: The protocol of the Service.
+          enum:
+            - tcp
+            - udp
+            - icmp
+            - any
+          example: tcp
+        ports:
+          type: array
+          description: The list of ports or port ranges for the Service.
+          items:
+            type: string
+            description: A string that specifies a port number.
+            example: '4567'
+          example:
+            - '9090'
+            - '8000'
+      example:
+        protocol: tcp
+        ports:
+          - '6589'
+
+    valuesServiceObjectGroup:
+      type: array
+      description: The list of values for the Service Object Group.
+      items:
+        anyOf:
+          - $ref: '#/components/schemas/ServiceValueType'
+
+    idServiceObjectGroup:
+      type: integer
+      description: The ID of the Service Object Group.
+      example: 123456
+
+    nameServiceObjectGroup:
+      type: string
+      description: The name of the Service Object Group.
+      example: mycompany service object group name
+
+    descriptionServiceObjectGroup:
+      type: string
+      description: The description of the Service Object Group.
+      example: mycompany service object group description
+
+    ServiceObjectGroupRequestSchema:
+      type: object
+      description: The properties of the Service Object Group request body.
+      required: [name, objectIds, groupIds, values]
+      properties:
+        name:
+          $ref: '#/components/schemas/nameServiceObjectGroup'
+        description:
+          $ref: '#/components/schemas/descriptionServiceObjectGroup'
+        objectIds:
+          type: array
+          description: The list of IDs for the Service Objects.
+          items:
+            type: integer
+            example: 123456
+          example:
+            - 123456
+        groupIds:
+          type: array
+          description: The list of IDs for the Service Object Groups.
+          items:
+            type: integer
+            example: 123455
+          example:
+            - 123455
+        values:
+          $ref: '#/components/schemas/valuesServiceObjectGroup'
+      example:
+        name: new service object group five
+        description: description for service object group five
+        objectIds:
+          - 15906
+        groupIds: []
+        values:
+          - protocol: tcp
+            ports:
+              - '9780'
+          - protocol: icmp
+            ports: []
+
+    ServiceObjectGroupResponseSchema:
+      type: object
+      description: The properties of the Service Object Group response.
+      required: [id, name, objects, groups, values, url]
+      properties:
+        id:
+          $ref: '#/components/schemas/idServiceObjectGroup'
+        name:
+          $ref: '#/components/schemas/nameServiceObjectGroup'
+        description:
+          $ref: '#/components/schemas/descriptionServiceObjectGroup'
+        objects:
+          type: array
+          description: The list of properties for the Service Objects.
+          items:
+            type: object
+            description: The properties of the Service Object.
+            required: [id, name]
+            properties:
+              id:
+                $ref: '#/components/schemas/idServiceObject'
+              name:
+                $ref: '#/components/schemas/nameServiceObject'
+        groups:
+          type: array
+          description: The list of properties for the Service Object Groups.
+          items:
+            type: object
+            description: The properties of the Service Object Group.
+            required: [id, name]
+            properties:
+              id:
+                $ref: '#/components/schemas/idServiceObjectGroup'
+              name:
+                $ref: '#/components/schemas/nameServiceObjectGroup'
+        values:
+          $ref: '#/components/schemas/valuesServiceObjectGroup'
+        url:
+          type: string
+          description: The URL for the Service Object Group.
+          example: 'http://api.sse.cisco.com/v1/groups/services/1245'
+        created_at:
+          $ref: '#/components/schemas/created_at'
+        modified_at:
+          $ref: '#/components/schemas/modified_at'
+        modified_by:
+          $ref: '#/components/schemas/modified_by'
+      example:
+        id: 4451
+        name: test_new service object group
+        description: ''
+        objects:
+          - id: 15723
+            name: new service object
+        groups: []
+        values: []
+        url: 'https://api.sse.cisco.com/policies/v2/objects/serviceObjectGroups/4451'
+        created_at: '2024-11-07T21:30:07Z'
+        modified_at: '2024-11-07T21:30:07Z'
+        modified_by: '11702836a'
+
+    400ErrorObject:
+      type: object
+      description: The properties of the error message.
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Organization ID must be a numeric value.
+
+    401ErrorObject:
+      type: object
+      description: The properties of the error message.
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Authorization token is invalid.
+
+    403ErrorObject:
+      type: object
+      description: The properties of the error message.
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Not Authorized
+
+    404ErrorObject:
+      type: object
+      description: The properties of the error message.
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Not Found
+
+    500ErrorObject:
+      type: object
+      description: The properties of the error message.
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Internal Server Error

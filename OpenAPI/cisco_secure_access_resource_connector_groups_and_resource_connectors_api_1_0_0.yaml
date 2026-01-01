@@ -1,0 +1,1588 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Resource Connector Groups and Resource Connectors API
+  description: |
+    Manage the Resource Connector Groups and Resource Connectors in the organization.
+  version: 1.0.0
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: deployments/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: Connector Groups
+    description: Manage the Resource Connector Groups.
+  - name: Connectors
+    description: Manage the Resource Connectors.
+  - name: Secure Access
+
+paths:
+  /connectorGroups:
+    get:
+      tags:
+      - Connector Groups
+      - Secure Access
+      summary: List Resource Connector Groups
+      description: |-
+        List the Resource Connector Groups in the organization.
+        If you include `filters` on the request, the response is a subset of the Resource Connector Groups in the organization.
+      operationId: listConnectorGroups
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:read
+      parameters:
+      - $ref: '#/components/parameters/includeProvisioningKey'
+      - $ref: '#/components/parameters/filtersConnectorGroups'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/sortByConnectorGroup'
+      - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorGroupList'
+              example:
+                data:
+                  - id: 123456
+                    name: NYC Connector Group
+                    location: us-west-2
+                    environment: aws
+                    provisioningKey: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+                    provisioningKeyExpiresAt: '2023-03-14T18:34:25.412525046Z'
+                    baseImageDownloadUrl: 'https://foo.bar.com/baseimage'
+                    status: connected
+                    statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                    connectorsCount: 5
+                    resourceIds: [12, 34]
+                    createdAt: '2023-03-14T18:34:25.412525046Z'
+                    modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                offset: 1
+                limit: 50
+                total: 100
+        '400':
+          $ref: '#/components/responses/400ConnectorGroupError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags:
+      - Connector Groups
+      - Secure Access
+      summary: Create Resource Connector Group
+      description: Create a Resource Connector Group in the organization.
+      operationId: createConnectorGroup
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:write
+      requestBody:
+        description: Create a Resource Connector Group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/connectorGroupReq'
+            example:
+              name: NYC Connector Group
+              location: us-west-2
+              environment: aws
+        required: false
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorGroupResponse'
+              example:
+                id: 1234567
+                name: NYC Connector Group
+                location: us-west-2
+                environment: aws
+                provisioningKey: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+                provisioningKeyExpiresAt: '2023-03-14T18:34:25.412525046Z'
+                baseImageDownloadUrl: 'https://foo.bar.com/baseimage'
+                status: connected
+                statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                connectorsCount: 5
+                resourceIds: [12, 34]
+                createdAt: '2023-03-14T18:34:25.412525046Z'
+                modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                disconnectedConnectorsCount: 2
+        '400':
+          $ref: '#/components/responses/400ConnectorGroupError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /connectorGroups/{id}:
+    get:
+      tags:
+      - Connector Groups
+      - Secure Access
+      summary: Get Resource Connector Group
+      description: Get the details about a Resource Connector Group.
+      operationId: getConnectorGroup
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:read
+      parameters:
+      - $ref: '#/components/parameters/idConnectorGroup'
+      - $ref: '#/components/parameters/includeProvisioningKey'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorGroupResponse'
+              example:
+                id: 1234567
+                name: NYC Connector Group
+                location: us-west-2
+                environment: aws
+                provisioningKey: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+                provisioningKeyExpiresAt: '2023-03-14T18:34:25.412525046Z'
+                baseImageDownloadUrl: 'https://foo.bar.com/baseimage'
+                status: connected
+                statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                connectorsCount: 5
+                resourceIds: [12, 34]
+                createdAt: '2023-03-14T18:34:25.412525046Z'
+                modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                disconnectedConnectorsCount: 2
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    put:
+      tags:
+      - Connector Groups
+      - Secure Access
+      summary: Update Resource Connector Group
+      description: Update the `name` and `location` properties on the Resource Connector Group.
+      operationId: putConnectorGroup
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:write
+      parameters:
+      - $ref: '#/components/parameters/idConnectorGroup'
+      requestBody:
+        description: Set the properties on the Resource Connector Group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/connectorGroupReq'
+            example:
+              name: NYC Connector Group
+              location: us-west-2
+              environment: aws
+        required: false
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorGroupResponse'
+              example:
+                id: 1234567
+                name: NYC Connector Group
+                location: us-west-2
+                environment: aws
+                provisioningKey: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+                provisioningKeyExpiresAt: '2023-03-14T18:34:25.412525046Z'
+                baseImageDownloadUrl: 'https://foo.bar.com/baseimage'
+                status: connected
+                statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                connectorsCount: 5
+                resourceIds: [12, 34]
+                createdAt: '2023-03-14T18:34:25.412525046Z'
+                modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                disconnectedConnectorsCount: 2
+        '400':
+          $ref: '#/components/responses/400ConnectorGroupError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    patch:
+      tags:
+      - Connector Groups
+      - Secure Access
+      summary: Patch Resource Connector Group
+      description: |-
+        Update the `name` or `location` properties on the Resource Connector Group, or
+        refresh the Resource Connector Group's provisioning key.
+      operationId: patchConnectorGroup
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:write
+      parameters:
+      - $ref: '#/components/parameters/idConnectorGroup'
+      requestBody:
+        description: Set the properties on the Connector Group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/connectorGroupPatchReq'
+            example:
+              - op: replace
+                path: /provisioningKey
+                value: ''
+        required: false
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorGroupResponse'
+              example:
+                id: 1234567
+                name: NYC Connector Group
+                location: us-west-2
+                environment: aws
+                provisioningKey: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+                provisioningKeyExpiresAt: '2023-03-14T18:34:25.412525046Z'
+                baseImageDownloadUrl: 'https://foo.bar.com/baseimage'
+                status: connected
+                statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                connectorsCount: 5
+                resourceIds: [12, 34]
+                createdAt: '2023-03-14T18:34:25.412525046Z'
+                modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                disconnectedConnectorsCount: 2
+        '400':
+          $ref: '#/components/responses/400ConnectorGroupError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+      - Connector Groups
+      - Secure Access
+      summary: Delete Resource Connector Group
+      description: Delete the Resouce Connector Group, including the Connectors in the Resource Connector Group.
+      operationId: deleteConnectorGroup
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:write
+      parameters:
+        - $ref: '#/components/parameters/idConnectorGroup'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: string
+                format: nullable
+              example: ''
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /connectorGroups/counts:
+    get:
+      tags:
+        - Connector Groups
+        - Secure Access
+      summary: Get Counts Resource Connector Groups States
+      description: Get the counts of the state information for the Resource Connector Groups.
+      operationId: getConnectorGroupCount
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:read
+      responses:
+        '200':
+          description: OK
+          content:
+            resource/json:
+              schema:
+                $ref: '#/components/schemas/connectorGroupCountsResponse'
+              example:
+                connected: 3
+                disabled: 4
+                disconnected: 3
+                hasDisconnectedConnector: 2
+                noAssignedResources: 0
+                total: 14
+                waiting: 2
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /connectorAgents:
+    get:
+      tags:
+      - Connectors
+      - Secure Access
+      summary: List Connectors
+      description: |-
+        List the Connectors for the Resouce Connector Groups in the organization.
+        If you include query filters on the request, the response is a subset of the Connectors in the organization.
+      operationId: listConnectors
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:read
+      parameters:
+      - $ref: '#/components/parameters/filtersConnectorAgents'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/sortByConnectorAgent'
+      - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorListRes'
+              example:
+                data:
+                  - id: 123456
+                    groupId: 123964
+                    instanceId: i-04568b6cdaeedda25a
+                    confirmed: true
+                    enabled: true
+                    version: v10.1
+                    sha1: '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed'
+                    hostname: i-0123456789abcdef.us-west-2.compute.internal
+                    originIpAddress: '10.45.102.214'
+                    status: connected
+                    statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                    revoked_at: '2023-03-14T18:34:25.412525046Z'
+                    createdAt: '2023-03-14T18:34:25.412525046Z'
+                    modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                offset: 1
+                limit: 50
+                total: 100
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /connectorAgents/{id}:
+    get:
+      tags:
+      - Connectors
+      - Secure Access
+      summary: Get Connector
+      description: Get the details about a Connector.
+      operationId: getConnector
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:read
+      parameters:
+      - $ref: '#/components/parameters/idConnector'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorResponse'
+              example:
+                id: 123456
+                groupId: 123964
+                instanceId: i-04568b6cdaeedda25a
+                confirmed: true
+                enabled: true
+                version: v10.1
+                sha1: '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed'
+                hostname: i-0123456789abcdef.us-west-2.compute.internal
+                originIpAddress: '10.45.102.214'
+                status: connected
+                statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                revoked_at: '2023-03-14T18:34:25.412525046Z'
+                createdAt: '2023-03-14T18:34:25.412525046Z'
+                modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                baseVersion: "240127"
+                isLatestBaseVersion: true
+                upgradeStatus: successful
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    patch:
+      tags:
+      - Connectors
+      - Secure Access
+      summary: Patch Connector
+      description: Update the properties on the Connector.
+      operationId: patchConnector
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:write
+      parameters:
+      - $ref: '#/components/parameters/idConnector'
+      requestBody:
+        description: Update the properties on the Connector.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/connectorPatchReq'
+            example:
+              - op: replace
+                path: /confirmed
+                value: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connectorResponse'
+              example:
+                id: 123456
+                groupId: 123964
+                instanceId: i-04568b6cdaeedda25a
+                confirmed: true
+                enabled: true
+                version: v10.1
+                sha1: '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed'
+                hostname: i-0123456789abcdef.us-west-2.compute.internal
+                originIpAddress: '10.45.102.214'
+                status: connected
+                statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+                revoked_at: '2023-03-14T18:34:25.412525046Z'
+                createdAt: '2023-03-14T18:34:25.412525046Z'
+                modifiedAt: '2023-03-14T18:34:25.412525046Z'
+                baseVersion: "240127"
+                isLatestBaseVersion: true
+                upgradeStatus: successful
+        '400':
+          $ref: '#/components/responses/400ConnectorAgentError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+      - Connectors
+      - Secure Access
+      summary: Delete Connector
+      description: Remove the Connector from the Resource Connector Group in the organization.
+      operationId: deleteConnector
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:write
+      parameters:
+      - $ref: '#/components/parameters/idConnector'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: string
+                format: nullable
+              example: ''
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /connectorAgents/counts:
+    get:
+      tags:
+        - Connectors
+        - Secure Access
+      summary: Get Counts Connectors States
+      description: Get the counts of the state information for the Connectors.
+      operationId: getConnectorAgentCount
+      security:
+        - oauthFlow:
+          - deployments.resourceconnectors:read
+      responses:
+        '200':
+          description: OK
+          content:
+            resource/json:
+              schema:
+                $ref: '#/components/schemas/connectorCountsResponse'
+              example:
+                announced: 1
+                connected: 3
+                disabled: 4
+                disconnected: 3
+                expired: 2
+                reachable: 0
+                total: 15
+                upgrading: 2
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    idConnectorGroup:
+      name: id
+      in: path
+      required: true
+      description: The ID of the Connector Group.
+      schema:
+        type: integer
+      example: 123455
+
+    idConnector:
+      name: id
+      in: path
+      required: true
+      description: The ID of the Connector.
+      schema:
+        type: integer
+      example: 123455
+
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: |-
+        The place to start reading in the collection. The offset starts at 0.
+        If the `limit` is 10, the offset for the next response is 10. The default value is 0.
+      schema:
+        type: integer
+        default: 0
+      example: 25
+
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: |-
+        The maximum number of items to return in the response from the collection. The default value is 10.
+      schema:
+        type: integer
+        default: 10
+      example: 100
+
+    sortByConnectorAgent:
+      name: sortBy
+      in: query
+      required: false
+      description: |-
+        Specify a field to filter the collection.
+      schema:
+        type: string
+        enum:
+          - instanceId
+          - originIpAddress
+          - createdAt
+          - modifiedAt
+        default: originIpAddress
+      example: originIpAddress
+
+    sortByConnectorGroup:
+      name: sortBy
+      in: query
+      required: false
+      description: |-
+        Specify a field to filter the collection.
+      schema:
+        type: string
+        enum:
+          - name
+          - connectorsCount
+          - resourceIds
+          - createdAt
+          - modifiedAt
+        default: name
+      example: resourceIds
+
+    sortOrder:
+      name: sortOrder
+      in: query
+      required: false
+      description: |-
+        Specify a field in the response to order the collection.
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+        default: asc
+      example: desc
+
+    includeProvisioningKey:
+      name: includeProvisioningKey
+      in: query
+      required: false
+      description: |-
+        Specify whether to include the Connector Group's provisioning key in the response.
+      schema:
+        type: boolean
+        default: false
+      example: true
+
+    filtersConnectorAgents:
+      name: filters
+      in: query
+      required: false
+      description: |-
+        Filter the list of Connectors by one or more properties.
+
+        For example:
+
+        ```
+        {
+          "groupId": "123",
+          "instanceId": "i-04568b6cdaeedda25a",
+          "status": "connected,reachable",
+          "confirmed": true
+        }
+        ```
+
+        Filters are applied to the following properties:
+
+        * **groupId**—A comma-separated list of Connector Group IDs.
+        * **instanceId**—The ID of the Connector. The value is not case sensitive.
+        * **status**—A comma-separated list of Connector status labels.
+        * **confirmed**—If set to `true`, list the confirmed location of the Connector. The value is not case sensitive.
+        * **hasSynced**—If set to `true`, list the Connectors that have successfully synced.
+        * **hasLatestVersion**—If set to `true`, list the Connectors that have the latest software version.
+
+      schema:
+        type: string
+
+    filtersConnectorGroups:
+      name: filters
+      in: query
+      required: false
+      description: |-
+        Filter the list of Connector Groups by one or more properties.
+
+        For example:
+
+        ```
+        {
+          "groupId": "123,987",
+          "name": "NYC Connector Group",
+          "status": "connected,waiting",
+          "location": "us-east-1",
+          "hasResources": false
+        }
+        ```
+
+        Filters are applied to the following properties:
+
+        * **groupId**—A comma-separated list of Connector Group IDs.
+        * **name**—The name of the Connector Group. The value is not case sensitive.
+        * **location**—The location of the Connector Group.
+        * **status**—A comma-separated list of Connector Group status labels.
+        * **hasResources**—If set to `true`, list the Connector Groups with at least one resource.
+          If set to `false`, list the Connector Groups with no resource.
+        * **hasAgentWithStatus**—If set to `true`, list the Connector Groups that have at least one Connector with the specified status.
+        * **hasOutdatedAgent**—If set to `true`, list the Connector Groups that have at least one Connector in the group with an outdated software version.
+          If set to `false`, list the Connector Groups where all Connectors in the group have up-to-date software versions.
+        * **hasOutOfSyncAgent**—If set to `true`, list the Connector Groups that have at least one out of sync Connector.
+          If set to `false`, list only the Connector Groups that have all Connectors in the group that are able to sync.
+        * **environment**—The specified environment: `aws`, `azure`, `container`, or `esx`.
+        * **resourceIds**—The comma-separated list of the private resources that are associated with the Resource Connector Group.
+        * **dnsResourceId**—The ID of the DNS resource that is associated with the Connector Group.
+
+      #When the value is not set, Secure Access returns Connector Groups regardless of the number of the resources.
+      schema:
+        type: string
+
+  schemas:
+
+    forwardDNS:
+      type: array
+      description: The DNS configuration for the Connector Group.
+      items:
+        type: object
+        properties:
+          dnsResourceId:
+            type: integer
+            description: The ID for the DNS server that is associated with the Connector Group.
+            example: 123456
+          domains:
+            type: string
+            description: A comma-separated list of domains. DNS requests for these domains are sent to the DNS server that is identified by `dnsResourceId`.
+            example: 'domain1.com,domain2.com'
+      example:
+        - dnsResourceId: 123456
+          domains: 'domain1.com,domain2.com'
+
+    op:
+      description: The label that describes the type of operation.
+      type: string
+      enum:
+        - replace
+      example: replace
+
+    idConnectorGroup:
+      description: The ID of the Resource Connector Group. 
+      type: integer
+      readOnly: true
+      example: 1234557
+
+    idConnector:
+      type: integer
+      description: The ID of the Connector.
+      readOnly: true
+      example: 123456
+
+    offset:
+      description: |-
+        The place to start reading in the collection. The offset starts at 0.
+        If the `limit` is 10, the offset for the next response is 10. The default value is 0.
+      type: integer
+      default: 0
+      example: 1000
+
+    limit:
+      description: The maximum number of items in the response.
+      type: integer
+      example: 100
+
+    total:
+      description: The total number of items read from the collection. 
+      type: integer
+      example: 2000
+
+    name:
+      type: string
+      description: |-
+        The name of the Resource Connector Group.
+        The name may include alphanumeric characters, and the space (' ') and hyphen (-) characters.
+      minLength: 1
+      maxLength: 100
+      pattern: '^[a-zA-Z0-9- ]+$'
+      example: NYC Connector Group
+
+    location:
+      type: string
+      description: The region where the Resource Connector Group is available.
+      example: us-west-2
+
+    environment:
+      type: string
+      description: The type of cloud-native runtime environment that hosts the Resource Connector Group.
+      enum: [aws, azure, container, esx]
+      default: aws
+
+    connectorGroupReq:
+      type: object
+      description: Create the Connector Group object.
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        location:
+          $ref: '#/components/schemas/location'
+        environment:
+          $ref: '#/components/schemas/environment'
+        forwardDNS:
+          $ref: '#/components/schemas/forwardDNS'
+      required:
+        - name
+        - location
+      example:
+        name: NYC Connector Group
+        location: us-west-2
+        environment: aws
+
+    connectorGroupPatchReq:
+      type: array
+      description: Update properties of the Resource Connector Group.
+      items:
+        type: object
+        required: [op, path]
+        properties:
+          op:
+            $ref: '#/components/schemas/op'
+          path:
+            type: string
+            enum:
+              - '/name'
+              - '/confirmedAgentsEnabled'
+              - '/provisioningKey'
+              - '/resourceIds'
+              - '/forwardDNS'
+            description: |-
+              The Resource Connector Group property.
+              You can set these properties on the Connector Group: `name`, `confirmedAgentsEnabled`, `provisioningKey`, `forwardDNS`, and `resourceIds`.
+            example: '/name'
+          value:
+            description: |-
+              The value of the property.
+              When the value of the `path` field is `provisioningKey`, the `value` field accepts an empty string or is not required.
+            oneOf:
+              - type: string
+                description: New value for the paths "/name", "/confirmedAgentsEnabled" and "/resourceIds".
+                example: us-east-1
+              - $ref: '#/components/schemas/forwardDNS'
+      example:
+        - op: replace
+          path: '/provisioningKey'
+        - op: 'replace'
+          path: /name
+          value: Some renamed group
+        - op: replace
+          path: '/forwardDNS'
+          value:
+            - dnsResourceId: 123456
+              domains: 'domainone.com,domaintwo.com'
+
+    connectorGroupResponse:
+      type: object
+      description: The Resource Connector Group response object.
+      properties:
+        id:
+          $ref: '#/components/schemas/idConnectorGroup'
+        name:
+          $ref: '#/components/schemas/name'
+        location:
+          $ref: '#/components/schemas/location'
+        environment:
+          $ref: '#/components/schemas/environment'
+        forwardDNS:
+          $ref: '#/components/schemas/forwardDNS'
+        provisioningKey:
+          type: string
+          description: The Resource Connector Group's provisioning key.
+          example: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+        provisioningKeyExpiresAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Resource Connector Group's provisioning key expires, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+        baseImageDownloadUrl:
+          type: string
+          description: The URL of the Connector Group's base image.
+          readOnly: true
+          example: 'https://foo.bar.com/baseimage'
+        status:
+          type: string
+          description: The label that describes the status of the Resource Connector Group.
+          enum: [waiting, connected, overloaded, disabled, disconnected]
+          example: connected
+        statusUpdatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Resource Connector Group's status was updated, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+        connectorsCount:
+          type: integer
+          description: The number of Connectors in the Resource Connector Group.
+          example: 5
+        resourceIds:
+          type: array
+          description: The list of resource IDs.
+          items:
+            type: integer
+          example: [12, 34]
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Resource Connector Group was created, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+        modifiedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Resource Connector Group was modified, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+        connectedConnectorsCount:
+          type: integer
+          description: The number of Connectors in the Resource Connector Group that are synced and connected.
+          example: 4
+        disconnectedConnectorsCount:
+          type: integer
+          description: The number of Connectors in the Resource Connector Group that are disconnected.
+          example: 2
+        unabledToSyncConnectorsCount:
+          type: integer
+          description: The number of Connectors in the Resource Connector Group that are unabled to sync.
+          example: 3
+        needUpdateConnectorsCount:
+          type: integer
+          description: The number of Connectors in the Resource Connector Group that require an update.
+          example: 1
+
+      example:
+        id: 1234567
+        name: NYC Connector Group
+        location: us-west-2
+        environment: aws
+        provisioningKey: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+        provisioningKeyExpiresAt: '2023-03-14T18:34:25.412525046Z'
+        baseImageDownloadUrl: 'https://foo.bar.com/baseimage'
+        status: connected
+        statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+        connectorsCount: 5
+        resourceIds: [12, 34]
+        createdAt: '2023-03-14T18:34:25.412525046Z'
+        modifiedAt: '2023-03-14T18:34:25.412525046Z'
+        disconnectedConnectorsCount: 2
+
+    connectorGroupList:
+      type: object
+      description: The list of Resource Connector Groups and metadata about the Resource Connector Groups.
+      properties:
+        data:
+          type: array
+          description: The list of the Resource Connector Groups.
+          items:
+            $ref: '#/components/schemas/connectorGroupResponse'
+        offset:
+          $ref: '#/components/schemas/offset'
+        limit:
+          $ref: '#/components/schemas/limit'
+        total:
+          $ref: '#/components/schemas/total'
+      example:
+        data:
+          - id: 1234567
+            name: NYC Connector Group
+            location: us-west-2
+            environment: aws
+            provisioningKey: Zm9vYmFyYmF6MTIzNDU2Nzg5MDpiYXJmb29iYXoxMjM0NTY3ODkw
+            provisioningKeyExpiresAt: '2023-03-14T18:34:25.412525046Z'
+            baseImageDownloadUrl: 'https://foo.bar.com/baseimage'
+            status: connected
+            statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+            connectorsCount: 5
+            resourceIds: [12, 34]
+            createdAt: '2023-03-14T18:34:25.412525046Z'
+            modifiedAt: '2023-03-14T18:34:25.412525046Z'
+            disconnectedConnectorsCount: 2
+        offset: 1
+        limit: 50
+        total: 100
+
+    connectorGroupCountsResponse:
+      type: object
+      description: The counts of the state information for the Resouce Connector Groups.
+      properties:
+        connected:
+          type: integer
+          description: The number of Resource Connector Groups in the organization that are in the connected state.
+          example: 3
+        disabled:
+          type: integer
+          description: The number of Resource Connector Groups in the organization that are in the disabled state.
+          example: 4
+        disconnected:
+          type: integer
+          description: The number of the Resource Connector Groups in the organization that are in the disconnected state.
+          example: 3
+        hasDisconnectedConnector:
+          type: integer
+          description: The number of Resource Connector Groups in the organization that have at least one disconnected Connector.
+          example: 2
+        noAssignedResources:
+          type: integer
+          description: The number of Resource Connector Groups in the organization without any assigned private resources.
+          example: 0
+        total:
+          type: integer
+          description: The total number of Resource Connector Groups in the organization.
+          example: 14
+        waiting:
+          type: integer
+          description: The number of Resource Connector Groups in the organziation that are in the waiting state.
+          example: 14
+      example:
+        connected: 3
+        disabled: 4
+        disconnected: 3
+        hasDisconnectedConnector: 2
+        noAssignedResources: 0
+        total: 14
+        waiting: 2
+
+    connectorPatchReq:
+      type: array
+      description: Update the list of properties on the Connector.
+      items:
+        type: object
+        description: The properties to set on the Connector.
+        properties:
+          op:
+            $ref: '#/components/schemas/op'
+          path:
+            type: string
+            enum:
+              - /enabled
+              - /confirmed
+              - /revoked
+            description: |-
+              The Connector property.
+              You can set the following properties on the Connector: `enabled`, `confirmed`, and `revoked`.
+            example: '/enabled'
+          value:
+            type: boolean
+            description: The value of the property. When the value of the `path` field is `confirmed` or `revoked`, set the `value` property to `true`.
+            example: true
+      example:
+        - op: replace
+          path: /confirmed
+          value: true
+
+    connectorResponse:
+      type: object
+      description: Get the details about the Connector.
+      properties:
+        id:
+          $ref: '#/components/schemas/idConnector'
+        groupId:
+          $ref: '#/components/schemas/idConnectorGroup'
+        instanceId:
+          type: string
+          description: The globally unique ID of the Connector instance.
+          example: i-04568b6cdaeedda25a
+        confirmed:
+          type: boolean
+          description: Indicates whether the Connector exists.
+          default: false
+          example: true
+        enabled:
+          type: boolean
+          description: Indicates whether the Connector can receive traffic.
+          default: false
+          example: true
+        version:
+          type: string
+          description: The runtime version of the Connector image.
+          readOnly: true
+          example: v10.1
+        sha1:
+          type: string
+          description: The unique ID of the Connector formatted as a hash string.
+          example: "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
+        hostname:
+          type: string
+          description: The unique hostname of the device that manages the runtime of the Connector.
+          example: "i-0123456789abcdef.us-west-2.compute.internal"
+        originIpAddress:
+          type: string
+          description: The IP address of the Connector.
+          readOnly: true
+          example: "10.45.102.214"
+        baseVersion:
+          type: string
+          description: |-
+            The base OS version of the Connector image.
+            Updating the base OS version requires that you download and redeploy the latest Connector image.
+          readOnly: true
+          example: "240127"
+        isLatestBaseVersion:
+          type: boolean
+          description: |-
+            Indicates whether the Connector is using the latest available image.
+            If this value is false, a new image is available to download. We recommend that you redeploy this Connector with the latest image.
+          readOnly: true
+          example: true
+        upgradeStatus:
+          type: string
+          description: |-
+            Indicates the status of the latest over-the-air update for this Connector.
+            Over-the-air updates modify the Connector agent software, which are made without downloading a new image and redeploying the Connector.
+          enum: [successful, in_progress, failed, unknown]
+          readOnly: true
+          example: "successful"
+        status:
+          type: string
+          description: The label that describes the status of the Connector.
+          enum: [disconnected, connected, announced, reachable, disabled]
+          readOnly: true
+          default: announced
+        statusUpdatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Connector was updated, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+        controlStatusUpdatedAt:
+          type: string
+          description: The date and time when the Connector's controller status was last updated, specified in the ISO 8601 format.
+          format: date-time
+          readOnly: true
+          example: "2023-03-15T01:22:45.915326851Z"
+        revoked_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Connector was removed, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Connector was created, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+        modifiedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: The date and time when the Connector was last modified, specified in the ISO 8601 format.
+          example: '2023-03-14T18:34:25.412525046Z'
+      example:
+        id: 123456
+        groupId: 123964
+        instanceId: i-04568b6cdaeedda25a
+        confirmed: true
+        enabled: true
+        version: v10.1
+        sha1: '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed'
+        hostname: i-0123456789abcdef.us-west-2.compute.internal
+        originIpAddress: '10.45.102.214'
+        status: connected
+        statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+        revoked_at: '2023-03-14T18:34:25.412525046Z'
+        createdAt: '2023-03-14T18:34:25.412525046Z'
+        modifiedAt: '2023-03-14T18:34:25.412525046Z'
+        baseVersion: "240127"
+        isLatestBaseVersion: true
+        upgradeStatus: successful
+
+    connectorListRes:
+      type: object
+      description: The properties of the Connectors.
+      properties:
+        data:
+          description: The list of Connectors and metadata about the Connectors.
+          type: array
+          items:
+            $ref: '#/components/schemas/connectorResponse'
+        offset:
+          $ref: '#/components/schemas/offset'
+        limit:
+          $ref: '#/components/schemas/limit'
+        total:
+          $ref: '#/components/schemas/total'
+      example:
+        data:
+          - id: 123456
+            groupId: 123964
+            instanceId: i-04568b6cdaeedda25a
+            confirmed: true
+            enabled: true
+            version: v10.1
+            sha1: '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed'
+            hostname: i-0123456789abcdef.us-west-2.compute.internal
+            originIpAddress: '10.45.102.214'
+            status: connected
+            statusUpdatedAt: '2023-03-14T18:34:25.412525046Z'
+            revoked_at: '2023-03-14T18:34:25.412525046Z'
+            createdAt: '2023-03-14T18:34:25.412525046Z'
+            modifiedAt: '2023-03-14T18:34:25.412525046Z'
+            baseVersion: "240127"
+            isLatestBaseVersion: true
+            upgradeStatus: successful
+        offset: 1
+        limit: 50
+        total: 100
+
+    connectorCountsResponse:
+      type: object
+      description: The counts of the state information for the Connectors in the organization.
+      properties:
+        announced:
+          type: integer
+          description: The number of Connectors in the organization that are in the announced state.
+          example: 1
+        connected:
+          type: integer
+          description: The number of Connectors in the organization that are in the connected state.
+          example: 3
+        disabled:
+          type: integer
+          description: The number of Connectors in the organization that are in the disabled state.
+          example: 4
+        disconnected:
+          type: integer
+          description: The number of the Connectors in the organization that are in the disconnected state.
+          example: 3
+        expired:
+          type: integer
+          description: The number of Connectors in the organization that are in the expired state.
+          example: 2
+        reachable:
+          type: integer
+          description: The number of Connectors in the organization that are in the reachable state.
+          example: 0
+        unabledToSyncConnectorsCount:
+          type: integer
+          description: The number of Connectors in the organization that are unabled to sync.
+          example: 2
+        needUpdateConnectorsCount:
+          type: integer
+          description: The number of Connectors in the organization that require an update.
+          example: 3
+        total:
+          type: integer
+          description: The total number of Connectors in the organization.
+          example: 15
+        upgrading:
+          type: integer
+          description: The number of Connectors in the organziation that are in the upgrading state.
+          example: 2
+      example:
+        announced: 1
+        connected: 3
+        disabled: 4
+        disconnected: 3
+        expired: 2
+        reachable: 0
+        total: 15
+        upgrading: 2
+
+  responses:
+
+    400Error:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: The organization ID is a numeric value.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    400ConnectorGroupError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: The organization ID is a numeric value.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+              validationErrors:
+                type: object
+                description: The validation error information.
+                properties:
+                  name:
+                    type: string
+                    description: Indicates the problem with `name` property in the payload.
+                    example: The `name` property is a string with at least one character and no more than 50 characters.
+                  location:
+                    type: string
+                    description: Indicates the problem with the `location` property in the payload.
+                    example: The property value is invalid.
+                  environment:
+                    type: string
+                    description: Indicates the problem with `environment` property in the payload.
+                    example: The property value is invalid.
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    400ConnectorAgentError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: The organization ID is a numeric value.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+              validationErrors:
+                type: object
+                properties:
+                  enabled:
+                    type: string
+                    description: Indicates the problem with "enabled" property in the payload.
+                    example: The property value is invalid.
+                  confirmed:
+                    type: string
+                    description: Indicates the problem with "confirmed" property in the payload.
+                    example: The property value is invalid.
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    401Error:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Authorization token is invalid.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    403Error:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Not Authorized
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    404Error:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Not Found
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    409Error:
+      description: Conflict
+      # Duplicate Connector Group name
+      content:
+        resource/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Connector Group name must be unique.
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    500Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Internal Server Error
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: Client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.sse.cisco.com/auth/v2/token'
+          scopes:
+            deployments.resourceconnectors:read: 'Read the Resource Connector Group or Connector resources'
+            deployments.resourceconnectors:write: 'Write the Resource Connector Group or Connector resources'

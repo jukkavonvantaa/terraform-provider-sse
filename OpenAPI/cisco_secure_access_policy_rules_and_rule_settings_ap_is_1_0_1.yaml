@@ -1,0 +1,1690 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Policy Rules and Rule Settings APIs
+  version: 1.0.1
+  description: |-
+    Create and manage the access rules and rule settings in the Access policy.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+
+tags:
+  - name: Access Rules
+    description: The API endpoints that manage the access rules for the organization.
+  - name: Rule Settings and Defaults
+    description: The API endpoints that manage the rule settings and defaults on the access rules.
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+
+  '/settings':
+    get:
+      tags: 
+        - Rule Settings and Defaults
+        - Secure Access
+      summary: Get Rule Defaults and Global Policy Settings
+      description: Get the global policy settings and rule defaults for the organization.
+      operationId: getPolicySettings
+      security:
+        - oauthFlow:
+            - policies.settings:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsResponse'
+              example:
+                - settingName: 'sse.decryption.logPrivate'
+                  settingValue: false
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+        - Rule Settings and Defaults
+        - Secure Access
+      summary: Update Rule Defaults and Global Policy Settings
+      description: Update the rule defaults and global policy settings.
+      operationId: putPolicySettings
+      security:
+        - oauthFlow:
+            - policies.settings:write
+      requestBody:
+        required: true
+        description: Update the policy settings.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsRequest'
+            example:
+              - settingName: 'sse.decryption.logPrivate'
+                settingValue: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingResponse'
+              example:
+                - createdAt: "2024-03-26T18:54:45+00:00"
+                  settingName: "sse.decryption.logPrivate"
+                  settingValue: true
+                  modifiedAt: "2024-03-26T18:54:45+00:00"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/settings/{settingName}':
+    get:
+      tags: 
+        - Rule Settings and Defaults
+        - Secure Access
+      summary: Get Policy Setting
+      description: Get the policy setting identified by the setting name.
+      operationId: getPolicySetting
+      parameters:
+        - $ref: '#/components/parameters/settingName'
+      security:
+        - oauthFlow:
+            - policies.settings:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsResponseObject'
+              example:
+                createdAt: "2024-03-26T18:54:45+00:00"
+                settingName: "umbrella.logLevel"
+                settingValue: LOG_NONE
+                modifiedAt: "2024-03-26T18:54:45+00:00"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags: 
+        - Rule Settings and Defaults
+        - Secure Access
+      summary: Update Policy Setting
+      description: Update the policy setting.
+      operationId: putPolicySetting
+      parameters:
+        - $ref: '#/components/parameters/settingName'
+      requestBody:
+        required: true
+        description: Update the policy setting.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsRequestObject'
+            example:
+              settingName: 'sse.decryption.logPrivate'
+              settingValue: true
+      security:
+        - oauthFlow:
+            - policies.settings:write
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsResponseObject'
+              example:
+                createdAt: "2024-03-26T18:54:45+00:00"
+                settingName: "umbrella.logLevel"
+                settingValue: LOG_NONE
+                modifiedAt: "2024-03-26T18:54:45+00:00"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/settingTypes':
+    get:
+      tags: 
+        - Rule Settings and Defaults
+        - Secure Access
+      summary: List Policy Setting Types
+      description: List the policy setting types.
+      operationId: getPolicySettingTypes
+      security:
+        - oauthFlow:
+            - policies.settings:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingTypesResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/settingTypes/{settingName}':
+    get:
+      tags: 
+        - Rule Settings and Defaults
+        - Secure Access
+      summary: Get Policy Setting Type
+      description: Get the type of the policy setting.
+      operationId: getSettingTypesByName
+      parameters:
+      - $ref: '#/components/parameters/settingName'
+      security:
+        - oauthFlow:
+            - policies.settings:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingTypesResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/rules':
+
+    get:
+      tags: 
+        - Access Rules
+        - Secure Access
+      summary: List Rules
+      description: List the rules in the policy for the organization.
+      operationId: listRules
+      parameters:
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/ruleName'
+      - $ref: '#/components/parameters/filters'
+      security:
+        - oauthFlow:
+            - policies.rules:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rules'
+              example:
+                count: 1
+                result:
+                  - modifiedAt: "2024-04-01T19:42:38"
+                    ruleAccess: internet
+                    ruleIsDefault: false
+                    rulePriority: 9
+                    ruleName: "Rule 31 Created by Cisco Assistant"
+                    ruleId: 591710
+                    ruleIsEnabled: false
+                    ruleDescription: "Rule Created by Policy Assistant"
+                    modifiedBy: "service/chatgpt.policy-api/key/1"
+                    createdAt: "2024-03-28T18:17:36"
+                    ruleAction: allow
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags: 
+        - Access Rules
+        - Secure Access
+      summary: Create Rule
+      description: Create a rule on the policy for the organization.
+      operationId: addRule
+      security:
+        - oauthFlow:
+            - policies.rules:write
+      requestBody:
+        $ref: '#/components/requestBodies/RuleRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+              example:
+                modifiedAt: "2024-04-01T19:42:38"
+                ruleIsDefault: false
+                organizationId: 8094936
+                rulePriority: 9
+                ruleName: "Rule 31 Created by Cisco Assistant"
+                ruleId: 591710
+                ruleConditions:
+                  - attributeOperator: INTERSECT
+                    attributeName: "umbrella.source.identity_type_ids"
+                    attributeValue:
+                      - 7
+                  - attributeOperator: INTERSECT
+                    attributeName: "umbrella.destination.private_resource_ids"
+                    attributeValue:
+                      - 1640
+                ruleIsEnabled: false
+                ruleDescription: "Rule Created by Policy Assistant"
+                ruleSettings:
+                  - settingValue: "LOG_ALL"
+                    settingName: "umbrella.logLevel"
+                    modifiedAt: "2024-03-26T18:54:45+00:00"
+                    createdAt: "2024-03-28T18:17:36"
+                  - settingValue: "PRIVATE_NETWORK"
+                    settingName: "umbrella.default.traffic"
+                    modifiedAt: "2024-03-26T18:54:45+00:00"
+                    createdAt: "2024-03-28T18:17:36"
+                modifiedBy: "service/chatgpt.policy-api/key/1"
+                createdAt: "2024-03-28T18:17:36"
+                ruleAction: allow
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+        - Access Rules
+        - Secure Access
+      summary: Enable Rules
+      description: Enable or disable the rules on the policy.
+      operationId: putRules
+      security:
+        - oauthFlow:
+            - policies.rules:write
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateRulesRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RulesResponse'
+              example:
+                - organizationId: 8094936
+                  rulesetId: 145609
+                  ruleIsDefault: false
+                  modifiedAt: "2024-04-01T19:42:38"
+                  rulePriority: 9
+                  ruleId: 591710
+                  ruleIsEnabled: false
+                  ruleDescription: "Rule Created by Policy Assistant"
+                  ruleName: "Rule 31 Created by Cisco Assistant"
+                  modifiedBy: "service/chatgpt.policy-api/key/1"
+                  createdAt: "2024-03-28T18:17:36"
+                  ruleAction: allow
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/rules/{ruleId}':
+    get:
+      tags: 
+        - Access Rules
+        - Secure Access
+      summary: Get Rule
+      description: Get the details about the rule.
+      operationId: getRule
+      parameters:
+        - $ref: '#/components/parameters/ruleId'
+      security:
+        - oauthFlow:
+            - policies.rules:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+              example:
+                modifiedAt: "2024-04-01T19:42:38"
+                ruleIsDefault: false
+                organizationId: 8094936
+                rulePriority: 9
+                ruleName: "Rule 31 Created by Cisco Assistant"
+                ruleId: 591710
+                ruleConditions:
+                  - attributeOperator: INTERSECT
+                    attributeName: "umbrella.source.identity_type_ids"
+                    attributeValue:
+                      - 7
+                  - attributeOperator: INTERSECT
+                    attributeName: "umbrella.destination.private_resource_ids"
+                    attributeValue:
+                      - 1640
+                ruleIsEnabled: false
+                ruleDescription: "Rule Created by Policy Assistant"
+                ruleSettings:
+                  - settingValue: "LOG_ALL"
+                    settingName: "umbrella.logLevel"
+                    modifiedAt: "2024-03-26T18:54:45+00:00"
+                    createdAt: "2024-03-28T18:17:36"
+                  - settingValue: "PRIVATE_NETWORK"
+                    settingName: "umbrella.default.traffic"
+                    modifiedAt: "2024-03-26T18:54:45+00:00"
+                    createdAt: "2024-03-28T18:17:36"
+                modifiedBy: "service/chatgpt.policy-api/key/1"
+                createdAt: "2024-03-28T18:17:36"
+                ruleAction: allow
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+        - Access Rules
+        - Secure Access
+      summary: Update Rule
+      description: Update the properties on the rule.
+      operationId: putRule
+      parameters:
+        - $ref: '#/components/parameters/ruleId'
+      security:
+        - oauthFlow:
+            - policies.rules:write
+      requestBody:
+        $ref: '#/components/requestBodies/RuleRequestUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+              example:
+                modifiedAt: "2024-04-01T19:42:38"
+                ruleIsDefault: false
+                organizationId: 8094936
+                rulePriority: 9
+                ruleName: "Rule 31 Created by Cisco Assistant"
+                ruleId: 591710
+                ruleConditions:
+                  - attributeOperator: INTERSECT
+                    attributeName: "umbrella.source.identity_type_ids"
+                    attributeValue:
+                      - 7
+                  - attributeOperator: INTERSECT
+                    attributeName: "umbrella.destination.private_resource_ids"
+                    attributeValue:
+                      - 1640
+                ruleIsEnabled: false
+                ruleDescription: "Rule Created by Policy Assistant"
+                ruleSettings:
+                  - settingValue: "LOG_ALL"
+                    settingName: "umbrella.logLevel"
+                    modifiedAt: "2024-03-26T18:54:45+00:00"
+                    createdAt: "2024-03-28T18:17:36"
+                  - settingValue: "PRIVATE_NETWORK"
+                    settingName: "umbrella.default.traffic"
+                    modifiedAt: "2024-03-26T18:54:45+00:00"
+                    createdAt: "2024-03-28T18:17:36"
+                modifiedBy: "service/chatgpt.policy-api/key/1"
+                createdAt: "2024-03-28T18:17:36"
+                ruleAction: allow
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags: 
+        - Access Rules
+        - Secure Access
+      summary: Delete Rule
+      description: Delete a rule on the policy for the organization.
+      operationId: deleteRule
+      parameters:
+        - $ref: '#/components/parameters/ruleId'
+      security:
+        - oauthFlow:
+            - policies.rules:write
+      responses:
+        '200':
+          description: OK
+          content: {}
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/geolocations':
+
+    get:
+      tags:
+        - Access Rules
+        - Secure Access
+      summary: List GeoLocations
+      description: |-
+        List the regional information for the continents and countries.
+        You can use the country code to create a block on the traffic defined in an internet access rule.
+      operationId: getRegionalLocations
+      security:
+        - oauthFlow:
+            - policies.rules:read
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Regions'
+              example:
+                results:
+                  - continentName: South America
+                    countries:
+                      - countryName: Argentina
+                        countryCode: AR
+                      - countryName: Brazil
+                        countryCode: BR
+                  - continentName: Asia
+                    countries:
+                      - countryName: India
+                        countryCode: IN
+                      - countryName: Malaysia
+                        countryCode: MY
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+     #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    ruleId:
+      name: ruleId
+      in: path
+      description: The ID of the access rule.
+      required: true
+      schema:
+        type: integer
+      example: 2456
+
+    settingName:
+      name: settingName
+      in: path
+      description: The name of the global setting on the policy.
+      required: true
+      schema:
+        type: string
+      example: sse.decryption.logPrivate
+
+    offset:
+      name: offset
+      in: query
+      description: |-
+        The place to start reading in the collection. The default value is `0`.
+        For example, the offset of the first page in the collection is `0`.
+        If the limit is 10, the offset for next page is `10`.
+      required: false
+      schema:
+        type: integer
+        default: 0
+      example: 10
+
+    limit: 
+      name: limit
+      in: query
+      description: Set the number of items on a page. The maximum items that are allowed on a page in the response are 1000.
+      required: false
+      schema:
+        type: integer
+        default: 10
+      example: 20
+
+    ruleName:
+      name: ruleName
+      in: query
+      description: Filter the rules using the name of the rule or a sequence of characters found in the rule name.
+      required: false
+      schema:
+        type: string
+      example: Allow all rule
+
+    filters:
+      name: filters
+      in: query
+      required: false
+      schema:
+       $ref: '#/components/schemas/RuleFilters'
+      description: |-
+        Filter the rules by one or more properties.
+        Filter on: `ruleName`, `ruleDescription`, `ruleIsEnabled`, `ruleIsDefault`, `ruleAction`, `attributeName` and `attributeValue`, `settingName` and `settingValue`,
+        `rulePriority`, `destinations`, `sources`, `ruleConditions`.
+        Specify the properties in the JSON format.
+        **Note:** Filter on either `ruleConditions` or the `sources` and `destinations` properties, but not both sets of properties.
+
+        Example:
+
+        ```
+        {
+          "destinations": [
+            "umbrella.destination.destination_list_ids": "*"
+          ],
+          "sources": [
+            "umbrella.source.identity_ids": "*"
+          ],
+          "rulePriority": "1,2,3"
+        }
+        ```
+      example:
+        destinations:
+          - umbrella.destination.destination_list_ids: '*'
+        ruleAction: block
+        rulePriority: "9,100"
+        ruleName: "Rule 31 Created by Cisco Assistant"
+        ruleIsEnabled: false
+        ruleDescription: "Rule Created by Policy Assistant"
+        ruleConditions:
+          - umbrella.source.all: false
+          - umbrella.destination.application_ids: "1008716,5000041"
+
+  requestBodies:
+
+    RuleRequest:
+      description: Create the rule with the specific properties.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The properties of the rule.
+            required:
+              - ruleName
+              - ruleConditions
+              - ruleAction
+              - ruleSettings
+            properties:
+              ruleName:
+                $ref: '#/components/schemas/ruleName'
+              ruleDescription:
+                $ref: '#/components/schemas/ruleDescription'
+              ruleAction:
+                $ref: '#/components/schemas/ruleAction'
+              rulePriority:
+                $ref: '#/components/schemas/rulePriority'
+              ruleIsEnabled:
+                $ref: '#/components/schemas/ruleIsEnabled'
+              ruleConditions:
+                $ref: '#/components/schemas/ruleConditions'
+              ruleSettings:
+                $ref: '#/components/schemas/ruleSettings'
+          example:
+            ruleName: Test rule
+            ruleDescription: The description for the rule.
+            ruleAction: allow
+            ruleConditions:
+              - attributeName: umbrella.destination.all
+                attributeValue: true
+                attributeOperator: "="
+              - attributeName: umbrella.source.all
+                attributeValue: true
+                attributeOperator: "="
+            ruleSettings:
+              - settingName: umbrella.default.traffic
+                settingValue: PUBLIC_INTERNET
+
+    RuleRequestUpdate:
+      description: Create the rule with the specific properties.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The properties of the rule.
+            required:
+              - ruleName
+              - ruleConditions
+              - ruleAction
+              - ruleSettings
+              - rulePriority
+            properties:
+              ruleName:
+                $ref: '#/components/schemas/ruleName'
+              ruleDescription:
+                $ref: '#/components/schemas/ruleDescription'
+              ruleAction:
+                $ref: '#/components/schemas/ruleAction'
+              rulePriority:
+                $ref: '#/components/schemas/rulePriority'
+              ruleIsEnabled:
+                $ref: '#/components/schemas/ruleIsEnabled'
+              ruleConditions:
+                $ref: '#/components/schemas/ruleConditions'
+              ruleSettings:
+                $ref: '#/components/schemas/ruleSettings'
+          example:
+            ruleName: Test rule
+            ruleDescription: The description for the rule.
+            ruleAction: allow
+            rulePriority: 25
+            ruleConditions:
+              - attributeName: umbrella.destination.all
+                attributeValue: true
+                attributeOperator: "="
+              - attributeName: umbrella.source.all
+                attributeValue: true
+                attributeOperator: "="
+            ruleSettings:
+              - settingName: umbrella.default.traffic
+                settingValue: PUBLIC_INTERNET
+
+    UpdateRulesRequest:
+      description: |-
+        Provide the list of rule IDs and set the `ruleIsEnabled` property on these rules.
+        **Note:** You can not update the `ruleIsEnabled` property on the default rules.
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Set the `ruleIsEnabled` property on the rules.
+            required:
+              - ruleIds
+              - properties
+            properties:
+              ruleIds:
+                type: array
+                description: The list of rule IDs for the rules. Set the `rulesIsEnabled` property on these rules.
+                items:
+                  $ref: '#/components/schemas/ruleId'
+                example:
+                  - 591713
+                  - 591710
+              properties:
+                type: array
+                description: The list of the `ruleIsEnabled` setting for the rules.
+                items:
+                  type: object
+                  description: Set the `ruleIsEnabled` property on the rule.
+                  properties:
+                    ruleIsEnabled:
+                      $ref: '#/components/schemas/ruleIsEnabled'
+                  example:
+                    ruleIsEnabled: false
+                example:
+                  properties:
+                    - ruleIsEnabled: true
+          example:
+            ruleIds:
+              - 591713
+              - 591710
+            properties:
+              - ruleIsEnabled: true
+              - ruleIsEnabled: false
+
+  schemas:
+
+    ruleIsDefault:
+      type: boolean
+      description: Specifies whether the rule is the default rule.
+      example: true
+
+    ruleIsEnabled:
+      type: boolean
+      description: Specifies whether the rule is enabled.
+      example: true
+
+    ruleAction:
+      type: string
+      enum:
+        - allow
+        - block
+      description: The type of action that is set on the rule.
+      example: allow
+
+    rulePriority:
+      type: integer
+      description: |-
+        The positive integer that represents the priority of the rule.
+        The priority is unique across all rules on the policy for the organization.
+      example: 1
+
+    ruleDescription:
+      type: string
+      maxLength: 256
+      description: |-
+        The meaningful information about the rule. The description can have no more than 256 characters.
+      example: The rule for the London office.
+
+    ruleId:
+      type: integer
+      description: The ID of the rule.
+      readOnly: true
+      example: 183456
+
+    ruleName:
+      type: string
+      pattern: '^[a-zA-Z0-9-_\s]+$'
+      minLength: 2
+      maxLength: 50
+      description: |-
+        A rule name is a sequence of 2–50 alphanumeric, hyphen, underscore, and space characters.
+        A rule name is unique across all access rules in the organization's Access policy.
+      example: SSE_Rule-1
+
+    modifiedBy:
+      type: string
+      description: A string that includes the organization ID and user ID for the account that modified the access rule.
+      example: "org/1234/user/123453"
+
+    settingName:
+      type: string
+      description: The name of the rule setting.
+      enum:
+        - sse.decryption.logInternet
+        - sse.decryption.logPrivate
+        - sse.globalIPSEnabled
+        - sse.ztaAuthnTimeoutEnabled
+        - sse.tenantControlProfileId
+        - sse.ztaAuthnTimeoutMinutes
+        - sse.ztnaSessionTimeoutMinutes
+        - umbrella.m365Compatibility
+        - umbrella.posture.webProfileId
+        - umbrella.posture.ipsProfileId
+        - umbrella.posture.profileIdClientbased
+        - umbrella.logLevel
+        - umbrella.default.traffic
+      example: umbrella.logLevel
+
+    settingDescription:
+      type: string
+      description: The description of the access rule setting.
+      example: Bypass for decryption.
+
+    settingValue:
+      description: The value of the rule setting.
+      oneOf:
+        - type: string
+        - type: integer
+        - type: boolean
+      example: LOG_NONE
+
+    ruleSettings:
+      type: array
+      description: The list of settings on a rule.
+      items:
+        type: object
+        properties:
+          settingName:
+            $ref: '#/components/schemas/settingName'
+          settingValue:
+            $ref: '#/components/schemas/settingValue'
+        example:
+          settingName: "sse.decryption.logInternet"
+          settingValue: false
+      example:
+        - settingName: "sse.decryption.logInternet"
+          settingValue: false
+
+    attributeValue:
+      oneOf:
+        - type: string
+        - type: boolean
+        - $ref: '#/components/schemas/attributeValueArrayIntegers'
+        - $ref: '#/components/schemas/attributeValueNetworkServiceObjects'
+      description: The value of the attribute.
+      example: 123
+
+    attributeValueNetworkServiceObjects:
+      type: string
+      description: |-
+        To use these specific attribute values in a rule condition, you must:
+        * set the `attributeOperator` to `AND`.
+        * set the `attributeName` to `umbrella.destination.logical_operator`.
+      enum:
+        - "(umbrella.destination.networkObjectIds && umbrella.destination.serviceObjectIds)"
+        - "(umbrella.destination.networkObjectGroupIds && umbrella.destination.serviceObjectGroupIds)"
+        - "((umbrella.destination.networkObjectIds || umbrella.destination.networkObjectGroupIds) && (umbrella.destination.serviceObjectIds || umbrella.destination.serviceObjectGroupIds))"
+        - "(umbrella.destination.networkObjectIds && umbrella.destination.serviceObjectGroupIds)"
+        - "(umbrella.destination.networkObjectGroupIds && umbrella.destination.serviceObjectIds)"
+        - "((umbrella.destination.networkObjectIds || umbrella.destination.networkObjectGroupIds) && umbrella.destination.serviceObjectIds)"
+        - "((umbrella.destination.networkObjectIds || umbrella.destination.networkObjectGroupIds) && umbrella.destination.serviceObjectGroupIds)"
+        - "((umbrella.destination.serviceObjectIds || umbrella.destination.serviceObjectGroupIds) && umbrella.destination.networkObjectIds)"
+        - "(umbrella.destination.networkObjectGroupIds && (umbrella.destination.serviceObjectIds || umbrella.destination.serviceObjectGroupIds))"
+
+    attributeValueArrayIntegers:
+      type: array
+      description: The list of integers that represent the attribute values.
+      items:
+        type: integer
+        description: An integer that represents the attribute value.
+      example:
+        - 235
+        - 355
+
+    attributeNameSource:
+      type: string
+      description: The name of the attributes for the source components.
+      enum:
+        - umbrella.source.all
+        - umbrella.source.networkObjectIds
+        - umbrella.source.networkObjectGroupIds
+        - umbrella.source.identity_type_ids
+        - umbrella.source.ip_address
+        - umbrella.source.identity_ids
+      example: umbrella.source.ip_address
+
+    attributeNameSourceComposite:
+      type: string
+      description: The name of the attributes for the composite source components.
+      enum:
+        - umbrella.source.ip_address
+      example: umbrella.source.ip_address
+
+    attributeNameDestination:
+      type: string
+      description: The name of the attribute for the source components.
+      enum:
+        - umbrella.destination.all
+        - umbrella.destination.networkObjectIds
+        - umbrella.destination.networkObjectGroupIds
+        - umbrella.destination.serviceObjectIds
+        - umbrella.destination.serviceObjectGroupIds
+        - umbrella.destination.application_ids
+        - umbrella.destination.application_list_ids
+        - umbrella.destination.private_application_ids
+        - umbrella.destination.private_application_group_ids
+        - umbrella.destination.category_ids
+        - umbrella.destination.category_list_ids
+        - umbrella.destination.destination_list_ids
+        - umbrella.destination.logical_operator
+        - umbrella.destination.geolocations
+        - umbrella.destination.private_resource_ids
+      example: umbrella.destination.private_application_ids
+
+    attributeNameDestinationComposite:
+      type: string
+      description: The name of the attribute for the source components.
+      enum:
+        - umbrella.destination.ip_address
+        - umbrella.destination.port
+        - umbrella.destination.network_protocol
+      example: umbrella.destination.ip_address
+
+    attributeName:
+      anyOf:
+        - $ref: '#/components/schemas/attributeNameSource'
+        - $ref: '#/components/schemas/attributeNameSourceComposite'
+        - $ref: '#/components/schemas/attributeNameDestination'
+        - $ref: '#/components/schemas/attributeNameDestinationComposite'
+      description: The name of the attribute.
+      example: umbrella.destination.private_application_ids
+
+    attributeOperator:
+      type: string
+      description: The operator that can act on the attribute.
+      enum:
+        - '='
+        - INTERSECT
+        - AND
+        - IN
+      example: INTERSECT
+
+    ruleConditions:
+      type: array
+      description: The list of conditions that are set on the rule. Updates to "ReadOnly" attributes are ignored.
+      items:
+        type: object
+        description: |-
+          The attributes created on the rule. The conditions include the name of the attribute, the value of the attribute, and the operator
+          that is applied to the rule condition.
+        properties:
+          attributeName:
+            $ref: '#/components/schemas/attributeName'
+          attributeValue:
+            $ref: '#/components/schemas/attributeValue'
+          attributeOperator:
+            $ref: '#/components/schemas/attributeOperator'
+      example:
+        - attributeName: umbrella.destination.private_application_ids
+          attributeValue:
+            - 12345
+            - 34
+          attributeOperator: INTERSECT
+
+    organizationId:
+      type: integer
+      description: The ID of the organization.
+      readOnly: true
+      example: 987456
+
+    createdAtRule:
+      type: string
+      description: The date and time when the system created the access rule.
+      format: date-time
+      readOnly: true
+      example: '2021-12-13T16:07:07.222Z'
+
+    modifiedAtRule:
+      type: string
+      description: The date and time when the system updated the access rule.
+      format: date-time
+      readOnly: true
+      example: '2023-11-13T21:28:54+00:00'    
+
+    createdAtRuleSetting:
+      type: string
+      description: The date and time when the system created the rule setting.
+      format: date-time
+      readOnly: true
+      example: '2021-12-13T16:07:07.222Z'
+
+    modifiedAtRuleSetting:
+      type: string
+      description: The date and time when the system updated the rule setting.
+      format: date-time
+      readOnly: true
+      example: '2023-11-13T21:28:54+00:00'
+
+    SettingsRequest:
+      type: array
+      description: The list of properties for the policy rule settings.
+      items:
+        type: object
+        description: The name and value of the setting.
+        properties:
+          settingName: 
+            $ref: '#/components/schemas/settingName'
+          settingValue:
+            $ref: '#/components/schemas/settingValue'
+      example:
+        - settingName: 'sse.decryption.logPrivate'
+          settingValue: true
+
+    SettingsRequestObject:
+      type: object
+      description: The name and value of the setting.
+      properties:
+        settingName: 
+          $ref: '#/components/schemas/settingName'
+        settingValue:
+          $ref: '#/components/schemas/settingValue'
+      example:
+        settingName: umbrella.logLevel
+        settingValue: LOG_NONE
+
+    SettingResponse:
+      type: array
+      description: The properties of the policy settings.
+      items:
+        type: object
+        properties:
+          settingValue:
+            $ref: '#/components/schemas/settingValue'
+          settingName:
+            $ref: '#/components/schemas/settingName'
+          createdAt:
+            $ref: '#/components/schemas/createdAtRuleSetting'
+          modifiedAt:
+            $ref: '#/components/schemas/modifiedAtRuleSetting'
+      example:
+        - createdAt: "2024-03-26T18:54:45+00:00"
+          settingName: "sse.decryption.logInternet"
+          settingValue: false
+          modifiedAt: "2024-03-26T18:54:45+00:00"
+        - createdAt: "2024-03-26T18:54:45+00:00"
+          settingName: "sse.decryption.logPrivate"
+          settingValue: false
+          modifiedAt: "2024-03-26T18:54:45+00:00"
+        - createdAt: "2024-03-26T18:54:45+00:00"
+          settingName: "sse.globalIPSEnabled"
+          settingValue: true
+          modifiedAt: "2024-03-26T18:54:45+00:00"
+        - createdAt: "2024-02-05T09:13:56+00:00"
+          settingName: "sse.tenantControlProfileId"
+          settingValue: 19383
+          modifiedAt: "2024-02-05T09:13:56+00:00"
+
+    SettingsResponseObject:
+      type: object
+      description: The properties of the rule setting.
+      required:
+        - settingName
+        - settingValue
+        - createdAt
+        - modifiedAt
+      properties:
+        settingName:
+          $ref: '#/components/schemas/settingName'
+        settingValue:
+          $ref: '#/components/schemas/settingValue'
+        createdAt:
+            $ref: '#/components/schemas/createdAtRuleSetting'
+        modifiedAt:
+            $ref: '#/components/schemas/modifiedAtRuleSetting'
+      example:
+        settingName: 'sse.decryption.logPrivate'
+        settingValue: true
+        createdAt: "2024-03-26T18:54:45+00:00"
+        modifiedAt: "2024-02-05T09:13:56+00:00"
+
+    SettingsResponse:
+      type: array
+      description: The list of policy rule settings.
+      items:
+        type: object
+        required:
+          - settingName
+          - settingValue
+        properties:
+          settingName:
+            $ref: '#/components/schemas/settingName'
+          settingValue:
+            $ref: '#/components/schemas/settingValue'
+      example:
+        - settingName: 'sse.decryption.logPrivate'
+          settingValue: true
+
+    SettingTypesResponse:
+      type: array
+      description: The list of policy setting types.
+      items:
+        type: object
+        properties:
+          serviceScopes:
+            type: array
+            description: The list of services that are related to the policy setting type.
+            items:
+              type: string
+            example: []
+          settingForRulesets:
+            type: boolean
+            description: Specifies whether the setting is for the rulesets.
+            example: false
+          settingId:
+            type: integer
+            description: The ID of the setting.
+            example: 12355
+          settingName:
+            $ref: '#/components/schemas/settingName'
+          typeDescription:
+            type: string
+            description: The type of the setting description.
+            enum:
+              - boolean
+              - integer
+            example: boolean
+          typeName:
+            type: string
+            description: The type of the setting name.
+            enum:
+              - boolean
+              - integer
+            example: integer
+          typeDefaultValue:
+            type: boolean
+            description: Specifies whether the setting has the default value.
+            example: false
+          settingDescription:
+            $ref: '#/components/schemas/settingDescription'
+          typeValidationRegex:
+            type: string
+            description: The regex pattern for validating the type.
+          settingForRules:
+            type: boolean
+            description: Specifies whether the setting is for the rules.
+            example: false
+          settingForOrganizations:
+            type: boolean
+            description: Specifies whether the setting is for the organization.
+            example: false
+
+    RuleFilters:
+      type: object
+      description: |-
+        Filter the rules by the rule properties.
+        **Note:** You can filter on either `ruleConditions` or the set of `sources` and `destinations` properties, but not both sets of properties.
+      properties:
+        ruleName:
+          $ref: '#/components/schemas/ruleName'
+        ruleDescription:
+          $ref: '#/components/schemas/ruleDescription'
+        ruleIsEnabled:
+          $ref: '#/components/schemas/ruleIsEnabled'
+        ruleIsDefault:
+          $ref: '#/components/schemas/ruleIsDefault'
+        ruleAction:
+          $ref: '#/components/schemas/ruleAction'
+        attributeName:
+          $ref: '#/components/schemas/attributeName'
+        attributeValue:
+          $ref: '#/components/schemas/attributeValue'
+        settingName:
+          $ref: '#/components/schemas/settingName'
+        settingValue:
+          $ref: '#/components/schemas/settingValue'
+        rulePriority:
+          type: string
+          description: |-
+            Filter on the priorities of the rules.
+            Provide a comma-separated string of integers that corresponds to the priorities of your rules.
+          example: "1,2,3"
+      additionalProperties:
+        oneOf:
+          - $ref: '#/components/schemas/ruleConditions'
+          - $ref: '#/components/schemas/RuleSourceDestFilters'
+      example:
+        destinations:
+          - umbrella.destination.destination_list_ids: '*'
+        sources:
+          - umbrella.source.identity_ids: "*"
+        rulePriority: "1,2,3"
+        ruleAction: allow
+
+    RuleSourceDestFilters:
+      type: object
+      description: The source and destination properties. Use these properties to filter your collection of rules.
+      properties:
+        sources:
+          type: array
+          description: The list of sources to filter your collection of rules.
+          items:
+            $ref: '#/components/schemas/RuleFilterSourcesExample'
+        destinations:
+          type: array
+          description: The list of destinations to filter your collection of rules.
+          items:
+            $ref: '#/components/schemas/RuleFilterDestinationsExample'
+      example:
+        sources:
+          - umbrella.source.identity_type_id: 3
+        destinations:
+          - umbrella.destination.private_resource_ids: '*'
+
+    RuleFilterDestinationsExample:
+      type: object
+      description: Filter on the property and value of the destination.
+      additionalProperties:
+        oneOf:
+        - type: string
+      example:
+        umbrella.destination.private_resource_ids: '*'
+      #umbrella.destination.private_resource_types: apps
+
+    RuleFilterSourcesExample:
+      type: object
+      description: Filter on the property and value of the source.
+      additionalProperties:
+        oneOf:
+          - type: string
+          - type: integer
+      example:
+        umbrella.source.identity_ids: "*"
+      #umbrella.source.identity_type_id: 3
+
+    #RuleFilterRuleConditionsExample:
+    #  type: object
+    #  additionalProperties:
+    #    oneOf:
+    #      - type: string
+    #      - type: boolean
+    #  example:
+    #    umbrella.source.all: true
+    #- {"umbrella.destination.all": true}
+
+    RulesResponse:
+      type: array
+      description: The list of rules in the policy.
+      items:
+        type: object
+        description: The core properties of the rule.
+        required:
+          - ruleId
+        properties:
+          organizationId:
+            $ref: '#/components/schemas/organizationId'
+          ruleId:
+            $ref: '#/components/schemas/ruleId'
+          ruleName:
+            $ref: '#/components/schemas/ruleName'
+          ruleDescription:
+            $ref: '#/components/schemas/ruleDescription'
+          ruleAction:
+            $ref: '#/components/schemas/ruleAction'
+          rulePriority:
+            $ref: '#/components/schemas/rulePriority'
+          ruleIsDefault:
+            $ref: '#/components/schemas/ruleIsDefault'
+          ruleIsEnabled:
+            $ref: '#/components/schemas/ruleIsEnabled'
+          modifiedBy:
+            $ref: '#/components/schemas/modifiedBy'
+          modifiedAt:
+            $ref: '#/components/schemas/modifiedAtRule'
+          createdAt:
+            $ref: '#/components/schemas/createdAtRule'
+      example:
+        - organizationId: 8094936
+          ruleIsDefault: false
+          modifiedAt: "2024-04-01T19:42:38"
+          rulePriority: 9
+          ruleId: 591710
+          ruleIsEnabled: false
+          ruleDescription: "Rule Created by Policy Assistant"
+          ruleName: "Rule 31 Created by Cisco Assistant"
+          modifiedBy: "service/chatgpt.policy-api/key/1"
+          createdAt: "2024-03-28T18:17:36"
+          ruleAction: allow
+
+    Rules:
+      type: object
+      description: The rules in the organization's Access policy.
+      properties:
+        count:
+          type: integer
+          description: The number of rules in the Access policy.
+          example: 100
+        result:
+          $ref: '#/components/schemas/RulesResponse'
+      example:
+        count: 1
+        result:
+          - modifiedAt: "2024-04-01T19:42:38"
+            ruleAccess: internet
+            ruleIsDefault: false
+            rulePriority: 9
+            ruleName: "Rule 31 Created by Cisco Assistant"
+            ruleId: 591710
+            ruleIsEnabled: false
+            ruleDescription: "Rule Created by Policy Assistant"
+            modifiedBy: "service/chatgpt.policy-api/key/1"
+            createdAt: "2024-03-28T18:17:36"
+            ruleAction: allow
+
+    Rule:
+      type: object
+      description: |-
+        The properties of the access rule that enables security for the traffic that is described on the rule.
+        The rule includes the actions, settings, and conditions configured on the rule and when these attributes
+        were created or modified.
+      properties:
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        ruleId:
+          $ref: '#/components/schemas/ruleId'
+        ruleName:
+          $ref: '#/components/schemas/ruleName'
+        ruleDescription:
+          $ref: '#/components/schemas/ruleDescription'
+        ruleAction:
+          $ref: '#/components/schemas/ruleAction'
+        rulePriority:
+          $ref: '#/components/schemas/rulePriority'
+        ruleIsDefault:
+          $ref: '#/components/schemas/ruleIsDefault'
+        ruleIsEnabled:
+          $ref: '#/components/schemas/ruleIsEnabled'
+        ruleConditions:
+          $ref: '#/components/schemas/ruleConditions'
+        ruleSettings:
+          $ref: '#/components/schemas/SettingResponse'
+        modifiedBy:
+          $ref: '#/components/schemas/modifiedBy'
+        modifiedAt:
+          $ref: '#/components/schemas/modifiedAtRule'
+        createdAt:
+          $ref: '#/components/schemas/createdAtRule'
+
+    Regions:
+      type: object
+      description: The information about the regions that you can apply to the traffic on internet access rules.
+      properties:
+        results:
+          type: array
+          description: The list of geolocation information for the continents and countries.
+          items:
+            type: object
+            description: The properties of the region.
+            properties:
+              continentName:
+                type: string
+                description: The name of the continent.
+              countries:
+                type: array
+                description: The list of countries in the continent.
+                items:
+                  type: object
+                  description: The properties of the country. Includes the country name and code.
+                  properties:
+                    countryName:
+                      type: string
+                      description: The name of the country.
+                      example: India
+                    countryCode:
+                      type: string
+                      description: The two-character code for the country.
+                      example: IN
+            example:
+              continentName: Asia
+              countries:
+              - countryName: India
+                countryCode: IN
+              - countryName: Malaysia
+                countryCode: MY
+          example:
+            - continentName: South America
+              countries:
+                - countryName: Argentina
+                  countryCode: AR
+                - countryName: Brazil
+                  countryCode: BR
+      example:
+        results:
+          - continentName: South America
+            countries:
+              - countryName: Argentina
+                countryCode: AR
+              - countryName: Brazil
+                countryCode: BR
+          - continentName: Asia
+            countries:
+              - countryName: India
+                countryCode: IN
+              - countryName: Malaysia
+                countryCode: MY
+
+  responses:
+
+    400Error:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: The organization ID is a numeric value.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    401Error:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Authorization token is invalid.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    403Error:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Not Authorized
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    404Error:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Not Found
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    500Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Internal Server Error
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            policies.settings:write: 'Write policies global rule settings'
+            policies.settings:read: 'Read policies global rule settings'
+            policies.rules:read: 'Read policies access rules'
+            policies.rules:write: 'Write policies access rules'

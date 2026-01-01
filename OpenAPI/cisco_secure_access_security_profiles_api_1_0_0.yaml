@@ -1,0 +1,755 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Security Profiles API
+  version: 1.0.0
+  description: Get the Security profiles in the Secure Access organization.
+  contact:
+    name: Cloud Security Developer Community
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+tags:
+  - name: Security Profiles
+    description: The Security profiles in the organization.
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+
+  /securityProfiles:
+
+    get:
+      tags: 
+        - Security Profiles
+        - Secure Access
+      summary: List Security Profiles
+      description: Get all Security profiles in the organization.
+      operationId: getSecurityProfiles
+      security:
+        - oauthFlow:
+            - policies.securityProfiles:read
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSecurityProfilesResponse'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+  /securityProfiles/{profileId}:
+
+    get:
+      tags: 
+        - Security Profiles
+        - Secure Access
+      summary: Get Security Profile
+      description: Get the properties of the Security Profile.
+      operationId: getSecurityProfile
+      parameters:
+        - $ref: '#/components/parameters/profileId'
+        - $ref: '#/components/parameters/optionalFields' 
+      security:
+        - oauthFlow:
+            - policies.securityProfiles:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityProfileResponse'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    optionalFields:
+      in: query
+      name: optionalFields 
+      description: |-
+        A JSON array of optional fields to include in the response. 
+        For example:
+        ```
+        [%22categorySetting%22,%22domainlists%22,%22fileInspectionSetting%22,%22identityCount%22,%22policySetting%22,%22securitySetting%22,%22settingGroupBypassInspectionGroup%22]
+        ```
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+      #example: [%22categorySetting%22,%22domainlists%22,%22fileInspectionSetting%22,%22identityCount%22,%22policySetting%22,%22securitySetting%22,%22settingGroupBypassInspectionGroup%22]
+
+    profileId:
+      in: path
+      name: profileId
+      description: The ID of the Security profile.
+      required: true
+      schema:
+        type: integer
+
+    page:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+
+    limit: 
+      name: limit
+      in: query
+      description: The number of items on a page. The maximum items that are allowed on a page in the response are 100.
+      required: false
+      schema:
+        type: integer
+        default: 10
+        format: int32
+        minimum: 1
+        maximum: 100
+      example: 20
+
+  responses:
+
+    badRequest:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+
+    unauthorized:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+
+    forbidden:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+
+    notFound:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+
+    serverError:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/serverError'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            policies.securityProfiles:read: 'Read Security Profiles'
+
+  schemas:
+
+    securityProfileCreatedAt:
+      type: integer
+      description: The date and time (in seconds since the Unix Epoch) when the system created the Security profile setting.
+      example: 1490206249
+
+    securityProfileModifiedAt:
+      type: integer
+      description: The date and time (in seconds since the Unix Epoch) when the system created the Security profile setting.
+      example: 1490206249
+
+    frontendModifiedAt:
+      type: integer
+      description: The date and time (in seconds since the Unix Epoch) when the system modified the dashboard.
+      example: 1139310
+
+    id:
+      type: integer
+      description: The ID of the Security profile.
+      example: 1234567
+
+    organizationId:
+      type: integer
+      description: The ID of the organization.
+      example: 2345678
+
+    isDefault:
+      type: boolean
+      example: true
+      description: Specifies whether the setting is the default setting.
+
+    isFwaasDefault:
+      type: boolean
+      description: Specifies whether the Security profile for the cloud-delivered firewall is the default Security profile.
+      example: true
+
+    isSwgDefault:
+      type: boolean
+      description: Specifies whether the Security profile for the secure web gateway (SWG) is the default Security profile.
+      example: true
+
+    name:
+      type: string
+      description: The name of the Security profile.
+      example: System Provided - Private Access
+
+    reporting:
+      type: string
+      description: Specifies whether the system enables or disables the reporting of the Security profile setting.
+      enum:
+        - enabled
+        - disabled
+      example: enabled
+
+    identityCount:
+      type: integer
+      description: The number of resources in the organization.
+      example: 100
+
+    #markedForDeletion:
+    #  type: boolean
+    #  description: Specifies whether the system marks the setting for deletion.
+    #  example: false
+
+    bundleTypeId:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+      example: 2
+      description: |-
+        The ID of the bundle type.
+
+    whitelistOnly:
+      type: boolean
+      description: Specifies whether the setting is for the Allow list only.
+      example: false
+
+    applicationAupSettingGroupId:
+      type: integer
+      example: 1139310
+      description: The group ID of the Application setting.
+
+    aupSettingGroupId:
+      type: integer
+      example: 9
+      description: The group ID of the Category setting.
+
+    fileInspectionSettingGroupId:
+      type: integer
+      example: 1139310
+      description: The group ID of the File Inspection setting.
+
+    policySettingGroupId:
+      type: integer
+      example: 1139310
+      description: The group ID of the Policy setting.
+
+    securitySettingGroupId:
+      type: integer
+      example: 1139310
+      description: The group ID of the Security setting.
+
+    landerSettingGroupId:
+      type: integer
+      example: 1139310
+      description: The group ID of the Notification setting.
+
+    settingGroupBypassInspectionGroupId:
+      type: integer
+      example: 1139310
+      description: The group ID of the Bypass Inspection setting.
+
+    priority:
+      type: integer
+      description: The priority of the Security profile.
+      example: 1139310
+
+    tenantControlsRestriction:
+        type: object
+        description: The properties of the Tenant Control.
+        properties:
+          id:
+            type: integer
+            description: The ID of the Tenant Control setting.
+            example: 17764
+          name:
+            type: string
+            description: The name of the Tenant Control setting.
+            example: Global Tenant Controls
+          domains:
+            type: array
+            description: The list of destinations.
+            items:
+              type: object
+              description: The properties of the destination.
+              properties: {}
+          restrictions:
+            type: array
+            description: The list of Tenant Control restrictions.
+            items:
+              type: object
+              description: The properties of the Tenant Control restriction.
+              properties: {}
+
+    ListSecurityProfilesResponse:
+      type: array
+      description: The list of the Security profiles in the organization.
+      items:
+        type: object
+        required: [ id, organizationId, isDefault, name, createdAt, modifiedAt ]
+        description: The properties of the Security Profile.
+        properties:
+          id:
+                $ref: '#/components/schemas/id'
+          organizationId:
+                $ref: '#/components/schemas/organizationId'
+          isDefault:
+                $ref: '#/components/schemas/isDefault'
+          name:
+                $ref: '#/components/schemas/name'
+          createdAt:
+                $ref: '#/components/schemas/securityProfileCreatedAt'
+          modifiedAt:
+                $ref: '#/components/schemas/securityProfileModifiedAt'
+          applicationAupSettingGroupId:
+                $ref: '#/components/schemas/applicationAupSettingGroupId'
+          aupSettingGroupId:
+                $ref: '#/components/schemas/aupSettingGroupId'
+          bundleTypeId:
+                $ref: '#/components/schemas/bundleTypeId'
+          landerSettingGroupId:
+                $ref: '#/components/schemas/landerSettingGroupId'
+          securitySettingGroupId:
+                $ref: '#/components/schemas/securitySettingGroupId'
+          policySettingGroupId:
+                $ref: '#/components/schemas/policySettingGroupId'
+          settingGroupBypassInspectionGroupId:
+                $ref: '#/components/schemas/settingGroupBypassInspectionGroupId'
+          fileInspectionSettingGroupId:
+                $ref: '#/components/schemas/fileInspectionSettingGroupId'
+          whitelistOnly:
+                $ref: '#/components/schemas/whitelistOnly'
+          frontendModifiedAt:
+                $ref: '#/components/schemas/frontendModifiedAt'
+          priority:
+                $ref: '#/components/schemas/priority'
+          reporting:
+                $ref: '#/components/schemas/reporting'
+          isFwaasDefault:
+                $ref: '#/components/schemas/isFwaasDefault'
+          isSwgDefault:
+                $ref: '#/components/schemas/isSwgDefault'
+          restriction:
+                $ref: '#/components/schemas/tenantControlsRestriction'
+      example:
+        - id: 13725886
+          organizationId: 8053787
+          isDefault: false
+          name: System Provided - Internet Access
+          createdAt: 1668574861
+          modifiedAt: 1748620055
+          applicationAupSettingGroupId: 1139310
+          aupSettingGroupId: 14758856
+          bundleTypeId: 2
+          landerSettingGroupId: 6556912
+          securitySettingGroupId: 14168795
+          policySettingGroupId: 13704136
+          settingGroupBypassInspectionGroupId: 6497268
+          fileInspectionSettingGroupId: 13658923
+          whitelistOnly: false
+          frontendModifiedAt: 1668574861
+          priority: 10
+          reporting: enabled
+          isSwgDefault: true
+          isFwaasDefault: false
+          restriction:
+            id: 17764
+            name: Global Tenant Controls
+            domains: []
+            restrictions: []
+
+    SecurityProfileResponse:
+      type: object
+      description: The properties of the Security profile.
+      required: [ id, organizationId, isDefault, name, isFwaasDefault, isSwgDefault, createdAt, modifiedAt, applicationAupSettingGroupId, aupSettingGroupId, bundleTypeId ]
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        isDefault:
+          $ref: '#/components/schemas/isDefault'
+        name:
+          $ref: '#/components/schemas/name'
+        aupSettingGroupId:
+          $ref: '#/components/schemas/aupSettingGroupId'
+        applicationAupSettingGroupId:
+          $ref: '#/components/schemas/applicationAupSettingGroupId'
+        landerSettingGroupId:
+          $ref: '#/components/schemas/landerSettingGroupId'
+        securitySettingGroupId:
+          $ref: '#/components/schemas/securitySettingGroupId'
+        policySettingGroupId:
+          $ref: '#/components/schemas/policySettingGroupId'
+        settingGroupBypassInspectionGroupId:
+          $ref: '#/components/schemas/settingGroupBypassInspectionGroupId'
+        fileInspectionSettingGroupId:
+          $ref: '#/components/schemas/fileInspectionSettingGroupId'
+        whitelistOnly:
+          $ref: '#/components/schemas/whitelistOnly'
+        frontendModifiedAt:
+          $ref: '#/components/schemas/frontendModifiedAt'
+        createdAt:
+          $ref: '#/components/schemas/securityProfileCreatedAt'
+        modifiedAt:
+          $ref: '#/components/schemas/securityProfileModifiedAt'
+        priority:
+          $ref: '#/components/schemas/priority'
+        reporting:
+          $ref: '#/components/schemas/reporting'
+        bundleTypeId:
+          $ref: '#/components/schemas/bundleTypeId'
+        isSwgDefault:
+          $ref: '#/components/schemas/isSwgDefault'
+        isFwaasDefault:
+          $ref: '#/components/schemas/isFwaasDefault'
+        categorySetting:
+          type: object
+          description: The properties of the Content Category setting.
+          properties: {}
+          example:
+            id: 14758855
+            organizationId: 1
+            isDefault: true
+            name: content category setting one
+            categoryBits: 'fffffffffffff000fffffffff8800000000000090106049004c46'
+            type: mixed
+            createdAt: 1520476127
+            modifiedAt: 1520476129
+            markedForDeletion: false
+            bundleTypeId: 1
+            isSwgDefault: false
+            warnCategoryBits: '0'
+        fileInspectionSetting:
+          type: object
+          description: The properties of the File Inspection setting.
+          properties: {}
+          example: {}
+        policySetting:
+          type: object
+          description: The properties of the Policy setting.
+          properties: {}
+          example:
+            id: 14657488
+            organizationId: 8287715
+            isDefault: false
+            name: Security Profile for Internet Access 1
+            intelligentProxy: true
+            intelligentProxyHttps: false
+            ipFiltering: false
+            fileInspectionId: 0
+            reporting: enabled
+            whitelistOnly: false
+            safeSearch: false
+            createdAt: '2024-10-30 22:54:28'
+            modifiedAt: '2024-10-30 22:54:28'
+            markedForDeletion: false
+            decryptExceptionCategories: '0'
+            exceptiondomainlistId: 0
+            saml: 0
+            swgDisplayBlockPage: 0
+        securitySetting:
+          type: object
+          description: The properties of the Security settings.
+          properties: {}
+          example:
+            id: 14946279
+            organizationId: 8287715
+            isDefault: false
+            name: Default Web Settings
+            botnetProtection: true
+            malwareProtection: true
+            superBotnet: true
+            superMalware: true
+            phishingProtection: true
+            suspiciousResponseFiltering: false
+            malwareUrlProxy: false
+            urlProxyHttps: false
+            ipFiltering: false
+            fileInspection: true
+            ampScan: false
+            createdAt: '2024-10-30 22:35:34'
+            modifiedAt: '2024-10-30 22:35:34'
+            categoryPrefs: '0000000000000000'
+            categoryPrefsHigh: '0000000000000000'
+            categoryBits: '0'
+            markedForDeletion: false
+            bundleTypeId: 2
+            isSwgDefault: true
+        identityCount:
+          $ref: '#/components/schemas/identityCount'
+        domainlists:
+          type: array
+          description: The list of destination lists in the organization.
+          items: {}
+          example:
+            - id: 18120197
+              organizationId: 8287715
+              access: allow
+              isGlobal: true
+              name: Global Allow List
+              thirdpartyCategoryId: null
+              createdAt: '2024-10-30 22:35:34'
+              modifiedAt: '2024-10-30 22:35:34'
+              isMspDefault: false
+              markedForDeletion: false
+              bundleTypeId: 1
+        restriction:
+          $ref: '#/components/schemas/tenantControlsRestriction'
+      example:
+        id: 13725886
+        organizationId: 8053787
+        isDefault: false
+        name: System Provided - Internet Access
+        aupSettingGroupId: 14758856
+        applicationAupSettingGroupId: 1139310
+        landerSettingGroupId: 6556912
+        securitySettingGroupId: 14168795
+        policySettingGroupId: 13704136
+        settingGroupBypassInspectionGroupId: 6497268
+        fileInspectionSettingGroupId: 13658923
+        whitelistOnly: false
+        frontendModifiedAt: 1668574861
+        createdAt: 1668574861
+        modifiedAt: 1748620055
+        priority: 10
+        reporting: enabled
+        bundleTypeId: 2
+        isSwgDefault: true
+        isFwaasDefault: false
+        restriction:
+          id: 17764
+          name: Global Tenant Controls
+          domains: []
+          restrictions: []
+
+    badRequest:
+      description: Bad Request
+      type: object
+      properties:
+        status:
+          type: object
+          description: Validation Error
+          properties:
+            code:
+              type: integer
+              example: 400
+              description: HTTP status error code
+            text:
+              type: string
+              example: Bad Request
+              description: HTTP status error text
+        data:
+          type: object
+          description: Validation Error
+          properties:
+            message:
+              type: string
+              example: Bad Request
+              description: Error message
+
+    unauthorized:
+      description: Unauthorized
+      type: object
+      properties:
+        status:
+          type: object
+          description: Unauthorized
+          properties:
+            code:
+              type: integer
+              example: 401
+              description: HTTP status error code
+            text:
+              type: string
+              example: Unauthorized
+              description: HTTP status error text
+        data:
+          type: object
+          description: Unauthorized
+          properties:
+            message:
+              type: string
+              example: Unauthorized
+              description: Error message
+
+    forbidden:
+      description: Forbidden
+      type: object
+      properties:
+        status:
+          type: object
+          description: Forbidden
+          properties:
+            code:
+              type: integer
+              example: 403
+              description: HTTP status error code
+            text:
+              type: string
+              example: Forbidden
+              description: HTTP status error text
+        data:
+          type: object
+          description: Forbidden
+          properties:
+            message:
+              type: string
+              example: Forbidden
+              description: Error message
+
+    notFound:
+      description: Not Found
+      type: object
+      properties:
+        status:
+          type: object
+          description: Resource Not Found
+          properties:
+            code:
+              type: integer
+              example: 404
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Not Found'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Resource Not Found
+          properties:
+            message:
+              type: string
+              example: Not Found
+              description: Error message
+
+    serverError:
+      description: Internal Server Error
+      type: object
+      properties:
+        status:
+          type: object
+          description: Internal Server Error
+          properties:
+            code:
+              type: integer
+              example: 500
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Internal Server Error'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Internal Server Error
+          properties:
+            message:
+              type: string
+              example: Internal Server Error
+              description: Error message

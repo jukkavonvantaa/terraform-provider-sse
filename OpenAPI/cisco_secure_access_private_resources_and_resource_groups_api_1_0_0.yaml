@@ -1,0 +1,1767 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Private Resources and Resource Groups API
+  description: Manage the Private Resources and Resource Groups in the organization.
+  version: 1.0.0
+  contact:
+    name: Cloud Security Developer Community
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: Resource Groups
+    description: The Secure Access Private Resource Groups
+  - name: Private Resources
+    description: The Secure Access Private Resources
+  - name: Secure Access
+
+paths:
+  /privateResourceGroups:
+    get:
+      tags:
+      - Resource Groups
+      - Secure Access
+      summary: List Resource Groups
+      description: List the Private Resource Groups for the organization.
+      operationId: listResourceGroups
+      security:
+        - oauthFlow:
+          - policies.privateresourcegroups:read
+      parameters:
+        - $ref: '#/components/parameters/resourceGroupsFilters'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/resourceGroupsSortBy'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceGroupList'
+              example:
+                items:
+                  - resourceGroupId: 1122341
+                    name: namePrivateResourceGroup
+                    description: The description of the private resource group.
+                    resourceIds:
+                      - 1234
+                      - 5661
+                offset: 0
+                limit: 100
+                total: 200
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags:
+      - Resource Groups
+      - Secure Access
+      summary: Create Resource Group
+      description: |-
+        Create a Private Resource Group for the organization.
+        You can create a maximum of 1000 Private Resource Groups.
+      operationId: addPrivateResourceGroup
+      security:
+        - oauthFlow:
+          - policies.privateresourcegroups:write
+      requestBody:
+        description: Create the Resource Group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/privateResourceGroupRequest'
+            example:
+              name: privateResourceGroupName
+              description: The description of the private resource group.
+              resourceIds:
+                - 1325
+                - 3452
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceGroupResponse'
+              example:
+                resourceGroupId: 1122341
+                name: namePrivateResourceGroup
+                description: The description of the private resource group.
+                resourceIds:
+                  - 1234
+                  - 5661
+                createdAt: "2021-12-13T16:07:07.222Z"
+                modifiedAt: "2021-12-13T16:07:07.222Z"
+                createdBy: '123455'
+                modifiedBy: '12345'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        #'409':
+        #  $ref: '#/components/responses/409Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /privateResourceGroups/{id}:
+    get:
+      tags:
+      - Resource Groups
+      - Secure Access
+      summary: Get Resource Group
+      description: Get the details about a Private Resource Group.
+      operationId: getPrivateResourceGroup
+      security:
+        - oauthFlow:
+          - policies.privateresourcegroups:read
+      parameters:
+        - $ref: '#/components/parameters/privateResourceGroupId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceGroupResponse'
+              example:
+                resourceGroupId: 1122341
+                name: namePrivateResourceGroup
+                description: The description of the private resource group.
+                resourceIds:
+                  - 1234
+                  - 5661
+                createdAt: "2021-12-13T16:07:07.222Z"
+                modifiedAt: "2021-12-13T16:07:07.222Z"
+                createdBy: '123455'
+                modifiedBy: '12345'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    put:
+      tags:
+      - Resource Groups
+      - Secure Access
+      summary: Update Resource Group
+      description: |-
+        Update the `name` and `description` properties on the Private Resource Group.
+      operationId: putPrivateResourceGroup
+      security:
+        - oauthFlow:
+          - policies.privateresourcegroups:write
+      parameters:
+        - $ref: '#/components/parameters/privateResourceGroupId'
+      requestBody:
+        description: Update the properties of the Private Resource Group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/privateResourceGroupRequest'
+            example:
+              name: privateResourceGroupName
+              description: The description of the private resource group.
+              resourceIds:
+                - 1325
+                - 3452
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceGroupResponse'
+              example:
+                resourceGroupId: 1122341
+                name: privateResourceGroupName
+                description: The description of the private resource group.
+                resourceIds:
+                  - 1234
+                  - 5661
+                createdAt: "2021-12-13T16:07:07.222Z"
+                modifiedAt: "2021-12-13T16:07:07.222Z"
+                createdBy: '123455'
+                modifiedBy: '12345'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    delete:
+      tags:
+      - Resource Groups
+      - Secure Access
+      summary: Delete Resource Group
+      description: |-
+        Delete the Private Resource Group from the organization.
+        Before deleting the Private Resource Group, Secure Access removes the Private Resources
+        from the Private Resource Group.
+      operationId: deletePrivateResourceGroup
+      security:
+        - oauthFlow:
+          - policies.privateresourcegroups:write
+      parameters:
+      - $ref: '#/components/parameters/privateResourceGroupId'
+      - name: force
+        in: query
+        description: |-
+          Specify whether to force the removal of the Private Resource Group even if one or more private access rules include the group.
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Private resource group deleted successfully.
+              example:
+                msg: Private resource group deleted successfully.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /privateResources:
+    get:
+      tags:
+        - Private Resources
+        - Secure Access
+      summary: List Private Resources
+      description: List the Private Resources for the organization.
+      operationId: listPrivateResources
+      security:
+        - oauthFlow:
+          - policies.privateresources:read
+      parameters:
+        - $ref: '#/components/parameters/resourcesFilters'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/resourcesSortBy'
+        - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceList'
+              example:
+                items:
+                  - resourceId: 183456
+                    name: 'The private resource name'
+                    description: 'The description of the private resource'
+                    dnsServerId: 123455
+                    certificateId: 123985
+                    accessTypes:
+                      - type: branch
+                      - type: browser
+                        externalFQDN: https://jira-5001.ztna.ciscoplus.com
+                        protocol: HTTPS
+                        sni: xyz123.jira.com
+                        sslVerificationEnabled: true
+                      - type: network
+                      - type: client
+                        reachableAddresses:
+                          - "192.168.0.1"
+                          - "example.com"
+                    resourceAddresses:
+                      - destinationAddr:
+                          - 'example.com'
+                          - '172.6.0.0/32'
+                        protocolPorts:
+                          - protocol: "HTTP/HTTPS"
+                            ports: "80"
+                    resourceGroupIds:
+                      - 234234234
+                      - 1242134324
+                    createdAt: "2021-12-13T16:07:07.222Z"
+                    modifiedAt: "2021-12-13T16:07:07.222Z"
+                    createdBy: "123456"
+                    modifiedBy: "987654" 
+                offset: 1
+                limit: 100
+                total: 200
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      tags:
+      - Private Resources
+      - Secure Access
+      summary: Create Private Resource
+      description: |-
+        Create a Private Resource for the organization. You can add at most 1000 Private Resources to an organization.
+        When you add a Private Resource enabled for Zero Trust Access, the Zero Trust Access service automatically manages the private applications.
+      operationId: addPrivateResource
+      security:
+        - oauthFlow:
+          - policies.privateresources:write
+      requestBody:
+        description: Create the Private Resource.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/privateResourceRequest'
+            example:
+              name: Jira
+              description: ''
+              dnsServerId: 44589
+              certificateId: 123356
+              accessTypes:
+                - type: browser
+                  externalFQDNPrefix: jira
+                  protocol: HTTPS
+                  sni: xyz123.jira.com
+                  sslVerificationEnabled: true
+                - type: network
+                - type: client
+                  reachableAddresses:
+                    - "192.168.0.1"
+                    - "example.com"
+              resourceAddresses:
+                - destinationAddr:
+                    - 'example.com'
+                    - '172.6.0.0/32'
+                  protocolPorts:
+                    - protocol: "HTTP/HTTPS"
+                      ports: "80"
+              resourceGroupIds:
+                - 123455
+                - 94275
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceResponse'
+              example:
+                resourceId: 183456
+                name: 'The private resource name'
+                description: 'The description of the private resource'
+                dnsServerId: 123455
+                certificateId: 123985
+                accessTypes:
+                  - type: branch
+                  - type: browser
+                    externalFQDN: https://jira-5001.ztna.ciscoplus.com
+                    protocol: HTTPS
+                    sni: xyz123.jira.com
+                    sslVerificationEnabled: true
+                  - type: network
+                  - type: client
+                    reachableAddresses:
+                      - "192.168.0.1"
+                      - "example.com"
+                resourceAddresses:
+                  - destinationAddr:
+                      - 'example.com'
+                      - '172.6.0.0/32'
+                    protocolPorts:
+                      - protocol: "HTTP/HTTPS"
+                        ports: "80"
+                resourceGroupIds:
+                  - 234234234
+                  - 1242134324
+                createdAt: "2021-12-13T16:07:07.222Z"
+                modifiedAt: "2021-12-13T16:07:07.222Z"
+                createdBy: "123456"
+                modifiedBy: "987654" 
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        #'409':
+        #  $ref: '#/components/responses/409Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /privateResources/{id}:
+    get:
+      tags:
+      - Private Resources
+      - Secure Access
+      summary: Get Private Resource
+      description: Get the details about a Private Resource.
+      operationId: getPrivateResource
+      security:
+        - oauthFlow:
+          - policies.privateresources:read
+      parameters:
+        - $ref: '#/components/parameters/privateResourceId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceResponse'
+              example:
+                resourceId: 183456
+                name: 'The private resource name'
+                description: 'The description of the private resource'
+                dnsServerId: 123455
+                certificateId: 123985
+                accessTypes:
+                  - type: branch
+                  - type: browser
+                    externalFQDN: https://jira-5001.ztna.ciscoplus.com
+                    protocol: HTTPS
+                    sni: xyz123.jira.com
+                    sslVerificationEnabled: true
+                  - type: network
+                  - type: client
+                    reachableAddresses:
+                    - "192.168.0.1"
+                    - "example.com"
+                resourceAddresses:
+                  - destinationAddr:
+                      - 'example.com'
+                      - '172.6.0.0/32'
+                    protocolPorts:
+                      - protocol: "HTTP/HTTPS"
+                        ports: "80"
+                resourceGroupIds:
+                  - 234234234
+                  - 1242134324
+                createdAt: "2021-12-13T16:07:07.222Z"
+                modifiedAt: "2021-12-13T16:07:07.222Z"
+                createdBy: "123456"
+                modifiedBy: "987654" 
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+      - Private Resources
+      - Secure Access
+      summary: Update Private Resource
+      description: |-
+        Update the properties on a Private Resource.
+        You can set the following Private Resource properties: `name`, `description`, `resourceAddresses`, `dnsServerId`, `certificateId`,
+        `protocol`, `sni`, and `sslVerificationEnabled`.
+      operationId: putPrivateResource
+      security:
+        - oauthFlow:
+          - policies.privateresources:write
+      parameters:
+        - $ref: '#/components/parameters/privateResourceId'
+      requestBody:
+        description: Update a Private Resource.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/privateResourceRequest'
+            example:
+              name: 'Jira'
+              description: ''
+              dnsServerId: 98765
+              certificateId: 456
+              resourceAddresses:
+                - destinationAddr:
+                    - 'example.com'
+                    - '172.6.0.0/32'
+                  protocolPorts:
+                    - protocol: "HTTP/HTTPS"
+                      ports: "80"
+              accessTypes:
+                - type: client
+                  reachableAddresses:
+                    - 'example.com'
+                    - '172.6.0.0/32'
+        required: false
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/privateResourceResponse'
+              example:
+                resourceId: 183456
+                name: 'The private resource name'
+                description: 'The description of the private resource'
+                dnsServerId: 123455
+                certificateId: 123985
+                accessTypes:
+                  - type: branch
+                  - type: browser
+                    externalFQDN: https://jira-5001.ztna.ciscoplus.com
+                    protocol: HTTPS
+                    sni: xyz123.jira.com
+                    sslVerificationEnabled: true
+                  - type: network
+                  - type: client
+                    reachableAddresses:
+                      - "192.168.0.1"
+                      - "example.com"
+                resourceAddresses:
+                  - destinationAddr:
+                      - 'example.com'
+                      - '172.6.0.0/32'
+                    protocolPorts:
+                      - protocol: "HTTP/HTTPS"
+                        ports: "80"
+                resourceGroupIds:
+                  - 234234234
+                  - 1242134324
+                createdAt: "2021-12-13T16:07:07.222Z"
+                modifiedAt: "2021-12-13T16:07:07.222Z"
+                createdBy: '123456'
+                modifiedBy: '987654' 
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    delete:
+      tags:
+      - Private Resources
+      - Secure Access
+      summary: Delete Private Resource
+      description: |-
+        Delete a Private Resource. Remove the Private Resource from any Private Resource Groups before deleting the resource.
+        If the Private Resource is the only resource in your organization's Private Resource Groups,
+        then Secure Access also removes the Private Resource Groups.
+      operationId: deletePrivateResource
+      security:
+        - oauthFlow:
+          - policies.privateresources:write
+      parameters:
+      - $ref: '#/components/parameters/privateResourceId'
+      - name: force
+        in: query
+        description: Specify whether to force the removal of the Private Resource even if one or more private access rules include the resource.
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Private resource deleted successfully.
+              example:
+                msg: Private resource deleted successfully.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    privateResourceGroupId:
+      name: id
+      in: path
+      description: The ID of the Private Resource Group.
+      required: true
+      schema:
+        type: integer
+
+    privateResourceId:
+      name: id
+      in: path
+      description: The ID of the Private Resource.
+      required: true
+      schema:
+        type: integer
+
+    resourcesFilters:
+      name: filters
+      in: query
+      required: false
+      description: |-
+        Filter the private resources in the organization by one or more properties: `name`, `description`, `resourceGroupId`, `accessType`, and `externalFQDN`.
+
+        * **name**-The name of the resource. The value is case insensitive.
+        * **description**-The description of the resource. The value is case insensitive.
+        * **resourceGroupId**-The ID of the resource group that includes the resource.
+        * **accessType**-The type of access configured for the resource. Valid values are: `browser`, `network`, or `client`, or a combination of these values.
+        * **externalFQDN**-The value of the resource's external fully qualified domain name (FQDN).
+
+        Specify the filters in the JSON format.
+
+        Example:
+
+        ```
+        { "name": "West coast", "description": "West Coast", "resourceGroupId": 1234, "accessType": "network", "externalFQDN": "https://jira-2390150.ztna.ciscoplus.com" }
+        ```
+      schema:
+        type: object
+        description: The filters for the resource groups.
+        properties:
+          name:
+            $ref: '#/components/schemas/privateResourceName'
+          description:
+            $ref: '#/components/schemas/descriptionPrivateResource'
+          resourceGroupId:
+            $ref: '#/components/schemas/resourceGroupIds'
+          accessType:
+            $ref: '#/components/schemas/accessTypesRequest'
+          externalFQDN:
+            type: string
+            description: The value of the resource's external fully qualified domain name (FQDN).
+            example: cisco.com
+      example:
+        name: resource one
+
+    resourceGroupsFilters:
+      name: filters
+      in: query
+      required: false
+      description: |-
+        Filter the resource groups in the organization by one or more properties: `name`, `description`, `resourceId`, and `accessType`.
+
+        * **name**—The name of the resource group. The value is case insensitive.
+        * **description**—The description of the Resource Group. The value is case insensitive.
+        * **resourceId**—The resource group includes the resource, which you can identify by the ID.
+        * **accessType**—The resource group contains at least one resource. The resource has one of the types of access: `branch`, `network`, `client`, or `browser`.
+
+        Specify the filters in the JSON format.
+
+        Example:
+        
+        ```
+        { "name": "West coast", "description": "West Coast", "resourceId": 1234, "accessType": "network" }
+        ```
+      schema:
+        type: object
+        description: The filters for the resource groups.
+        properties:
+          name:
+            $ref: '#/components/schemas/privateResourceGroupName'
+          description:
+            $ref: '#/components/schemas/descriptionPrivateResourceGroup'
+          resourceId:
+            $ref: '#/components/schemas/resourceIds'
+          accessType:
+            $ref: '#/components/schemas/accessTypesRequest'
+      example:
+        name: group one
+
+    offset:
+      name: offset
+      in: query
+      description: |-
+        An integer that represents an index in the collection. If the limit is `10` and the offset is `0`, the offset for next page is `10`.
+      schema:
+        type: integer
+        default: 0
+      required: false
+      example: 10
+
+    limit:
+      name: limit
+      in: query
+      description: |-
+        The number of items from the collection to return on a page.
+        The default value sets `10` items on a page. The system allows a maximum of 1000 items on a page.
+      schema:
+        type: integer
+        default: 10
+        maximum: 1000
+      required: false
+      example: 40
+
+    resourceGroupsSortBy:
+      name: sortBy
+      in: query
+      description: Specify the field that is used to sort the Private Resource Groups.
+      schema:
+        type: string
+        enum:
+          - name
+          - resourceGroupId
+          - resourcesCount
+          - createdAt
+          - modifiedAt
+        default: name
+      example: name
+
+    resourcesSortBy:
+      name: sortBy
+      in: query
+      description: Specify the field that is used to sort the Private Resources.
+      schema:
+        type: string
+        enum:
+          - name
+          - resourceId
+          - createdAt
+          - modifiedAt
+        default: name
+      required: false
+      example: resourceId
+
+    sortOrder:
+      name: sortOrder
+      in: query
+      description: Specify the order to sort the Private Resources. The default value is `asc`.
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+        default: asc
+      required: false
+      example: desc
+
+  schemas:
+
+    privateResourceGroupName:
+      type: string
+      description: |-
+        The name of the Private Resource Group.
+        The Private Resource Group name must not have any special characters other than spaces and hyphens.
+      maxLength: 100
+      pattern: '^[a-zA-Z0-9- ]+$'
+      example: Westcoast Data Center
+
+    privateResourceName:
+      type: string
+      description: |-
+        The name of the Private Resource that is unique across all resources in the organization.
+        The Resource name must not have any special characters other than spaces and hyphens.
+      maxLength: 50
+      pattern: '^[a-zA-Z0-9- ]+$'
+      example: Jira
+
+    ports:
+      type: string
+      description: |-
+        The port number or list of comma-separated port numbers that you can use to connect to the Private Resource.
+        A port number must be within the range of `1-65535`.
+      example: '80,8080'
+
+    reachableAddresses:
+      type: array
+      description: |-
+        The list of IP address, CIDRs, FQDN, or wildcard FQDN destinations.
+        IPv6 is not supported. Only applies to resources you configure for client-based Zero Trust Access.
+      items:
+        type: string
+        description: An IP or CIDR address, FQDN, or wildcard FQDN destination.
+        example: '172.6.0.0/32'
+      example:
+        - '172.6.0.0/32'
+
+    networkBasedAccess:
+      type: object
+      description: The connection to private resources that is defined for a network.
+      properties:
+        type:
+          type: string
+          description: The type of the connection is network.
+          enum:
+            - network
+          example: network
+      required:
+        - type
+      example:
+        type: network
+
+    branchAccess:
+      type: object
+      description: |-
+        The connection type is the branch network.
+        The branch connection type is always enabled for all private resources.
+      properties:
+        type:
+          type: string
+          description: The type of the connection is branch.
+          enum:
+            - branch
+          example: branch
+      example:
+        type: branch
+
+    clientBasedAccess:
+      type: object
+      description: The connection to private resources is defined for the Cisco Secure Client.
+      properties:
+        type:
+          type: string
+          description: The type of the connection is Cisco Secure Client.
+          enum:
+            - client
+          example: client
+        reachableAddresses:
+          $ref: '#/components/schemas/reachableAddresses'
+      required:
+        - type
+        - reachableAddresses
+      example:
+        type: client
+        reachableAddresses:
+          - jira.com
+
+    browserBasedAccessCommon:
+      type: object
+      description: The properties of a browser-based connection type.
+      properties:
+        type:
+          type: string
+          description: The type of the connection is a browser.
+          enum:
+            - browser
+          example: browser
+        protocol:
+          $ref: '#/components/schemas/protocolProxyToResource'
+        sni:
+          $ref: '#/components/schemas/sni'
+        sslVerificationEnabled:
+          $ref: '#/components/schemas/sslVerificationEnabled'
+      required:
+        - type
+        - protocol
+      example:
+        type: browser
+        protocol: HTTPS
+
+    externalFQDNPrefix:
+      type: object
+      properties:
+        externalFQDNPrefix:
+          type: string
+          maxLength: 50
+          description: The external fully qualified domain name (FQDN) prefix.
+      description: |-
+        The subdomain of the URL for the private resource.
+        This value must be unique across all private resources in the organization, and must contain only alphanumeric characters or hyphens.
+
+    externalFQDN:
+      type: object
+      properties:
+        externalFQDN:
+          type: string
+          maxLength: 50
+          description: The external fully qualified domain name (FQDN).
+      description: |-
+        The URL for the private resource.
+        This value must be unique across all private resources in the organization, and must contain only alphanumeric characters or hyphens.
+
+    browserBasedAccessRequest:
+      description: The properties of the browser-based request.
+      allOf:
+        - $ref: '#/components/schemas/browserBasedAccessCommon'
+        - $ref: '#/components/schemas/externalFQDNPrefix'
+
+    browserBasedAccessResponse:
+      description: The properties of the browser-based response.
+      allOf:
+        - $ref: '#/components/schemas/browserBasedAccessCommon'
+        - $ref: '#/components/schemas/externalFQDN'
+
+    accessTypesRequest:
+      type: array
+      description: |-
+        The list of connection properties that describe how end users can access private resources in the organization.
+        Browser-based access requires that all resource addresses use the HTTP or HTTPS protocols.
+        Branch access is always enabled for a private resource.
+      items:
+        anyOf:
+          - $ref: '#/components/schemas/clientBasedAccess'
+          - $ref: '#/components/schemas/networkBasedAccess'
+          - $ref: '#/components/schemas/browserBasedAccessRequest'
+      example:
+          - type: browser
+            externalFQDNPrefix: jira
+            protocol: HTTPS
+            sni: xyz123.jira.com
+            sslVerificationEnabled: true
+          - type: client
+            reachableAddresses:
+              - "192.168.0.1"
+              - "example.com"
+          - type: network
+
+    accessTypes:
+      type: array
+      description: |-
+        The list of connection properties that describe how end users can access private resources in the organization.
+        Browser-based access requires that all resource addresses use the HTTP or HTTPS protocols.
+        Branch access is always enabled for a private resource.
+      items:
+        anyOf:
+          - $ref: '#/components/schemas/branchAccess'
+          - $ref: '#/components/schemas/browserBasedAccessResponse'
+          - $ref: '#/components/schemas/clientBasedAccess'
+          - $ref: '#/components/schemas/networkBasedAccess'
+      example:
+        - type: branch
+        - type: browser
+          externalFQDNPrefix: jira
+          protocol: HTTPS
+          sni: xyz123.jira.com
+          sslVerificationEnabled: true
+        - type: client
+          reachableAddresses:
+            - "192.168.0.1"
+            - "example.com"
+        - type: network
+
+    resourceAddresses:
+      type: array
+      description: The list of resource addresses for the Private Resources.
+      items:
+        type: object
+        description: The destinations, protocols, and ports of the Private Resource's address.
+        required:
+          - destinationAddr
+          - protocolPorts
+        properties:
+          destinationAddr:
+            type: array
+            description: The list of IP address, CIDRs, FQDN, or wildcard FQDN destinations. IPv6 is not supported.
+            items:
+              type: string
+            example:
+              - '172.6.0.0/32'
+          protocolPorts:
+            type: array
+            description: The list of protocols and ports for the IP address destinations. The protocols must be unique.
+            items:
+              type: object
+              description: The protocol and port properties for the Private Resource's address.
+              properties:
+                protocol:
+                  $ref: '#/components/schemas/protocolClientToResource'
+                ports:
+                  $ref: '#/components/schemas/ports'
+            example:
+              - protocol: TCP
+                ports: '80,9000'
+      example:
+        - destinationAddr:
+            - "172.6.0.0/32"
+            - "255.100.100.0/24"
+            - "mydomain.com"
+          protocolPorts:
+            - protocol: TCP
+              ports: "80,82"
+            - protocol: UDP
+              ports: "53"
+        - destinationAddr:
+            - "example.com"
+          protocolPorts:
+            - protocol: "HTTP/HTTPS"
+              ports: "80"
+
+    protocolProxyToResource:
+      type: string
+      description: |-
+        The protocol for the communication between the proxy and the Private Resource.
+        Only applicable for browser-based Zero Trust Network Access.
+      enum:
+        - HTTPS
+        - HTTP
+      example: HTTPS
+
+    protocolClientToResource:
+      type: string
+      description: |-
+        The protocol you use to connect the user with the Private Resource.
+        The system only allows the TCP protocol is allowed for browser-based Zero Trust Access.
+      enum:
+        - Any
+        - TCP
+        - UDP
+        - HTTP/HTTPS
+      example: Any
+
+    sni:
+      type: string
+      description: |-
+        The Server Name Indication (SNI) domain name.
+        Only applicable for browser-based Zero Trust Access and when you select the HTTPS protocol.
+        The SNI must be a valid domain.
+      example: ''
+
+    sslVerificationEnabled:
+      type: boolean
+      description: |-
+        Specify whether to enable upstream SSL verification for the internally hosted URL by the customer.
+        Applicable for browser-based Zero Trust Access only and when you select the HTTPS protocol.
+      default: true
+      example: true
+
+    resourceGroupIds:
+      type: array
+      items:
+        type: integer
+        example: 1
+        description: The ID of the Private Resource Group.
+      description: The list of IDs for the Private Resource Groups that include the Private Resource.
+      example:
+        - 1
+        - 19
+
+    dnsServerId:
+      type: integer
+      description: The unique identifier of the DNS server you use to resolve IP addresses.
+      example: 98765
+
+    certificateId:
+      type: integer
+      description: The ID of the certificate you use to decrypt traffic to the Private Resource.
+      example: 456
+
+    descriptionPrivateResource:
+      type: string
+      description: The description of the Private Resource.
+      maxLength: 255
+      example: Jira App For My Org
+
+    descriptionPrivateResourceGroup:
+      type: string
+      description: The description of the Private Resource Group.
+      maxLength: 255
+      example: Private resources in Westcoast Data Center
+
+    privateResourceRequest:
+      type: object
+      description: Create the Private Resource.
+      required:
+        - name
+        - accessTypes
+        - resourceAddresses
+      properties:
+        name:
+          $ref: '#/components/schemas/privateResourceName'
+        description:
+          $ref: '#/components/schemas/descriptionPrivateResource'
+        dnsServerId:
+          $ref: '#/components/schemas/dnsServerId'
+        certificateId:
+          $ref: '#/components/schemas/certificateId'
+        accessTypes:
+          $ref: '#/components/schemas/accessTypesRequest'
+        resourceAddresses:
+          $ref: '#/components/schemas/resourceAddresses'
+        resourceGroupIds:
+          $ref: '#/components/schemas/resourceGroupIds'
+      example:
+        name: Jira
+        description: ''
+        dnsServerId: 44589
+        certificateId: 123356
+        accessTypes:
+          - type: browser
+            externalFQDNPrefix: jira
+            protocol: HTTPS
+            sni: xyz123.jira.com
+            sslVerificationEnabled: true
+          - type: network
+          - type: client
+            reachableAddresses:
+              - "192.168.0.1"
+              - "example.com"
+        resourceAddresses:
+          - destinationAddr:
+              - 'example.com'
+              - '172.6.0.0/32'
+            protocolPorts:
+              - protocol: "HTTP/HTTPS"
+                ports: "80"
+        resourceGroupIds:
+          - 123455
+          - 94275
+
+
+    # original
+    #accessTypes:
+    #      type: array
+    #      description: |-
+    #       The list of the access types. An access type has properties that describe how remote users can access a Private Resource.
+    #        You can only select the browser-based Zero Trust Access access type if all addresses for a Private Resource have the HTTP/HTTPS protocols.
+    #      items:
+    #        type: object
+    #        required:
+    #          - type
+    #        description: The properties of the access type.
+    #        properties:
+    #          type:
+    #            type: string
+    #            enum:
+    #              - network
+    #              - client
+    #              - browser
+    #            example: client
+    #          externalFQDNPrefix:
+    #            type: string
+    #            description: |-
+    #              The prefix that is used to generate the external FQDN. Applicable for browser-based Zero Trust Access only.
+    #              This value is required and must be unique across all Private Resources for the organization.
+    #            #example: ''
+    #          protocol:
+    #           $ref: '#/components/schemas/protocolProxyToResource'
+    #          sni:
+    #            $ref: '#/components/schemas/sni'
+    #          sslVerificationEnabled:
+    #            $ref: '#/components/schemas/sslVerificationEnabled'
+    #          reachableAddresses:
+    #            $ref: '#/components/schemas/reachableAddresses'
+    #          example:
+    #      - type: browser
+    #        externalFQDN: https://jira-5001.ztna.ciscoplus.com
+    #        protocol: HTTPS
+    #        sni: xyz123.jira.com
+    #        sslVerificationEnabled: true
+    #      - type: network
+    #      - type: client
+    #        reachableAddresses:
+    #        - "192.168.0.1"
+    #        - "example.com"
+
+    privateResourceResponse:
+      type: object
+      description: Get the Private Resource.
+      properties:
+        resourceId:
+          type: integer
+          description: The ID of the Private Resource.
+          readOnly: true
+          example: 183456
+        name:
+          $ref: '#/components/schemas/privateResourceName'
+        description:
+          $ref: '#/components/schemas/descriptionPrivateResource'
+        dnsServerId:
+          $ref: '#/components/schemas/dnsServerId'
+        certificateId:
+          $ref: '#/components/schemas/certificateId'
+        accessTypes:
+          $ref: '#/components/schemas/accessTypes'
+        resourceAddresses:
+          $ref: '#/components/schemas/resourceAddresses'
+        resourceGroupIds:
+          $ref: '#/components/schemas/resourceGroupIds'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: "2021-12-13T16:07:07.222Z"
+          description: Record the date and time when you create the private resource.
+        modifiedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: "2021-12-13T16:07:07.222Z"
+          description: Record the date and time when you update the private resource.
+        createdBy:
+          type: string
+          description: The ID of the user who creates the private resource.
+          example: "123456"
+        modifiedBy:
+          type: string
+          description: The ID of the user who last modifies the private resource.
+          example: "987654"
+      example:
+        resourceId: 183456
+        name: 'The private resource name'
+        description: 'The description of the private resource'
+        dnsServerId: 123455
+        certificateId: 123985
+        accessTypes:
+          - type: branch
+          - type: browser
+            externalFQDN: https://jira-5001.ztna.ciscoplus.com
+            protocol: HTTPS
+            sni: xyz123.jira.com
+            sslVerificationEnabled: true
+          - type: network
+          - type: client
+            reachableAddresses:
+            - "192.168.0.1"
+            - "example.com"
+        resourceAddresses:
+          - destinationAddr:
+              - 'example.com'
+              - '172.6.0.0/32'
+            protocolPorts:
+              - protocol: "HTTP/HTTPS"
+                ports: "80"
+        resourceGroupIds:
+          - 234234234
+          - 1242134324
+        createdAt: "2021-12-13T16:07:07.222Z"
+        modifiedAt: "2021-12-13T16:07:07.222Z"
+        createdBy: "123456"
+        modifiedBy: "987654"
+
+    resourceIds:
+      type: array
+      description: |-
+        The list of IDs for the private resources that belong in the group.
+        The list may be empty.
+      items:
+        type: integer
+        example: 255
+        description: The private resource ID.
+      example:
+        - 1234
+        - 562
+
+    privateResourceGroupRequest:
+      type: object
+      description: The properties of the private resource group.
+      properties:
+        name:
+          $ref: '#/components/schemas/privateResourceGroupName'
+        description:
+          $ref: '#/components/schemas/descriptionPrivateResourceGroup'
+        resourceIds:
+          $ref: '#/components/schemas/resourceIds'
+      required:
+        - name
+        - resourceIds
+      example:
+        name: myPrivateGroupName
+        description: The private resource group description.
+        resourceIds:
+          - 1325
+          - 3452
+
+    privateResourceGroupResponse:
+      type: object
+      description: Get the Resource Group.
+      properties:
+        resourceGroupId:
+          type: integer
+          description: The ID of the Private Resource Group.
+          readOnly: true
+          example: 1122321
+        name:
+          $ref: '#/components/schemas/privateResourceGroupName'
+        description:
+          $ref: '#/components/schemas/descriptionPrivateResourceGroup'
+        resourceIds:
+          $ref: '#/components/schemas/resourceIds'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: "2021-12-13T16:07:07.222Z"
+          description: The date and time when the Private Resource Group was created.
+        modifiedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: "2021-12-13T16:07:07.222Z"
+          description: The date and time when the Private Resource Group was updated.
+        createdBy:
+          type: string
+          description: The ID of the user who created the Private Resource Group.
+          example: "123456"
+        modifiedBy:
+          type: string
+          description: The ID of the user who last modified the Private Resource Group.
+          example: "987654"
+      example:
+        resourceGroupId: 1122341
+        name: namePrivateResourceGroup
+        description: The description of the private resource group.
+        resourceIds:
+          - 1234
+          - 5661
+        createdAt: "2021-12-13T16:07:07.222Z"
+        modifiedAt: "2021-12-13T16:07:07.222Z"
+        createdBy: '123455'
+        modifiedBy: '12345'
+
+    privateResourceList:
+      type: object
+      description: |-
+        List all private Resources in the organization. If you set query filters on your request,
+        you can get a subset of the Private Resources in the collection.
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/privateResourceResponse'
+          example:
+            - resourceId: 183456
+              name: 'The private resource name'
+              description: 'The description of the private resource'
+              dnsServerId: 123455
+              certificateId: 123985
+              accessTypes:
+                - type: branch
+                - type: browser
+                  externalFQDN: https://jira-5001.ztna.ciscoplus.com
+                  protocol: HTTPS
+                  sni: xyz123.jira.com
+                  sslVerificationEnabled: true
+                - type: network
+                - type: client
+                  reachableAddresses:
+                  - "192.168.0.1"
+                  - "example.com"
+              resourceAddresses:
+                - destinationAddr:
+                    - 'example.com'
+                    - '172.6.0.0/32'
+                  protocolPorts:
+                    - protocol: "HTTP/HTTPS"
+                      ports: "80"
+              resourceGroupIds:
+                - 234234234
+                - 1242134324
+              createdAt: "2021-12-13T16:07:07.222Z"
+              modifiedAt: "2021-12-13T16:07:07.222Z"
+              createdBy: "123456"
+              modifiedBy: "987654" 
+        offset:
+          type: integer
+          description: The index where the server starts to read the collection.
+          example:  0
+        limit:
+          type: integer
+          description: The number of items returned on a page in the response.
+          example: 100
+        total:
+          type: integer
+          description: The total count of the Private Resources read in the collection.
+          example: 100
+      example:
+        items:
+          - resourceId: 183456
+            name: 'The private resource name'
+            description: 'The description of the private resource'
+            dnsServerId: 123455
+            certificateId: 123985
+            accessTypes:
+              - type: branch
+              - type: browser
+                externalFQDN: https://jira-5001.ztna.ciscoplus.com
+                protocol: HTTPS
+                sni: xyz123.jira.com
+                sslVerificationEnabled: true
+              - type: network
+              - type: client
+                reachableAddresses:
+                - "192.168.0.1"
+                - "example.com"
+            resourceAddresses:
+              - destinationAddr:
+                  - 'example.com'
+                  - '172.6.0.0/32'
+                protocolPorts:
+                  - protocol: "HTTP/HTTPS"
+                    ports: "80"
+            resourceGroupIds:
+              - 234234234
+              - 1242134324
+            createdAt: "2021-12-13T16:07:07.222Z"
+            modifiedAt: "2021-12-13T16:07:07.222Z"
+            createdBy: "123456"
+            modifiedBy: "987654" 
+        offset: 1
+        limit: 100
+        total: 200
+
+    privateResourceGroupList:
+      type: object
+      description: |-
+        List all Private Resource Groups in the organization. If you set query filters on the request,
+        you can get a subset of the Private Resources in the collection.
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/privateResourceGroupResponse'
+        offset:
+          type: integer
+          description: The index where the server starts to read the collection.
+        limit:
+          type: integer
+          description: The number of items returned on a page in the response.
+        total:
+          type: integer
+          description: The total count of the Private Resource Groups read in the collection.
+      example:
+        items:
+          - resourceGroupId: 1122341
+            name: namePrivateResourceGroup
+            description: The description of the private resource group.
+            resourceIds:
+              - 1234
+              - 5661
+            createdAt: "2021-12-13T16:07:07.222Z"
+            modifiedAt: "2021-12-13T16:07:07.222Z"
+            createdBy: '123455'
+            modifiedBy: '12345'
+        offset: 0
+        limit: 100
+        total: 200
+
+  responses:
+
+    400Error:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: The organization ID is a numeric value.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+#    400NameError:
+#      description: Bad Request
+#      content:
+#        application/json:
+#          schema:
+#            type: object
+#            properties:
+#              error:
+#                type: string
+#                description: Error message explaining the reason for failure from the list.
+#            example:
+#              error: 'name is a required field'
+
+#    400ConnectorGroupError:
+#      description: Bad Request
+#      content:
+#        application/json:
+#          schema:
+#            type: object
+#            properties:
+#              error:
+#                type: string
+#                description: Error message explaining the reason for failure.
+#                example: The organization ID is a numeric value.
+#              requestId:
+#                type: string
+#                description: The ID of the request.
+#                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+#              validationErrors:
+#                type: object
+#                description: The validation error information.
+#                properties:
+#                  name:
+#                    type: string
+#                    description: Indicates the problem with `name` property in the payload.
+#                    example: The `name` property is a string with at least one character and no more than 50 characters.
+#                  location:
+#                    type: string
+#                    description: Indicates the problem with the `location` property in the payload.
+#                    example: The property value is invalid.
+#                  environment:
+#                    type: string
+#                    description: Indicates the problem with `environment` property in the payload.
+#                    example: The property value is invalid.
+#      headers:
+#        Content-Type:
+#          $ref: '#/components/headers/Content-Type'
+#        Date:
+#          $ref: '#/components/headers/Date'
+
+#    400ConnectorAgentError:
+#      description: Bad Request
+#      content:
+#        application/json:
+#          schema:
+#            type: object
+#            properties:
+#              error:
+#                type: string
+#                description: Error message explaining the reason for failure.
+#                example: The organization ID is a numeric value.
+#              requestId:
+#                type: string
+#                description: The ID of the request.
+#                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+#              validationErrors:
+#                type: object
+#                properties:
+#                  enabled:
+#                    type: string
+#                    description: Indicates the problem with "enabled" property in the payload
+#                    example: The property value is invalid.
+#                  confirmed:
+#                    type: string
+#                    description: Indicates the problem with "confirmed" property in the payload
+#                    example: The property value is invalid.
+#      headers:
+#        Content-Type:
+#          $ref: '#/components/headers/Content-Type'
+#        Date:
+#          $ref: '#/components/headers/Date'
+
+    401Error:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Authorization token is invalid.
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    403Error:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Not Authorized
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    404Error:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Not Found
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+#    409Error:
+#      description: Conflict
+#      # Duplicate Resource Group name
+#      content:
+#        application/json:
+#          schema:
+#            type: object
+#            properties:
+#              error:
+#                type: string
+#                description: Error message explaining the reason for failure.
+#                example: Connector Group name must be unique.
+#      headers:
+#        Content-Type:
+#          $ref: '#/components/headers/Content-Type'
+#        Date:
+#          $ref: '#/components/headers/Date'
+
+    500Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Internal Server Error
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.sse.cisco.com/auth/v2/token'
+          scopes:
+            policies.privateresourcegroups:read: 'Read the Private Resource Groups resources'
+            policies.privateresourcegroups:write: 'Write the Private Resource Groups resources'
+            policies.privateresources:read: 'Read the Private Resources resources'
+            policies.privateresources:write: 'Write the Private Resources resources'

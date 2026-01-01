@@ -1,0 +1,3858 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.0
+info:
+  title: Cisco Secure Access Investigate API
+  description: |-
+    The Secure Access Investigate API provides a complete view of domains in relation to IP and autonomous system number (ASN) information.
+    You can get the following domain information:
+
+    * Domain status, risk score, and geolocation
+    * Number of domain searches
+    * Co-occurring domains
+    * Subdomains of a domain
+    * Tagged timeline of a domain, IP, or URL
+    * Security reputation of a domain
+    * Top accessed domains
+    * WHOIS information for the domain
+    * Threat intelligence data for domains, IPs, and URLs
+    * Threat intelligence samples by file hash
+  version: 2.0.0
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: investigate/v2
+
+tags:
+- name: Domain Status and Categorization
+- name: Domain Volume
+- name: Co-occurrences for a Domain
+- name: Passive DNS
+- name: Tagging Timeline
+- name: Subdomains for a Domain
+- name: Related Domains for a Domain
+- name: Security Information for a Domain
+- name: AS Information for a Domain
+- name: WHOIS Information for a Domain
+- name: Popularity List-Top Million Domains
+- name: Search Domain
+- name: Cisco Secure Malware Analytics Integration
+- name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+  '/domains/categorization/{domain}':
+    get:
+      summary: Get Domain Status and Categorization
+      operationId: getDomainsCategorization
+      tags:
+        - Domain Status and Categorization
+        - Secure Access
+      description: |
+        Look up the status, and security and content category IDs for the domain.
+        The domain status is a numerical value determined by the Cisco Security Labs team.
+        Valid status values are: '-1' (malicious), '1' (safe), or '0' (undetermined status).
+      parameters:
+      - $ref: '#/components/parameters/domainParam'
+      - $ref: '#/components/parameters/showLabels'
+
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainCategorization'
+              example:
+                amazon.com:
+                  status: 1
+                  security_categories:
+                    - '150'
+                  content_categories:
+                    - '8'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/domains/categorization':
+    post:
+      summary: Check Status and Categorization of Domains
+      operationId: postDomainsCategorization
+      tags:
+        - Domain Status and Categorization
+        - Secure Access
+      description: |
+        Provide a list of domains and look up the status, and security and content category IDs for each domain.
+        The domain status is a numerical value determined by the Cisco Security Labs team.
+        Valid status values are: '-1' (malicious), '1' (safe), or '0' (undetermined status).
+      parameters:
+        - $ref: '#/components/parameters/showLabels'
+      security:
+        - oauthFlow:
+          - investigate.bulk:read
+      requestBody:
+        required: true
+        description: |-
+          In a single request, the payload must not exceed 100KB and contain no more
+          than 1000 domains.
+        content:
+          application/json:
+            schema:
+              type: array
+              description: The list of domains.
+              items:
+                type: string
+                description: A domain name.
+                example: 'yahoo.com'
+            example:
+              - "google.com"
+              - "yahoo.com"
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainCategorization'
+              example:
+                - google.com:
+                  status: 1
+                  security_categories: []
+                  content_categories:
+                    - '23'
+                    - '25'
+                    - '190'
+                - yahoo.com:
+                  status: 1
+                  security_categories: []
+                  content_categories:
+                    - '23'
+                    - '167'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/domains/volume/{domain}':
+    get:
+      summary: Get Domain Volume
+      operationId: getDomainVolume
+      tags:
+        - Domain Volume
+        - Secure Access
+      description: |
+        List the query volume for a domain over the last 30 days.
+        If there is no information about the domain, Investigate returns an empty array.
+        As the query takes time to generate, the last two hours may be blank.
+      parameters:
+      - $ref: '#/components/parameters/domainParam'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/stop'
+      - name: match
+        in: query
+        required: false
+        description: |-
+          Valid values are: `exact`, `component`, or `all`. The default value is `all`.
+        schema:
+          type: string
+          default: all
+          enum:
+            - exact
+            - component
+            - all
+        example: exact
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dates:
+                    type: array
+                    description: The list of dates recorded for the domain.
+                    items:
+                      type: string
+                      description: The dates recorded for this domain expressed in the Unix epoch time.
+                    example:
+                      - "1510873200000"
+                      - "1510959600000"
+                  queries:
+                    type: array
+                    description: The list of the numbers of DNS queries requested for the domain in one hour, listed in ascending order.
+                    items:
+                      type: string
+                      description: The number of DNS queries requested for the domain in one hour.
+                    example:
+                      - "1378426"
+                      - "1361934"
+                      - "1308188"
+              example:
+                dates:
+                  - "1510873200000"
+                  - "1510959600000"
+                queries:
+                  - "1378426"
+                  - "1361934"
+                  - "1308188"
+                  - "1238823"
+                  - "1245126"
+                  - "1215994"
+                  - "1256917"
+                  - "1200190"
+                  - "1245963"
+                  - "1355719"
+                  - "1332685"
+                  - "1319825"
+                  - "1362464"
+                  - "1457174"
+                  - "1695448"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/recommendations/name/{domain}.json':
+    get:
+      summary: Get Recommendations by Name
+      operationId: getRecommendationsName
+      tags:
+        - Co-occurrences for a Domain
+        - Secure Access
+      description: |-
+        List the co-occurences for the specified domain.
+        A co-occurrence is when two or more domains are accessed by the same users within a small window of time.
+        Co-occurring domains are not necessarily problematic; legitimate sites co-occur with each other as a part
+        of normal web activity. However, unusual or suspicious co-occurences can provide additional information regarding attacks.
+        To determine co-occurrences for a domain, a small time window of traffic across all of our datacenters is taken.
+        Investigate checks the sites that end users visited before and after the domain was requested in the API call.
+      parameters:
+      - $ref: '#/components/parameters/domainParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pfs2:
+                    type: array
+                    description: The list of the co-occurring domains.
+                    items:
+                      type: string
+                      description: The domain name.
+                      example: "query.example.com"
+                    example:
+                      - "download.example.com"
+                      - "query.example.com"
+                  found:
+                    type: boolean
+                    description: Specify whether the domain is co-occurring.
+                    example: true
+              example:
+                pfs2:
+                  - "download.example.com"
+                  - "query.example.com"
+                found: true
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/pdns/name/{domain}':
+    get:
+      summary: Get Resource Records for Name
+      operationId: getPassiveDNSName
+      tags:
+        - Passive DNS
+        - Secure Access
+      description:
+        The Passive DNS endpoint provides historical data from the Secure Access resolvers for domains,
+        IPs, and other resource records.
+      parameters:
+      - $ref: '#/components/parameters/domainParam'
+      - $ref: '#/components/parameters/limitRecordsParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortorderParam'
+      - $ref: '#/components/parameters/sortbyParam'
+      - $ref: '#/components/parameters/recordTypeParam'
+      - $ref: '#/components/parameters/includeFeaturesParam'
+      - $ref: '#/components/parameters/minFirstSeenParam'
+      - $ref: '#/components/parameters/maxFirstSeenParam'
+      - $ref: '#/components/parameters/minLastSeenParam'
+      - $ref: '#/components/parameters/maxLastSeenParam'
+      - $ref: '#/components/parameters/sortCategoriesParam'
+      - $ref: '#/components/parameters/requiredCategoriesParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Records'
+              example:
+                - minTtl: 86400
+                  maxTtl: 86400
+                  firstSeen: 1506630180000
+                  lastSeen: 1557133071000
+                  name: "coinhive.com"
+                  type: "NS"
+                  rr: "lara.ns.cloudflare.com."
+                  securityCategories: ['8', '150']
+                  contentCategories:
+                    - "Software/Technology"
+                    - "Business Services"
+                  firstSeenISO: "2017-09-28T20:23:00Z"
+                  lastSeenISO: "2019-05-06T08:57Z"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/pdns/domain/{domain}':
+    get:
+      summary: Get Resource Records for Domain
+      operationId: getPassiveDNSDomain
+      tags:
+        - Passive DNS
+        - Secure Access
+      description: Get the Resource Record (RR) data for DNS responses, and categorization
+        data, where the answer (or rdata) is the domain(s).
+      parameters:
+      - $ref: '#/components/parameters/domainParam'
+      - $ref: '#/components/parameters/limitRecordsParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortorderParam'
+      - $ref: '#/components/parameters/sortbyParam'
+      - $ref: '#/components/parameters/recordTypeParam'
+      - $ref: '#/components/parameters/includeFeaturesParam'
+      - $ref: '#/components/parameters/minFirstSeenParam'
+      - $ref: '#/components/parameters/maxFirstSeenParam'
+      - $ref: '#/components/parameters/minLastSeenParam'
+      - $ref: '#/components/parameters/maxLastSeenParam'
+      - $ref: '#/components/parameters/sortCategoriesParam'
+      - $ref: '#/components/parameters/requiredCategoriesParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Records'
+              example:
+                - minTtl: 3600
+                  maxTtl: 3600
+                  firstSeen: 1482339360000
+                  lastSeen: 1482339360000
+                  name: "coinhive.com"
+                  type: "CNAME"
+                  rr: "www.coinhive.com."
+                  securityCategories:
+                    - "Potentially Harmful"
+                    - "Cryptomining"
+                  contentCategories: []
+                  firstSeenISO: "2016-12-21T16:56:00Z"
+                  lastSeenISO: "2016-12-21T16:56Z"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/pdns/ip/{ip}':
+    get:
+      summary: Get Resource Records for IP
+      operationId: getPassiveDNSIp
+      tags:
+        - Passive DNS
+        - Secure Access
+      description: Get the Resource Record (RR) data for DNS responses, and categorization
+        data, where the answer (or rdata) is the domain(s).
+      parameters:
+      - name: ip
+        in: path
+        required: true
+        description: 'An IP address, for example: 2620:119:35::35.'
+        schema:
+          type: string
+        example: '208.67.222.222'
+      - $ref: '#/components/parameters/limitRecordsParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortorderParam'
+      - $ref: '#/components/parameters/sortbyParam'
+      - $ref: '#/components/parameters/recordTypeParam'
+      - $ref: '#/components/parameters/includeFeaturesParam'
+      - $ref: '#/components/parameters/minFirstSeenParam'
+      - $ref: '#/components/parameters/maxFirstSeenParam'
+      - $ref: '#/components/parameters/minLastSeenParam'
+      - $ref: '#/components/parameters/maxLastSeenParam'
+      - $ref: '#/components/parameters/sortCategoriesParam'
+      - $ref: '#/components/parameters/requiredCategoriesParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Records'
+              example:
+                - minTtl: 3600
+                  maxTtl: 3600
+                  firstSeen: 1544388420000
+                  lastSeen: 1553839713000
+                  name: "146.112.61.104"
+                  type: "A"
+                  rr: "hit-block.umbrella.com."
+                  securityCategories:
+                    - Malware
+                  contentCategories:
+                    - "Software/Technology"
+                  firstSeenISO: "2018-12-09T20:47:00Z"
+                  lastSeenISO: "2019-03-29T06:08Z"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/pdns/raw/{anystring}':
+    get:
+      summary: Get Resource Records for Raw Data
+      operationId: getPassiveDNSRaw
+      tags:
+        - Passive DNS
+        - Secure Access
+      description: Get the Resource Record (RR) data for DNS responses, and categorization
+        data, where the answer (or rdata) could be anything.
+      parameters:
+      - name: anystring
+        in: path
+        required: true
+        description: |-
+          The text representation of the data. When querying TXT records, add quotes around the text.
+          For example, to search for the 'abc', provide the string as a path parameter
+          in an API request: 'https://api.sse.cisco.com/investigate/v2/pdns/raw/%22abc%22'.
+        schema:
+          type: string
+        example: '%22abc%22'
+      - $ref: '#/components/parameters/limitRecordsParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortorderParam'
+      - $ref: '#/components/parameters/sortbyParam'
+      - $ref: '#/components/parameters/recordTypeParam'
+      - $ref: '#/components/parameters/includeFeaturesParam'
+      - $ref: '#/components/parameters/minFirstSeenParam'
+      - $ref: '#/components/parameters/maxFirstSeenParam'
+      - $ref: '#/components/parameters/minLastSeenParam'
+      - $ref: '#/components/parameters/maxLastSeenParam'
+      - $ref: '#/components/parameters/sortCategoriesParam'
+      - $ref: '#/components/parameters/requiredCategoriesParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Records'
+              example:
+                - minTtl: 3600
+                  maxTtl: 3600
+                  firstSeen: 1544386020000
+                  lastSeen: 1555327199000
+                  name: "926723159-3188410"
+                  type: "TXT"
+                  rr: "cisco.com"
+                  securityCategories:
+                    - Malware
+                    - Cryptomining
+                  contentCategories:
+                    - "Software/Technology"
+                    - "Business Services"
+                  firstSeenISO: "2018-12-09T20:07:00Z"
+                  lastSeenISO: "2019-04-15T11:19Z"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/links/name/{domain}':
+    get:
+      summary: Get Related Domains for Domain
+      operationId: getLinksName
+      tags:
+        - Related Domains for a Domain
+        - Secure Access
+      description: |-
+        List the domain names that are frequently requested around
+        the same time (up to 60 seconds before or after) as the given domain name,
+        but that are not frequently associated with other domain names.
+      parameters:
+        - $ref: '#/components/parameters/domainParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tb1:
+                    type: array
+                    description: |-
+                      The list of domain name and score pairs where score is the number of client IP requests
+                      to the site around the same time that the site is looked up.
+                    items:
+                      type: object
+                      properties:
+                        domain:
+                          type: string
+                          description: A domain name.
+                          example: 'www.example1.com'
+                        score:
+                          type: number
+                          description: |-
+                            The number of client IP requests to the site around the same time
+                            that the site is looked up.
+                          example: 10
+                      description: |-
+                        A [domain name, score] tuple where score is the number of client IP requests
+                        to the site around the same time as the site is looked up.
+                        This is a score that reflects the number of client IPs querying related
+                        sites within 60 seconds of the original request.
+                    example:
+                      - domain: "www.example1.com"
+                        score: 10
+                  found:
+                    type: boolean
+                    description: Specifies whether the results are available.
+                    example: true
+              example:
+                tb1:
+                  - domain: "www.example1.com"
+                    score: 10
+                  - domain: "info.example2.com"
+                    score: 9
+                  - domain: "support.example.com"
+                    score: 3
+                found: true
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/security/name/{domain}':
+    get:
+      summary: Get Security Score Information for Domain
+      operationId: getSecurityName
+      tags:
+        - Security Information for a Domain
+        - Secure Access
+      description: |-
+        List multiple scores or security features for a domain. You can use the scores
+        or security features to determine relevant data points and build insights on the reputation
+        or security risk posed by the site. No one security information feature is conclusive.
+        Instead, consider these features as part of your security research.
+      parameters:
+        - $ref: '#/components/parameters/domainParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dga_score:
+                    type: number
+                    description: |-
+                      A domain generation algorithm (DGA) is used by malware to generate large lists of domain names.
+                      This score is created based on the likeliness
+                      of the domain name being generated by an algorithm
+                      rather than a human. This algorithm is designed to identify domains which
+                      have been created using an automated randomization
+                      strategy, which is a common evasion technique in malware kits or botnets.
+                      This score ranges from -100 (suspicious) to 0 (benign).
+                    example: 38.301771886101335
+                  perplexity:
+                    type: number
+                    description: |-
+                      A second score on the likeliness of the name to be algorithmically
+                      generated, on a scale from 0 to 100. This score is used in conjunction with DGA.
+                    example: 0.4540313302593146
+                  entropy:
+                    type: number
+                    description: The number of bits required to encode the domain name as a score.
+                      This score is used in conjunction with DGA and Perplexity.
+                    example: 2.5216406363433186
+                  securerank2:
+                    type: number
+                    description: |-
+                      The suspicious rank for a domain that reviews base on the lookup behavior
+                      of client IP for the domain.
+                      Securerank is designed to identify hostnames requested by known infected
+                      clients but never requested by clean clients,
+                      assuming these domains are more likely to be bad.
+                      Scores returned range from -100 (suspicious) to 100 (benign).
+                    example: -1.3135141095601992
+                  pagerank:
+                    type: number
+                    description: A popularity score according to Google's PageRank algorithm.
+                    example: 0.0262532
+                  asn_score:
+                    type: number
+                    description: |-
+                      The ASN reputation score ranges from -100 to 0 where -100 is very suspicious.
+                    example: -29.75810625887133
+                  prefix_score:
+                    type: number
+                    description: |-
+                      The prefix ranks domains given their IP prefixes
+                      (an IP prefix is the first three octets in an IP address)
+                      and the reputation score of these prefixes. The scores range from -100 to 0 where -100 is
+                      very suspicious.
+                    example: -64.9070502788884
+                  rip_score:
+                    type: number
+                    description: |-
+                      The RIP ranks domains given their IP addresses and the reputation score
+                      of these IP addresses. The scores ranges from -100 to 0 where -100 is very suspicious.
+                    example: -75.64720536038982
+                  popularity:
+                    type: number
+                    description: |-
+                      The number of unique client IPs visiting this site, relative to all
+                      requests to all sites. A score of how many different client or unique IPs requested
+                      to this domain compared to others.
+                    example: 25.335450495507196
+                  geodiversity:
+                    type: array
+                    description: The list of scores that represent the number of queries from clients visiting the domain,
+                        broken down by country.
+                    items:
+                      type: number
+                      description: |-
+                        A score that represents the number of queries from clients visiting the domain,
+                        broken down by country. Score is a non-normalized ratio between 0 and 1.
+                      example: 0.24074075
+                    example:
+                      - 0.24074075
+                      - 0.018518519
+                  geodiversity_normalized:
+                    type: array
+                    description: |-
+                      The list of scores that represents the amount of queries for clients visiting the domain,
+                      broken down by country.
+                    items:
+                      type: number
+                      description: A score that represents the amount of queries for clients visiting the domain,
+                        broken down by country. The score is a normalized ratio between 0 and 1.
+                      example: 0.3761535390278368
+                    example:
+                      - 0.3761535390278368
+                      - 0.0005015965168831449
+                  tld_geodiversity:
+                    type: array
+                    description: |-
+                      The list of scores that represent the top-level domain country code geodiversity as a percentage
+                      of clients visiting the domain.
+                    items:
+                      type: number
+                      description: |-
+                        A score that represents the top-level domain country code geodiversity as a percentage
+                        of clients visiting the domain. Occurs most often with domains that have a ccTLD.
+                        The score is the normalized ratio between 0 and 1.
+                    example:
+                      - 0.0
+                  geoscore:
+                    type: number
+                    description: |-
+                      A score that represents how far the different physical locations serving this name
+                      are from each other.
+                    example: 0
+                  ks_test:
+                    type: number
+                    description: |-
+                      A number that represents the Kolmogorov-Smirnov test on geodiversity.
+                      Zero indicates that the client traffic matches what is expected for this top-level domain.
+                    example: 0
+                  attack:
+                    type: string
+                    description: |-
+                      The name of any known attacks associated with this domain.
+                      Returns an empty string if no known threat associated with domain.
+                    example: ""
+                  threat_type:
+                    type: string
+                    description: |-
+                      The type of the known attack, such as botnet or APT. Returns an empty string if no known
+                      threat associated with domain.
+                    example: Botnet
+                  found:
+                    type: boolean
+                    description: |-
+                      Specifies whether the results are available.
+                    example: false
+                    # Returns blank if no known threat associated with domain.
+              example:
+                dga_score: 38.301771886101335
+                perplexity: 0.4540313302593146
+                entropy: 2.5216406363433186
+                securerank2: -1.3135141095601992
+                pagerank: 0.0262532
+                asn_score: -29.75810625887133
+                prefix_score: -64.9070502788884
+                rip_score: -75.64720536038982
+                popularity: 25.335450495507196
+                geodiversity:
+                  - 0.24074075
+                  - 0.018518519
+                geodiversity_normalized:
+                  - 0.3761535390278368
+                  - 0.0005015965168831449
+                tld_geodiversity:
+                  - 0.0
+                geoscore: 0
+                ks_test: 0
+                attack: ""
+                threat_type: ""
+                found: true
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/domains/risk-score/{domain}':
+    get:
+      summary: Get Risk Score for Domain
+      operationId: getDomainsRiskScore
+      tags:
+        - Security Information for a Domain
+        - Secure Access
+      description: |-
+        The Investigate Risk Score is based on an analysis of
+        the lexical characteristics of the domain name
+        and patterns in queries and requests to the domain.
+        The risk score is scaled from 0 to 100 where 100 is the highest risk
+        and 0 represents no risk at all. Periodically, Investigate updates this score based
+        on additional inputs.
+        A domain blocked by Secure Access receives a score of 100.
+      parameters:
+        - $ref: '#/components/parameters/domainParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/RiskScore'
+              example:
+                indicators:
+                  - indicator: "Geo Popularity Score"
+                    normalized_score: 2
+                    score: -3.610878169999999
+                  - indicator: "Keyword Score"
+                    normalized_score: 3
+                    score: 0.03586190445512534
+                  - indicator: "Lexical"
+                    normalized_score: 52
+                    score: 0.525
+                  - indicator: "Popularity 1 Day"
+                    normalized_score: 100
+                    score: 113.14
+                  - indicator: "Popularity 30 Day"
+                    normalized_score: 100
+                    score: 112.01
+                  - indicator: "Popularity 7 Day"
+                    normalized_score: 100
+                    score: 112.86
+                  - indicator: "Popularity 90 Day"
+                    normalized_score: 100
+                    score: 111.4
+                  - indicator: "TLD Rank Score"
+                    normalized_score: 1
+                    score: 0.010000315765229171
+                  - indicator: "Block Status"
+                    normalized_score: 0
+                    score: 0
+                risk_score: 4
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/bgp_routes/ip/{ip}/as_for_ip.json':
+    get:
+      summary: Get BGP Route Information for IP
+      operationId: getBgpRoutesIp
+      tags:
+        - AS Information for a Domain
+        - Secure Access
+      description: |-
+        This endpoint provides data about ASN and IP relationships,
+        showing how IP addresses are related to each other and to the regional registries.
+        You can find out more about the IP space associated with an AS
+        and correlate BGP routing information between AS.
+
+        When querying an IP to find which AS (Autonomous System), it is helpful
+        to find associated IP addresses. The AS is part of the BGP routing for that IP.
+
+        A valid result returns an array of hash references.
+        The hash reference contains information about the AS such as the ASN,
+        the CIDR prefix of the AS, the Internet Registry (RIR) number (0 through 6),
+        the Description of the AS and the creation date for the AS.
+        An empty response returns an empty array ([]).
+      parameters:
+      - name: ip
+        in: path
+        required: true
+        description: The IPv4 address where you can obtain the AS information.
+        schema:
+          type: string
+        example: 1.2.3.4
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The properties of the AS information.
+                properties:
+                  creation_date:
+                    type: string
+                    description: The date when the AS was first created.
+                    example: "2002-08-01"
+                  ir:
+                    type: integer
+                    description: |-
+                      The IR number corresponds to one of the 5 Regional Internet Registries (RIR).
+                      | Registry | Number |	Region |
+                      |-----|-----|-----|
+                      | Registry | 1 | AfriNIC: Africa |
+                      | Registry | 2 | APNIC: Asia, Australia, New Zealand, and neighboring countries. |
+                      | Registry | 3 | ARIN: United States, Canada, several parts of the Caribbean region, and Antarctica. |
+                      | Registry | 4 | LACNIC: Latin America and parts of the Caribbean region. |
+                      | Registry | 5 | RIPE NCC: Europe, Russia, the Middle East, and Central Asia. |
+                      | Registry | 0 | Unknown / Not Available |
+                    example: 2
+                  description:
+                    type: string
+                    description: Network Owner Description as provided by the network owner.
+                    example: "CHINANET-BACKBONE No.31,Jin-rong Street,CN 86400"
+                  asn:
+                    type: string
+                    description: The autonomous system number (ASN) associated with the IP address.
+                    example: "4134"
+                  cidr:
+                    type: string
+                    description: The IP CIDR for the ASN.
+                    example: "123.172.0.0/15"
+              example:
+                creation_date: "2002-08-01"
+                ir: 2
+                description: "CHINANET-BACKBONE No.31,Jin-rong Street,CN 86400"
+                asn: "4134"
+                cidr: "123.172.0.0/15"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/bgp_routes/asn/{asn}/prefixes_for_asn.json':
+    get:
+      summary: Get BGP Route Information for ASN
+      operationId: getBgpRoutesAsn
+      tags:
+        - AS Information for a Domain
+        - Secure Access
+      description: |
+        A response to a valid ASN returns an array of hash references.
+        Each hash reference contains two keys: `geo` and `cidr`.
+        Geo is a hash reference with the country name and country code
+        (the code corresponds to the country code list for ISO-3166-1 alpha-2).
+        CIDR contains the IP prefix for this ASN.
+      parameters:
+      - name: asn
+        in: path
+        required: true
+        description: Autonomous System Number (ASN) for the AS.
+        schema:
+          type: string
+        example: "4134"
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The properties of the BGP route information.
+                properties:
+                  cidr:
+                    type: array
+                    items:
+                      type: string
+                      description: A CIDR range of IP addresses.
+                      example: '98.143.32.0/20'
+                    description: |-
+                      A list of the CIDR range of IP addresses associated with this AS.
+                      The CIDR contains the IP prefix for the ASN.
+                    example:
+                      - '98.143.32.0/20'
+                  geo:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: The ID of the geolocation.
+                        example: 10
+                      name:
+                        type: string
+                        description: The name of the geolocation.
+                        example: United States
+                    description: |-
+                      Geo is a hash reference with the country name and country code
+                      (the code corresponds to the country code list for ISO-3166-1 alpha-2).
+                      For more information, see [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
+                    example:
+                      name: United States
+                      id: 10
+              example:
+                cidr:
+                  - '98.143.32.0/20'
+                geo:
+                  name: United States
+                  id: 10
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/whois/{domain}':
+    get:
+      summary: Get WHOIS Information for Domain
+      operationId: getWhois
+      tags:
+        - WHOIS Information for a Domain
+        - Secure Access
+      description: |
+        Get the WHOIS information for the specified email addresses,
+        nameservers, and domains. You can search by multiple email addresses or multiple nameservers.
+        This documentation outlines the following API endpoints:
+        email (single and multiple), domain record (current and historical), and nameserver (single and multiple).
+        In some instances, WHOIS information can be irregular as there are no standards
+        between domain registrars and large volumes of information can be returned from a query.
+        As such, both the email and nameserver WHOIS endpoints have a limit of 500 results,
+        which you can reduce to a smaller set of results.
+        There is an `offset` parameter that can be leveraged to retrieve the entire set
+        of domain entries for a given email without any limitation. Only the email parameter
+        supports this.
+        You can sort the email parameter by filtering the entries based on the timestamp field.
+        If a domain, email, or nameserver has no known WHOIS information, Investigate returns `HTTP 404`.
+        If a domain, email or nameserver does not exist, Investigate returns `HTTP 404`.
+      parameters:
+        - $ref: '#/components/parameters/domain'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of WHOIS information.
+                items:
+                  $ref: '#/components/schemas/WhoisDomain'
+              example:
+                - administrativeContactFax: ""
+                  whoisServers: ""
+                  addresses:
+                    - "1600 amphitheatre parkway"
+                    - "please contact contact-admin@google.com, 1600 amphitheatre parkway"
+                    - "2400 e. bayshore pkwy"
+                  administrativeContactName: "DNS Admin"
+                  zoneContactEmail: ""
+                  billingContactFax: ""
+                  administrativeContactTelephoneExt: ""
+                  administrativeContactEmail: "dns-admin@google.com"
+                  technicalContactEmail: "dns-admin@google.com"
+                  technicalContactFax: "16506181499"
+                  nameServers:
+                    - "ns1.google.com"
+                    - "ns2.google.com"
+                    - "ns3.google.com"
+                    - "ns4.google.com"
+                  zoneContactName: ""
+                  billingContactPostalCode: ""
+                  zoneContactFax: ""
+                  registrantTelephoneExt: ""
+                  zoneContactFaxExt: ""
+                  technicalContactTelephoneExt: ""
+                  billingContactCity: ""
+                  zoneContactStreet: []
+                  created: ""
+                  administrativeContactCity: "Mountain View"
+                  registrantName: "Dns Admin"
+                  zoneContactCity: ""
+                  domainName: "google.com"
+                  zoneContactPostalCode: ""
+                  administrativeContactFaxExt: ""
+                  technicalContactCountry: "UNITED STATES"
+                  registrarIANAID: "292"
+                  updated: "2011-07-20 00:00:00 UTC"
+                  administrativeContactStreet:
+                    - "1600 amphitheatre parkway"
+                  billingContactEmail: ""
+                  status:
+                    - "clientDeleteProhibited"
+                    - "clientTransferProhibited"
+                    - "clientUpdateProhibited"
+                    - "serverDeleteProhibited"
+                    - "serverTransferProhibited"
+                    - "serverUpdateProhibited"
+                  registrantCity: "Mountain View"
+                  billingContactCountry: ""
+                  expires: "2020-09-14 00:00:00 UTC"
+                  technicalContactStreet:
+                    - "2400 e. bayshore pkwy"
+                  registrantOrganization: "Google Inc."
+                  billingContactStreet: []
+                  registrarName: "MARKMONITOR INC."
+                  registrantPostalCode: "94043"
+                  zoneContactTelephone: ""
+                  registrantEmail: "dns-admin@google.com"
+                  technicalContactFaxExt: ""
+                  technicalContactOrganization: "Google Inc."
+                  emails:
+                    - "dns-admin@google.com"
+                  registrantStreet:
+                    - "please contact contact-admin@google.com"
+                    - "1600 amphitheatre parkway"
+                  technicalContactTelephone: "16503300100"
+                  technicalContactState: "CA"
+                  technicalContactCity: "Mountain View"
+                  registrantFax: "16506188571"
+                  registrantCountry: "UNITED STATES"
+                  billingContactFaxExt: ""
+                  timestamp: 0
+                  zoneContactOrganization: ""
+                  administrativeContactCountry: "UNITED STATES"
+                  billingContactName: ""
+                  registrantState: "CA"
+                  registrantTelephone: "16502530000"
+                  administrativeContactState: "CA"
+                  registrantFaxExt: ""
+                  technicalContactPostalCode: "94043"
+                  rawBase64: ""
+                  zoneContctTelephoneExt: ""
+                  administrativeContactOrganization: "Google Inc."
+                  billingContactTelephone: ""
+                  billingContactTelephoneExt: ""
+                  zoneContactState: ""
+                  administrativeContactTelephone: "16506234000"
+                  billingContactOrganization: ""
+                  technicalContactName: "DNS Admin"
+                  administrativeContactPostalCode: "94043"
+                  zoneContactCountry: ""
+                  billingContactState: ""
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/whois/{domain}/history':
+    get:
+      summary: Get WHOIS History for Domain
+      operationId: getWhoisHistory
+      tags:
+        - WHOIS Information for a Domain
+        - Secure Access
+      description: |
+        Get a standard WHOIS response record for a single domain with available historical
+        WHOIS data returned in an object. The information displayed varies by registrant.
+        The default limit for history is 10. You can set another value with the `limit` query parameter.
+      parameters:
+      - $ref: '#/components/parameters/domain'
+      - $ref: '#/components/parameters/limitParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of WHOIS information.
+                items:
+                  $ref: '#/components/schemas/WhoisDomain'
+              example:
+                - administrativeContactFax: ""
+                  whoisServers: ""
+                  addresses:
+                    - "1600 amphitheatre parkway"
+                    - "please contact contact-admin@google.com, 1600 amphitheatre parkway"
+                    - "2400 e. bayshore pkwy"
+                  administrativeContactName: "DNS Admin"
+                  zoneContactEmail: ""
+                  billingContactFax: ""
+                  administrativeContactTelephoneExt: ""
+                  administrativeContactEmail: "dns-admin@google.com"
+                  technicalContactEmail: "dns-admin@google.com"
+                  technicalContactFax: "16506181499"
+                  nameServers:
+                    - "ns1.google.com"
+                    - "ns2.google.com"
+                    - "ns3.google.com"
+                    - "ns4.google.com"
+                  zoneContactName: ""
+                  billingContactPostalCode: ""
+                  zoneContactFax: ""
+                  registrantTelephoneExt: ""
+                  zoneContactFaxExt: ""
+                  technicalContactTelephoneExt: ""
+                  billingContactCity: ""
+                  zoneContactStreet: []
+                  created: ""
+                  administrativeContactCity: "Mountain View"
+                  registrantName: "Dns Admin"
+                  zoneContactCity: ""
+                  domainName: "google.com"
+                  zoneContactPostalCode: ""
+                  administrativeContactFaxExt: ""
+                  technicalContactCountry: "UNITED STATES"
+                  registrarIANAID: "292"
+                  updated: "2011-07-20 00:00:00 UTC"
+                  administrativeContactStreet:
+                    - "1600 amphitheatre parkway"
+                  billingContactEmail: ""
+                  status:
+                    - "clientDeleteProhibited"
+                    - "clientTransferProhibited"
+                    - "clientUpdateProhibited"
+                    - "serverDeleteProhibited"
+                    - "serverTransferProhibited"
+                    - "serverUpdateProhibited"
+                  registrantCity: "Mountain View"
+                  billingContactCountry: ""
+                  expires: "2020-09-14 00:00:00 UTC"
+                  technicalContactStreet:
+                    - "2400 e. bayshore pkwy"
+                  registrantOrganization: "Google Inc."
+                  billingContactStreet: []
+                  registrarName: "MARKMONITOR INC."
+                  registrantPostalCode: "94043"
+                  zoneContactTelephone: ""
+                  registrantEmail: "dns-admin@google.com"
+                  technicalContactFaxExt: ""
+                  technicalContactOrganization: "Google Inc."
+                  emails:
+                    - "dns-admin@google.com"
+                  registrantStreet:
+                    - "please contact contact-admin@google.com"
+                    - "1600 amphitheatre parkway"
+                  technicalContactTelephone: "16503300100"
+                  technicalContactState: "CA"
+                  technicalContactCity: "Mountain View"
+                  registrantFax: "16506188571"
+                  registrantCountry: "UNITED STATES"
+                  billingContactFaxExt: ""
+                  timestamp: 0
+                  zoneContactOrganization: ""
+                  administrativeContactCountry: "UNITED STATES"
+                  billingContactName: ""
+                  registrantState: "CA"
+                  registrantTelephone: "16502530000"
+                  administrativeContactState: "CA"
+                  registrantFaxExt: ""
+                  technicalContactPostalCode: "94043"
+                  rawBase64: ""
+                  zoneContctTelephoneExt: ""
+                  administrativeContactOrganization: "Google Inc."
+                  billingContactTelephone: ""
+                  billingContactTelephoneExt: ""
+                  zoneContactState: ""
+                  administrativeContactTelephone: "16506234000"
+                  billingContactOrganization: ""
+                  technicalContactName: "DNS Admin"
+                  administrativeContactPostalCode: "94043"
+                  zoneContactCountry: ""
+                  billingContactState: ""
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/whois/nameservers/{nameserver}':
+    get:
+      summary: Get WHOIS Information for Nameserver
+      operationId: getWhoisNameserver
+      tags:
+        - WHOIS Information for a Domain
+        - Secure Access
+      description: |-
+        Get WHOIS information for the nameserver.
+        As a nameserver can potentially register hundreds or thousands of domains,
+        the server limits the number of results to 500.
+      parameters:
+      - name: nameserver
+        in: path
+        required: true
+        description: The nameserver's domain name.
+        schema:
+          type: string
+        example: nameserver1.com
+      - name: limit
+        in: query
+        required: false
+        description: |-
+          Specify the number of records to return from the collection.
+          The default limit is 500.
+        schema:
+          type: integer
+          default: 500
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortFieldParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The WHOIS email and nameserver information.
+                properties:
+                  totalResults:
+                    type: integer
+                    description: The total number of WHOIS records found for this query.
+                  moreDataAvailable:
+                    $ref: '#/components/schemas/moreDataAvailable'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  sortField:
+                    type: string
+                    description: The field that is used to sort the collection.
+                    example: updated
+                  domains:
+                    type: array
+                    description: The list of information about the WHOIS emails and nameservers.
+                    items:
+                      $ref: '#/components/schemas/WhoisEmailsAndNameservers'
+                    example:
+                      - domain: "46645.biz"
+                        current: true
+              example:
+                totalResults: 500
+                moreDataAvailable: true
+                limit: 500
+                sortField: updated
+                domains:
+                  - domain: "46645.biz"
+                    current: true
+                  - domain: "800google411.net"
+                    current: true
+                  - domain: "zagatnyc.com"
+                    current: true
+                  - domain: "zavers.com"
+                    current: true
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/whois/nameservers':
+    get:
+      summary: Get WHOIS Information for Nameservers
+      operationId: getWhoisNameservers
+      tags:
+        - WHOIS Information for a Domain
+        - Secure Access
+      description: |-
+        Get WHOIS information for the nameservers. To search by multiple nameservers, provide
+        a comma-delimited list of domain names for the `nameServerList` query parameter.
+        For example: `ns1.google.com,ns2.google.com`.
+      parameters:
+      - name: nameServerList
+        in: query
+        required: true
+        description: The nameserver's domain names.
+        schema:
+          type: string
+          description: The list of the nameserver's domain names.
+        example: 'ns1.google.com,ns2.google.com'
+      - name: limit
+        in: query
+        required: false
+        description: |-
+          The number of records to return in the response from the collection.
+          The default limit is 500.
+        schema:
+          type: integer
+          default: 500
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortFieldParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The WHOIS information about the nameservers.
+                properties:
+                  totalResults:
+                    $ref: '#/components/schemas/totalresults'
+                  moreDataAvailable:
+                    $ref: '#/components/schemas/moreDataAvailable'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  sortField:
+                    type: string
+                    description: The field that is used to sort the collection.
+                    example: updated
+                  domains:
+                    type: array
+                    description: The list of WHOIS nameserver domain information.
+                    items:
+                      $ref: '#/components/schemas/WhoisEmailsAndNameservers'
+                    example:
+                      - domain: "46645.biz"
+                        current: true
+              example:
+                totalResults: 500
+                moreDataAvailable: true
+                limit: 500
+                sortField: updated
+                domains:
+                  - domain: "46645.biz"
+                    current: true
+                  - domain: "800google411.net"
+                    current: true
+                  - domain: "zagatnyc.com"
+                    current: true
+                  - domain: "zavers.com"
+                    current: true
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/whois/emails/{email}':
+    get:
+      summary: Get WHOIS Email Information
+      operationId: getWhoisEmail
+      tags:
+        - WHOIS Information for a Domain
+        - Secure Access
+      description: |-
+        Get the email address or addresses of the registrar for the domain or domains. The results include
+        the total number of results for domains registered by this email address and a list
+        of the first 500 domains associated with this email.
+        You can pivot on the email address to find other malicious domains registered by the same email.
+        This endpoint is limited to a maximum of 500 results, which are the first 500 gathered from the database.
+        Reduce the number of results by setting the `limit` query parameter.
+        **Note:** Due to the sample length, Investigate may truncate a sample.
+      parameters:
+      - name: email
+        in: path
+        required: true
+        description: An email address that follows the RFC5322 conventions.
+        schema:
+          type: string
+        example: hello@sample.com
+      - name: limit
+        in: query
+        required: false
+        description: |-
+          Specify the number of results to return.
+          The default limit is 500.
+        example: 400
+        schema:
+          type: integer
+          default: 500
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortFieldParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalResults:
+                    type: integer
+                    description: The total number of results for this email address.
+                    example: 400
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  moreDataAvailable:
+                    type: boolean
+                    description: Specifies whether there is more than 500 results for this email.
+                    example: true
+                  limit:
+                    type: integer
+                    description: |-
+                      The number of results returned in the response. The default
+                      limit is 500.
+                  sortField:
+                    type: string
+                    description: The field that is used to sort the collection.
+                    example: updated
+                  domains:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WhoisEmailsAndNameservers'
+                    description: |-
+                      The list of domains registered by this email and if the domain is currently registered
+                      by this email address.
+                    example:
+                      - domain: "0emm.com"
+                        current: true
+              example:
+                #dns-admin@google.com:
+                totalResults: 500
+                moreDataAvailable: true
+                limit: 500
+                sortField: updated
+                domains:
+                  - domain: "0emm.com"
+                    current: true
+                  - domain: "10tothe100.net"
+                    current: true
+                  - domain: "youtubube.com"
+                    current: true
+                  - domain: "zagat.net"
+                    current: true
+                  - domain: "zagatnyc.com"
+                    current: true
+                  - domain: "zavers.com"
+                    current: true
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/whois/search/{searchField}/{regexExpression}':
+    get:
+      summary: Get WHOIS Information Search
+      operationId: getWhoisSearch
+      tags:
+        - WHOIS Information for a Domain
+        - Secure Access
+      description: |
+        Performs a regular expression (RegEx) search on the WHOIS data (domain, nameserver, and email fields)
+        that was updated or created in the specified time range.
+        Returns a list of ten WHOIS records that match the specified RegEx expression.
+        Use the `offset` query parameter to paginate the collection.
+        By default, Investigate sorts by the `updated` field.
+      parameters:
+      - name: searchField
+        in: path
+        required: true
+        description: |-
+          Specifies the field name to use in the RegEx search.
+          Valid field names are: `domain`, `nameserver`, and `email`.
+        schema:
+          type: string
+          enum:
+            - domain
+            - nameserver
+            - email
+        example: domain
+      - name: regexExpression
+        in: path
+        required: true
+        description: A standard regular expression pattern search.
+        schema:
+          type: string
+        example: "exa[a-z]ple.com"
+        # rename to expression, see next endpoint
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/stop'
+      - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortFieldParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The WHOIS information for a domain.
+                properties:
+                  totalResults:
+                    type: integer
+                    description: The total number of results for this search.
+                    example: 500
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  moreDataAvailable:
+                    type: boolean
+                    description: Specifies whether there is more than 10 results for this search.
+                    example: true
+                  limit:
+                    type: integer
+                    description: The total number of results for this page. Default limit is 10.
+                    example: 15
+                  sortField:
+                    type: string
+                    description: The field that is used to sort the collection.
+                    example: updated
+                  records:
+                    type: array
+                    description: The list of WHOIS records.
+                    items:
+                      $ref: '#/components/schemas/WhoisDomain'
+                    example:
+                      - administrativeContactFax: ""
+                        whoisServers: ""
+                        addresses:
+                          - "1600 amphitheatre parkway"
+                          - "please contact contact-admin@google.com, 1600 amphitheatre parkway"
+                          - "2400 e. bayshore pkwy"
+                        administrativeContactName: "DNS Admin"
+                        zoneContactEmail: ""
+                        billingContactFax: ""
+                        administrativeContactTelephoneExt: ""
+                        administrativeContactEmail: "dns-admin@google.com"
+                        technicalContactEmail: "dns-admin@google.com"
+                        technicalContactFax: "16506181499"
+                        nameServers:
+                          - "ns1.google.com"
+                          - "ns2.google.com"
+                          - "ns3.google.com"
+                          - "ns4.google.com"
+                        zoneContactName: ""
+                        billingContactPostalCode: ""
+                        zoneContactFax: ""
+                        registrantTelephoneExt: ""
+                        zoneContactFaxExt: ""
+                        technicalContactTelephoneExt: ""
+                        billingContactCity: ""
+                        zoneContactStreet: []
+                        created: ""
+                        administrativeContactCity: "Mountain View"
+                        registrantName: "Dns Admin"
+                        zoneContactCity: ""
+                        domainName: "google.com"
+                        zoneContactPostalCode: ""
+                        administrativeContactFaxExt: ""
+                        technicalContactCountry: "UNITED STATES"
+                        registrarIANAID: "292"
+                        updated: "2011-07-20 00:00:00 UTC"
+                        administrativeContactStreet:
+                          - "1600 amphitheatre parkway"
+                        billingContactEmail: ""
+                        status:
+                          - "clientDeleteProhibited"
+                          - "clientTransferProhibited"
+                          - "clientUpdateProhibited"
+                          - "serverDeleteProhibited"
+                          - "serverTransferProhibited"
+                          - "serverUpdateProhibited"
+                        registrantCity: "Mountain View"
+                        billingContactCountry: ""
+                        expires: "2020-09-14 00:00:00 UTC"
+                        technicalContactStreet:
+                          - "2400 e. bayshore pkwy"
+                        registrantOrganization: "Google Inc."
+                        billingContactStreet: []
+                        registrarName: "MARKMONITOR INC."
+                        registrantPostalCode: "94043"
+                        zoneContactTelephone: ""
+                        registrantEmail: "dns-admin@google.com"
+                        technicalContactFaxExt: ""
+                        technicalContactOrganization: "Google Inc."
+                        emails:
+                          - "dns-admin@google.com"
+                        registrantStreet:
+                          - "please contact contact-admin@google.com"
+                          - "1600 amphitheatre parkway"
+                        technicalContactTelephone: "16503300100"
+                        technicalContactState: "CA"
+                        technicalContactCity: "Mountain View"
+                        registrantFax: "16506188571"
+                        registrantCountry: "UNITED STATES"
+                        billingContactFaxExt: ""
+                        timestamp: 0
+                        zoneContactOrganization: ""
+                        administrativeContactCountry: "UNITED STATES"
+                        billingContactName: ""
+                        registrantState: "CA"
+                        registrantTelephone: "16502530000"
+                        administrativeContactState: "CA"
+                        registrantFaxExt: ""
+                        technicalContactPostalCode: "94043"
+                        rawBase64: ""
+                        zoneContctTelephoneExt: ""
+                        administrativeContactOrganization: "Google Inc."
+                        billingContactTelephone: ""
+                        billingContactTelephoneExt: ""
+                        zoneContactState: ""
+                        administrativeContactTelephone: "16506234000"
+                        billingContactOrganization: ""
+                        technicalContactName: "DNS Admin"
+                        administrativeContactPostalCode: "94043"
+                        zoneContactCountry: ""
+                        billingContactState: ""
+
+              example:
+                totalResults: 500
+                offset: 0
+                moreDataAvailable: true
+                limit: 10
+                sortField: updated
+                records:
+                  - administrativeContactFax: ""
+                    whoisServers: ""
+                    addresses:
+                      - "1600 amphitheatre parkway"
+                      - "please contact contact-admin@google.com, 1600 amphitheatre parkway"
+                      - "2400 e. bayshore pkwy"
+                    administrativeContactName: "DNS Admin"
+                    zoneContactEmail: ""
+                    billingContactFax: ""
+                    administrativeContactTelephoneExt: ""
+                    administrativeContactEmail: "dns-admin@google.com"
+                    technicalContactEmail: "dns-admin@google.com"
+                    technicalContactFax: "16506181499"
+                    nameServers:
+                      - "ns1.google.com"
+                      - "ns2.google.com"
+                      - "ns3.google.com"
+                      - "ns4.google.com"
+                    zoneContactName: ""
+                    billingContactPostalCode: ""
+                    zoneContactFax: ""
+                    registrantTelephoneExt: ""
+                    zoneContactFaxExt: ""
+                    technicalContactTelephoneExt: ""
+                    billingContactCity: ""
+                    zoneContactStreet: []
+                    created: ""
+                    administrativeContactCity: "Mountain View"
+                    registrantName: "Dns Admin"
+                    zoneContactCity: ""
+                    domainName: "google.com"
+                    zoneContactPostalCode: ""
+                    administrativeContactFaxExt: ""
+                    technicalContactCountry: "UNITED STATES"
+                    registrarIANAID: "292"
+                    updated: "2011-07-20 00:00:00 UTC"
+                    administrativeContactStreet:
+                      - "1600 amphitheatre parkway"
+                    billingContactEmail: ""
+                    status:
+                      - "clientDeleteProhibited"
+                      - "clientTransferProhibited"
+                      - "clientUpdateProhibited"
+                      - "serverDeleteProhibited"
+                      - "serverTransferProhibited"
+                      - "serverUpdateProhibited"
+                    registrantCity: "Mountain View"
+                    billingContactCountry: ""
+                    expires: "2020-09-14 00:00:00 UTC"
+                    technicalContactStreet:
+                      - "2400 e. bayshore pkwy"
+                    registrantOrganization: "Google Inc."
+                    billingContactStreet: []
+                    registrarName: "MARKMONITOR INC."
+                    registrantPostalCode: "94043"
+                    zoneContactTelephone: ""
+                    registrantEmail: "dns-admin@google.com"
+                    technicalContactFaxExt: ""
+                    technicalContactOrganization: "Google Inc."
+                    emails:
+                      - "dns-admin@google.com"
+                    registrantStreet:
+                      - "please contact contact-admin@google.com"
+                      - "1600 amphitheatre parkway"
+                    technicalContactTelephone: "16503300100"
+                    technicalContactState: "CA"
+                    technicalContactCity: "Mountain View"
+                    registrantFax: "16506188571"
+                    registrantCountry: "UNITED STATES"
+                    billingContactFaxExt: ""
+                    timestamp: 0
+                    zoneContactOrganization: ""
+                    administrativeContactCountry: "UNITED STATES"
+                    billingContactName: ""
+                    registrantState: "CA"
+                    registrantTelephone: "16502530000"
+                    administrativeContactState: "CA"
+                    registrantFaxExt: ""
+                    technicalContactPostalCode: "94043"
+                    rawBase64: ""
+                    zoneContctTelephoneExt: ""
+                    administrativeContactOrganization: "Google Inc."
+                    billingContactTelephone: ""
+                    billingContactTelephoneExt: ""
+                    zoneContactState: ""
+                    administrativeContactTelephone: "16506234000"
+                    billingContactOrganization: ""
+                    technicalContactName: "DNS Admin"
+                    administrativeContactPostalCode: "94043"
+                    zoneContactCountry: ""
+                    billingContactState: ""
+
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/search/{expression}':
+    get:
+      summary: Get Domains by Search
+      operationId: getSearch
+      tags:
+        - Search Domain
+        - Secure Access
+      description: List the newly seen domains that match a regular expression pattern.
+      parameters:
+      - name: expression
+        in: path
+        required: true
+        description: A standard regular expression pattern search.
+        schema:
+          type: string
+        example: "exa[a-z]ple.com"
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/stop'
+      - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - name: includeCategory
+        in: query
+        required: false
+        description: |
+          Enables or disables the inclusion of security categories in the response.
+          The default value is false.
+        schema:
+          type: boolean
+        example: true
+      - name: type
+        in: query
+        required: false
+        description: |
+          Specifies the search database node type. Valid values are: URL, IP, or HOST.
+        schema:
+          type: string
+          enum:
+            - URL
+            - IP
+            - HOST
+        example: IP
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The list of newly seen domains that match a regular expression pattern.
+                properties:
+                  expression:
+                    type: string
+                    description: Specifies the regular expression used in the search.
+                    example: "exa[a-z]ple.com"
+                  totalResults:
+                    $ref: '#/components/schemas/totalresults'
+                  moreDataAvailable:
+                    $ref: '#/components/schemas/moreDataAvailable'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  matches:
+                    type: array
+                    description: The list of matching records.
+                    items:
+                      $ref: '#/components/schemas/MatchRecord'
+                    example:
+                      - name: example
+                        firstSeen: 1432330927421
+                        firstSeenISO: '2015-05-22T21:42:07.421Z'
+                        securityCategories:
+                          - Botnet
+              example:
+                expression: "exa[a-z]ple.com"
+                totalResults: 1
+                moreDataAvailable: false
+                limit: 1000
+                matches:
+                - name: example
+                  firstSeen: 1432330927421
+                  firstSeenISO: '2015-05-22T21:42:07.421Z'
+                  securityCategories:
+                    - Botnet
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/topmillion':
+    get:
+      summary: Get Top Most Seen Domains
+      operationId: getTopmillion
+      tags:
+        - Popularity List-Top Million Domains
+        - Secure Access
+      description: |
+        List the most seen domains in Secure Access. You can download the data in a zip file,
+        or use the Investigate API to stream the data into a SIEM.
+        The popularity list contains our most queried domains based on passive DNS usage across
+        the Secure Access global network of more than 180 billion requests per day with many tens of millions
+        of unique active users, in more than 165 countries.
+        The metric does not only consist of browser-based http requests from users but also takes
+        in to account the number of unique client IPs invoking this domain relative to the sum of all requests
+        to all domains.
+        Our popularity ranking reflects the domain's relative internet activity agnostic
+        to the invocation protocols and applications where as site ranking models (such as Alexa) focus
+        on the web activity over port 80 (primarily from browsers).
+        In addition, the Secure Access popularity algorithm also applies data normalization techniques
+        to smooth potential biases that may occur due to sampling of DNS usage data.
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        description: |-
+          The maximum number of domains to return in the list.
+          If you do not set a limit, Investigate returns up to one million results.
+        schema:
+          type: integer
+        example: 1000
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of the most popular domains identified by the Secure Access DNS resolvers.
+                items:
+                  type: string
+                  description: A popular domain name identified by the Secure Access DNS resolvers.
+                  example: 'g.doubleclick.net'
+              example:
+                - "google.com"
+                - "netflix.com"
+                - "api-global.netflix.com"
+                - "microsoft.com"
+                - "www.google.com"
+                - "facebook.com"
+                - "doubleclick.net"
+                - "g.doubleclick.net"
+                - "googleads.g.doubleclick.net"
+                - "hola.org"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/samples/{destination}':
+    get:
+      summary: Get Samples for Domain, IP, or URL
+      operationId: getSamplesDestination
+      tags:
+        - Cisco Secure Malware Analytics Integration
+        - Secure Access
+      description: |
+        Specify a domain, IP, or URL. Use the destination to search for all samples
+        associated with the destination. The default number of items in a response is 10. You can extend the limit.
+        You must have a license for Cisco Secure Malware Analytics to receive the samples data.
+
+        Cisco Secure Malware Analytics retains checksum samples for one year.
+        You may find that Investigate previously listed a sample related
+        to a destination. If Cisco Secure Malware Analytics no longer contains a sample
+        related to the destination, Investigate does not display the sample in the list
+        of associated samples.
+
+        An error may occur when the requested destination is not in a valid format,
+        if the requested host is not found in our database, or if there is no data available
+        for the destination that you have requested. CIDR subnets (for example: 10.10.10.0/24) and pattern search is not supported.
+      parameters:
+      - $ref: '#/components/parameters/destinationParam'
+      - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/offsetParam'
+      - $ref: '#/components/parameters/sortbyScoreParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grids'
+              example:
+                - query: "google.com"
+                  totalResults: 10
+                  moreDataAvailable: true
+                  limit: 10
+                  offset: 0
+                  samples:
+                    - sha256: "e9d3470c37dada28d5a32fb53a243c5b20def35bb01abf8f5403182cc2b91fdd"
+                      sha1: "de182fdcc3c0d473b90a0df0ad14c2074d1e7c50"
+                      md5: "282f80e8a2cf9e0e0dd72093787d99c6"
+                      magicType: "PE32 executable (GUI) Intel 80386, for MS Windows"
+                      threatScore: 100
+                      size: 192512
+                      firstSeen: 1460108539000
+                      lastSeen: 1460108539000
+                      visible: true
+                      avresults:
+                        - signature: "Win.Trojan.Ramnit"
+                          product: "ClamAV"
+                        - signature: "Win.Trojan.Parite"
+                          product: "ClamAV"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/sample/{hash}':
+    get:
+      summary: Get Samples for Hash
+      operationId: getSampleHash
+      tags:
+        #- Threat Grid Integration—Cisco AMP Threat Grid
+        - Cisco Secure Malware Analytics Integration
+        - Secure Access
+      description: |
+        Gather the information from the /samples endpoint, then pivot using the checksums
+        of the samples revealed in your initial query.
+        This pivot can reveal large chunks of new data about the malware being researched.
+        Returns a variety of data as nested JSON arrays.
+        The initial results array contains the information about the original sample.
+        These results are described first and are, in effect, the samples of the sample.
+      parameters:
+        - $ref: '#/components/parameters/hash'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sample'
+              example:
+                sha256: "e9d3470c37dada28d5a32fb53a243c5b20def35bb01abf8f5403182cc2b91fdd"
+                sha1: "de182fdcc3c0d473b90a0df0ad14c2074d1e7c50"
+                md5: "282f80e8a2cf9e0e0dd72093787d99c6"
+                magicType: "PE32 executable (GUI) Intel 80386, for MS Windows"
+                threatScore: 100
+                size: 192512
+                firstSeen: 1460108539000
+                lastSeen: 1460108539000
+                visible: true
+                avresults:
+                  - signature: "Win.Trojan.Ramnit"
+                    product: "ClamAV"
+                  - signature: "Win.Trojan.Parite"
+                    product: "ClamAV"
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/sample/{hash}/artifacts':
+    get:
+      summary: Get Samples for Hash Artifacts
+      operationId: getSampleHashArtifacts
+      tags:
+        - Cisco Secure Malware Analytics Integration
+        - Secure Access
+      description: |-
+        Other samples associated with this sample. The sample data does not include a threat score.
+        Artifacts are only available for Cisco Secure Malware Analytics customers.
+      parameters:
+        - $ref: '#/components/parameters/hash'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/offsetParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleHashSamples'
+              example:
+                totalResults: 10
+                moreDataAvailable: true
+                limit: 100
+                offset: 0
+                artifacts:
+                  - sha256: "fd6c69c345f1e32924f0a5bb7393e191b393a78d58e2c6413b03ced7482f2320"
+                    sha1: "b4fa74a6f4dab3a7ba702b6c8c129f889db32ca6"
+                    md5: "ff5e1f27193ce51eec318714ef038bef"
+                    magicType: "PE32 executable (GUI) Intel 80386, for MS Windows, UPX compressed"
+                    size: 56320
+                    firstSeen: 1460108539000
+                    lastSeen: 1460108539000
+                    visible: false
+                    avresults:
+                      - signature: "Win.Trojan.Ramnit"
+                        product: "ClamAV"
+                      - signature: "Win.Trojan.Parite"
+                        product: "ClamAV"
+                samples: []
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/sample/{hash}/connections':
+    get:
+      summary: Get Samples for Hash Connections
+      operationId: getSampleHashConnections
+      tags:
+        - Cisco Secure Malware Analytics Integration
+        - Secure Access
+      description: |-
+        Information about network activity associated with this sample, such as connections to other domains or IPs.
+      parameters:
+        - $ref: '#/components/parameters/hash'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/offsetParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleHashConnections'
+              example:
+                totalResults: 2
+                moreDataAvailable: true
+                limit: 2
+                offset: 0
+                connections:
+                - name: "google.com"
+                  firstSeen: 1456268452000
+                  lastSeen: 1456268452000
+                  securityCategories:
+                    - "Botnet"
+                    - "Malware"
+                  attacks: []
+                  threatTypes: []
+                  type: "HOST"
+                  ips:
+                    - "172.217.1.78"
+                  urls:
+                    - "http://goo.gl/PDIfV"
+                - name: "rtvwerjyuver.com"
+                  firstSeen: 1456268452000
+                  lastSeen: 1456268452000
+                  securityCategories:
+                    - "Botnet"
+                    - "Malware"
+                  attacks: []
+                  threatTypes: []
+                  type: "HOST"
+                  ips: []
+                  urls: []
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/sample/{hash}/behaviors':
+    get:
+      summary: Get Samples for Hash Behaviors
+      operationId: getSampleHashBehaviors
+      tags:
+        - Cisco Secure Malware Analytics Integration
+        - Secure Access
+      description: |-
+        Get the information about specific actions or unique properties of this sample,
+        especially local to your network or the computer where the sample is run.
+      parameters:
+        - $ref: '#/components/parameters/hash'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/offsetParam'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleHashBehaviors'
+              example:
+                totalResults: 2
+                moreDataAvailable: true
+                limit: 2
+                offset: 0
+                behaviors:
+                  - name: pe-packed-upx
+                    title: Executable Packed with UPX
+                    hits: 2
+                    confidence: 30
+                    severity: 30
+                    tags:
+                      - packer
+                      - crypter
+                      - encoding
+                      - PE
+                    threat: 9
+                    category:
+                      - attribute
+                  - name: pe-header-timestamp-null
+                    title: PE COFF Header Timestamp is Not Set
+                    hits: 2
+                    confidence: 60
+                    severity: 5
+                    tags:
+                      - file
+                      - attributes
+                      - anomaly
+                      - PE
+                    threat: 3
+                    category:
+                      - attribute
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/timeline/{name}':
+    get:
+      operationId: getTimeline
+      tags:
+        - Tagging Timeline
+        - Secure Access
+      summary: Get Tagging Timeline for Destination
+      description: |
+        List the historical tagging timeline for a given IP, domain, or URL.
+        Investigate sorts the timeline items in descending order using the timestamp field.
+        Each timeline item includes lists of security category,
+        attack, or threat type associated with the destination.
+        Use the Tagging Timeline endpoint to verify when Secure Access assigned or removed
+        a security category, attack, or threat type.
+        If the current timeline item contains the security category, type of attack,
+        or threat type not found in the previous timeline item,
+        Secure Access updated the current timeline item.
+        If the current timeline item does not contain the security category, attack,
+        or threat type found in the previous timeline item,
+        Secure Access removed the security category, type of attack,
+        or threat type.
+      parameters:
+      - name: name
+        in: path
+        required: true
+        description: An IP, domain, or URL.
+        schema:
+          type: string
+        example: 'https://cisco.com'
+      security:
+        - oauthFlow:
+          - investigate.investigate:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineItem'
+              example:
+                - categories:
+                    - "Malware"
+                  attacks: [Trojan]
+                  threatTypes: []
+                  timestamp: 1561574807853
+                - categories: ['8', '150']
+                  attacks:
+                    - "Trojan"
+                  threatTypes: []
+                  timestamp: 1559545774604
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/subdomains/{domain}':
+      get:
+        operationId: getSubDomains
+        tags:
+          - Subdomains for a Domain
+          - Secure Access
+        description: |
+          Get the subdomains of a given domain. If there is no subdomain for the domain, Investigate returns an empty array.
+        summary: Get Subdomains for Domain
+        parameters:
+        - name: domain
+          in: path
+          required: true
+          description: A domain name.
+          schema:
+            type: string
+          example: cisco.com
+        - name: limit
+          in: query
+          required: false
+          description: |-
+            The number of records to return in the collection.
+            The default limit is 20 records. The maximum number of records is 100.
+          example: 50
+          schema:
+            type: integer
+        - name: offsetName
+          in: query
+          required: false
+          description: |-
+            Specify the subdomain to filter the collection. For example: https://api.sse.cisco.com/investigate/v2/subdomains/cisco.com?offsetName=api.cisco.com
+            The default value is the target domain.
+          schema:
+            type: string
+          example: api.cisco.com
+        security:
+          - oauthFlow:
+            - investigate.investigate:read
+        responses:
+          '200':
+            description: OK
+            headers:
+              Content-Type:
+                $ref: '#/components/headers/Content-Type'
+              Date:
+                $ref: '#/components/headers/Date'
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Subdomains'
+                example:
+                  - securityCategories: [Cryptomining]
+                    firstSeen: 1612088333
+                    name: 'api.c3pool.com'
+                  - securityCategories: [Cryptomining]
+                    firstSeen: 1615427410
+                    name: 'asia.c3pool.com'
+          '400':
+            $ref: '#/components/responses/400Error'
+          '401':
+            $ref: '#/components/responses/401Error'
+          '403':
+            $ref: '#/components/responses/403Error'
+          '404':
+            $ref: '#/components/responses/404Error'
+          '500':
+            $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    domain:
+      name: domain
+      in: path
+      required: true
+      description: The domain name without wildcards and including the top-level domain (TLD).
+      schema:
+        type: string
+      example: store.cisco.com
+
+    hash:
+      name: hash
+      in: path
+      required: true
+      description: A hash value.
+      #for example, `3ee3cbe0ca92d2470f50712adf60fb03e4ad327fd78e630e004571b89db47cea`.
+      schema:
+        type: string
+      example: '3ee3cbe0ca92d2470f50712adf60fb03e4ad327fd78e630e004571b89db47cea'
+
+    offsetParam:
+      name: offset
+      in: query
+      required: false
+      description:
+        A number that represents an index in the collection.
+        By default, the offset is 0 (the first record).
+      schema:
+        type: integer
+        default: 0
+      example: 2
+
+    limitParam:
+      name: limit
+      in: query
+      required: false
+      description: |-
+        The number of items to return in the response from the collection. The default limit is 10.
+        Increase the limit to request a larger set of data.
+      schema:
+        type: integer
+        default: 10
+      example: 25
+
+    start:
+      name: start
+      in: query
+      required: true
+      description: |-
+        Specifies a relative or absolute start time. If specifying an absolute time,
+        use an epoch time (Unix time) millisecond timestamp within the last 30 days.
+        Filter for data that appears after this time.
+        If specifying a relative time, use either seconds, minutes, hours, days
+        or weeks with a minus sign in front.
+        As an example, -1days, -1000minutes, or -2weeks are all valid.
+        You cannot combine timestamps. Only use one of the relative time enumerators per query.
+      schema:
+        type: string
+      example: -1days
+
+    stop:
+      name: stop
+      in: query
+      required: false
+      description: |-
+        Point in time in the past expressed as a timestamp in milliseconds or relative time.
+        Filter for data that appears before this time.
+        Valid formats: stop=-1days, stop=now, stop=1509642000000. The maximum time range is 30 days.
+      # Specifies the exclusive end time in milliseconds or a relative time ('now', '-2days').
+      schema:
+        type: string
+      example: now
+
+    minFirstSeenParam:
+      name: minFirstSeen
+      in: query
+      required: false
+      description: Only returns records with the value of `firstSeen` >= the value of `minFirstSeen`.
+      schema:
+        type: integer
+        format: int64
+
+    maxFirstSeenParam:
+      name: maxFirstSeen
+      in: query
+      required: false
+      description: Only returns records with the value of `firstSeen` <= the value of `maxFirstSeen`.
+      schema:
+        type: integer
+        format: int64
+
+    minLastSeenParam:
+      name: minLastSeen
+      in: query
+      required: false
+      description: Only returns records with the value of `lastSeen` >= the value of `minLastSeen`.
+      schema:
+        type: integer
+        format: int64
+
+    maxLastSeenParam:
+      name: maxLastSeen
+      in: query
+      required: false
+      description: Only returns records with the value of `lastSeen` <= the value of `maxLastSeen`.
+      schema:
+        type: integer
+        format: int64
+
+    sortorderParam:
+      name: sortorder
+      in: query
+      required: false
+      description: Sort records by ascending (`asc`) or descending (`desc`) order. By
+        default, the records are returned in descending order.
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+        default: desc
+      example: asc
+
+    sortbyParam:
+      name: sortby
+      in: query
+      required: false
+      description: |-
+        Sort records by one of the following fields: `minTtl`, `maxTtl`, `firstSeen`, or `lastSeen`.
+      schema:
+        type: string
+        enum:
+          - minTtl
+          - maxTtl
+          - firstSeen
+          - lastSeen
+      example: minTtl
+
+    # sortby with score option
+    sortbyScoreParam:
+      name: sortby
+      in: query
+      required: false
+      description: |-
+        Sort the sample based on optional values: `first-seen`, `last-seen`, or `score`.
+        The default value is `score`.
+      schema:
+        type: string
+        enum:
+          - firstSeen
+          - lastSeen
+          - score
+      example: score
+
+    sortFieldParam:
+      name: sortField
+      in: query
+      required: false
+      description: |-
+        Valid values are: `created`, `updated`, `expires`, or `domainname`.
+      schema:
+        type: string
+        enum:
+          - created
+          - updated
+          - expires
+          - domainname
+      example: created
+
+    requiredCategoriesParam:
+      name: requiredCategories
+      in: query
+      required: false
+      description: |-
+        Filter for records that are assigned the specified security categories.
+        The case-sensitive security category strings are: Drive-by Downloads/Exploits, Mobile Threats,
+        Dynamic DNS, High Risk Sites and Locations, Command and Control, Malware, Phishing,
+        Newly Seen Domains, Potentially Harmful,
+        DNS Tunneling VPN, and Cryptomining. Use commas to separate multiple security category strings.
+      schema:
+        type: string
+      example: 'Mobile Threats, Phishing'
+
+    sortCategoriesParam:
+      name: sortCategories
+      in: query
+      required: false
+      description: |-
+        Sort the records by the specified security categories or all security categories (`All`).
+        The case-sensitive security category strings are: Drive-by Downloads/Exploits, Mobile Threats,
+        Dynamic DNS, High Risk Sites and Locations, Command and Control, Malware, Phishing,
+        Newly Seen Domains, Potentially Harmful,
+        DNS Tunneling VPN, and Cryptomining. Use commas to separate multiple security category strings.
+
+        Investigate lists the records that have at least one of these security categories at the top of the list.
+        The rest of the sorting parameters are applied within the records with and without any of
+        the security categories.
+      schema:
+        type: string
+      example: 'All'
+
+    recordTypeParam:
+      name: recordType
+      in: query
+      required: false
+      description: |-
+          The type of records. For example: 'A', 'CNAME', 'NS', 'MX'.
+          Use commas to separate multiple types of record.
+      schema:
+        type: string
+      example: 'A, CNAME'
+
+    includeFeaturesParam:
+      name: includefeatures
+      in: query
+      required: false
+      description: Specify whether to add the feature sections to the response. The default value is 'false'.
+      schema:
+        type: boolean
+      example: true
+
+    domainParam:
+      name: domain
+      in: path
+      required: true
+      description: A domain name.
+      schema:
+        type: string
+      example: cisco.com
+
+    destinationParam:
+      name: destination
+      in: path
+      required: true
+      description: A domain, IP, or URL. For example, 'cisco.com', 195.22.28.196, or 'https://cisco.com'.
+      schema:
+        type: string
+      example: 'https://cisco.com'
+
+    limitRecordsParam:
+      name: limit
+      in: query
+      required: false
+      description: |
+        The number of records to return in the collection.
+        The default limit is 500 records. The maximum number of records
+        returned for all requests to the endpoint is 10,000.
+      schema:
+        type: integer
+        default: 500
+        maximum: 10000
+      example: 1000
+
+    showLabels:
+      name: showLabels
+      in: query
+      required: false
+      description: |-
+        Include the `showLabels` query parameter to display the security and content category labels in the response.
+        For example: https://api.sse.cisco.com/investigate/v2/domains/categorization/umbrella.com?showLabels.
+      schema:
+        type: string
+      example: https://api.sse.cisco.com/investigate/v2/domains/categorization/umbrella.com?showLabels
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          scopes:
+            investigate.investigate:read: Investigate read access
+            investigate.bulk:read: Investigate bulk read access
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+
+  responses:
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+  schemas:
+
+    firstSeen:
+      type: integer
+      format: int64
+      description: |-
+        The first time Secure Access related the domain for the resource record, specified
+        in Unix Epoch time.
+      example: 1615427410
+
+    firstSeenISO:
+      type: string
+      format: date-time
+      description: |-
+        The first time Secure Access related the domain for the resource record,
+        specified in ISO date and time format.
+      example: '2015-05-22T21:42:07.421Z'
+
+    lastSeen:
+      type: integer
+      format: int64
+      description: |-
+        The last time Secure Access related the domain for the resource record, specified
+        in Unix Epoch time.
+      example: 1615427410
+
+    lastSeenISO:
+      type: string
+      description: |-
+        The last time Secure Access related the domain for the resource record,
+        specified in ISO date and time format.
+      example: '2015-05-22T21:42:07.421Z'
+
+    totalresults:
+      type: integer
+      description: The total number of samples.
+      format: int64
+      example: 1000
+
+    moreDataAvailable:
+      type: boolean
+      description: Specifies whether more samples are available for the destination.
+      example: true
+
+    limit:
+      type: integer
+      description: The maximum number of records to include in the response.
+      format: int64
+      example: 100
+
+    offset:
+      type: integer
+      description: The place to start reading in the collection.
+      format: int64
+      default: 0
+      example: 5
+
+    TimelineItem:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
+            description: |-
+              The security category assigned at this date and time on the domain, IP, or URL. 
+          description: |-
+            The list of security categories assigned at this date and time on the domain, IP, or URL.
+            If no security categories are assigned, Investigate returns an empty array.
+          example:
+            - Command and Control
+            - Phishing
+        attacks:
+          type: array
+          items:
+            type: string
+            description: |-
+              The security threat assigned at this date and time on the domain, IP, or URL. 
+          description: |-
+            The list of threats assigned at this date and time on the domain, IP, or URL.
+            If no threats are assigned, Investigate returns an empty array.
+          example:
+            - Malware
+        threatTypes:
+          type: array
+          items:
+            type: string
+            description: |-
+              The type of security threats assigned at this date and time on the domain, IP, or URL. 
+          description: |-
+            The list of threat types assigned at this date and time on the domain, IP, or URL.
+            If no threat types are tagged, Investigate returns an empty array.
+          example:
+            - Bot
+        timestamp:
+          type: integer
+          format: int64
+          description: |-
+            The date and time of the tagging of the domain, IP, or URL.
+            The date and time is specified in milliseconds elapsed since the Unix epoch.
+          example: 1615427410000
+
+    Subdomains:
+      type: array
+      description: The list of subdomain information for the domain.
+      items:
+        type: object
+        description: The information about the subdomain.
+        properties:
+          name:
+            type: string
+            description: The name of the subdomain.
+            example: shop.cisco.com
+          securityCategories:
+            type: array
+            items:
+              type: string
+              description: |-
+                The list of security categories that are tagged on this subdomain.
+                If no security categories match the subdomain, Investigate returns an empty array.
+          firstSeen:
+            $ref: '#/components/schemas/firstSeen'
+        example:
+          name: shop.cisco.com
+          securityCategories: []
+          firstSeen: 1615427410000
+      example:
+        - name: shop.cisco.com
+          securityCategories: []
+          firstSeen: 1615427410000
+
+    DomainCategorization:
+      type: object
+      description: |-
+        The information about the domain's content and security categories.
+        Use the `showLabels` query parameter to display the security and content category labels
+        instead of the IDs.
+      properties:
+        status:
+          type: integer
+          format: int64
+          description: |-
+            * If the domain is considered malicious, the status returned is `-1`.
+            * If the domain is considered benign, the status returned is `1`.
+            * If the domain is unclassified, the status returned is 0.
+          example: 0
+        security_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityCategory'
+          description: |-
+            The security categories that match this domain.
+            If the domain does not match any security categories, the server returns an empty list.
+          example:
+            - Cryptomining
+        content_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentCategory'
+          description: |-
+            The content categories that match this domain.
+            If the domain does not match any content categories, the server returns an empty list.
+          example:
+            - Astrology
+      example:
+        status: 1
+        security_categories: [Malware, Phishing Attacks]
+        content_categories: [Auctions, Chat and Instant Messaging]
+
+    SecurityCategory:
+      type: string
+      description: A Secure Access security category.
+      example: Cryptomining
+
+    ContentCategory:
+      type: string
+      description: A Secure Access content category.
+      example: Astrology
+
+    Record:
+      type: object
+      description: The information about the record.
+      properties:
+        minTtl:
+          type: integer
+          format: int64
+          description: The minimum TTL for the record in seconds.
+        maxTtl:
+          type: integer
+          format: int64
+          description: The maximum TTL for the record in seconds.
+        firstSeen:
+          $ref: '#/components/schemas/firstSeen'
+        lastSeen:
+          type: integer
+          format: int64
+          description: |-
+            The last time Secure Access related the domain for the resource record, specified
+            in Unix Epoch time.
+        name:
+          type: string
+          description: The name of the query.
+        type:
+          type: string
+          description: |-
+            The DNS record type. For example: A, CNAME, NS, MX.
+        securityCategories:
+          type: array
+          items:
+            type: string
+          description: The Secure Access security categories, if any, that match the domain.
+        contentCategories:
+          type: array
+          items:
+            type: string
+          description: The Secure Access content categories, if any, that match the domain.
+        firstSeenISO:
+          $ref: '#/components/schemas/firstSeenISO'
+        lastSeenISO:
+          $ref: '#/components/schemas/lastSeenISO'
+
+    Avresult:
+      type: object
+      description: The information about the antivirus result.
+      properties:
+        signature:
+          type: string
+          description: The signature of the antivirus.
+        product:
+          type: string
+          description: The name of the product associated with the antivirus.
+      example:
+        signature: "Win.Trojan.Ramnit"
+        product: "ClamAV"
+
+    Sample:
+      type: object
+      description: The information about the hash sample.
+      properties:
+        sha256:
+          type: string
+          description: The sha256 hash string.
+          example: e9d3470c37dada28d5a32fb53a243c5b20def35bb01abf8f5403182cc2b91fdd
+        sha1:
+          type: string
+          description: The sha1 hash string.
+          example: de182fdcc3c0d473b90a0df0ad14c2074d1e7c50
+        md5:
+          type: string
+          description: The md5 hash string.
+          example: 282f80e8a2cf9e0e0dd72093787d99c6
+        magictype:
+          type: string
+        threatscore:
+          type: integer
+          format: int64
+          description: The threat score assigned to the sample.
+          example: 100
+        size:
+          type: integer
+          format: int64
+          description: The size of the sample.
+          example: 19251
+        firstSeen:
+          $ref: '#/components/schemas/firstSeen'
+        lastSeen:
+          $ref: '#/components/schemas/lastSeen'
+        visible:
+          type: boolean
+          description: Specifies whether the threat is visible.
+          example: false
+        avresults:
+          type: array
+          description: The list of antivirus results.
+          items:
+            $ref: '#/components/schemas/Avresult'
+      example:
+        sha256: "e9d3470c37dada28d5a32fb53a243c5b20def35bb01abf8f5403182cc2b91fdd"
+        sha1: "de182fdcc3c0d473b90a0df0ad14c2074d1e7c50"
+        md5: "282f80e8a2cf9e0e0dd72093787d99c6"
+        magicType: "PE32 executable (GUI) Intel 80386, for MS Windows"
+        threatscore: 100
+        size: 192512
+        firstSeen: 1460108539000
+        lastSeen: 1460108539000
+        visible: true
+        avresults:
+          - signature: "Win.Trojan.Ramnit"
+            product: "ClamAV"
+          - signature: "Win.Trojan.Parit"
+            product: "ClamAV"
+
+    Connection:
+      type: object
+      description: The properties of the connection.
+      properties:
+        name:
+          type: string
+        firstSeen:
+          $ref: '#/components/schemas/firstSeen'
+        lastSeen:
+          $ref: '#/components/schemas/lastSeen'
+        securityCategories:
+          type: array
+          items:
+            type: string
+        attacks:
+          type: array
+          items:
+            type: string
+        threatTypes:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+        ips:
+          type: array
+          items:
+            type: string
+        urls:
+          type: array
+          items:
+            type: string
+
+    Behavior:
+      type: object
+      description: The properties of the behavior.
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        hits:
+          type: integer
+          format: int64
+        confidence:
+          type: integer
+          format: int64
+        severity:
+          type: integer
+          format: int64
+        tags:
+          type: array
+          items:
+            type: string
+        threat:
+          type: integer
+          format: int64
+        category:
+          type: array
+          items:
+            type: string
+
+    SampleHashSamples:
+      type: object
+      description: The hash sample information and list of hash samples.
+      properties:
+        totalresults:
+          type: integer
+          description: The total number of samples.
+          format: int64
+          example: 100000
+        moreDataAvailable:
+          $ref: '#/components/schemas/moreDataAvailable'
+        limit:
+          $ref: '#/components/schemas/limit'
+        offset:
+          $ref: '#/components/schemas/offset'
+        artifacts:
+          type: array
+          description: The list of samples.
+          items:
+            $ref: '#/components/schemas/Sample'
+        samples:
+          type: array
+          description: The list of all samples associated with the destination and related sample information.
+          items:
+            $ref: '#/components/schemas/Grids'
+
+    SampleHashConnections:
+      type: object
+      description: The properties of the sample hash connections.
+      properties:
+        totalresults:
+          type: integer
+          format: int64
+        moreDataAvailable:
+          $ref: '#/components/schemas/moreDataAvailable'
+        limit:
+          $ref: '#/components/schemas/limit'
+        offset:
+          $ref: '#/components/schemas/offset'
+        connections:
+          type: array
+          description: The list of connection information.
+          items:
+            $ref: '#/components/schemas/Connection'
+
+    SampleHashBehaviors:
+      type: object
+      description: The properties of the sample hash behaviors.
+      properties:
+        totalresults:
+          type: integer
+          format: int64
+        moreDataAvailable:
+          $ref: '#/components/schemas/moreDataAvailable'
+        limit:
+          $ref: '#/components/schemas/limit'
+        offset:
+          $ref: '#/components/schemas/offset'
+        behaviors:
+          type: array
+          description: The list of behavioral information related to the destination.
+          items:
+            $ref: '#/components/schemas/Behavior'
+
+    Grid:
+      type: object
+      description: The samples and information associated with the destination.
+      properties:
+        query:
+          type: string
+          description: The domain, IP, or URL.
+          example: google.com
+        totalresults:
+          type: integer
+          description: The number of total results.
+          format: int64
+          example: 10
+        moreDataAvailable:
+          $ref: '#/components/schemas/moreDataAvailable'
+        limit:
+          $ref: '#/components/schemas/limit'
+        offset:
+          $ref: '#/components/schemas/offset'
+        samples:
+          type: array
+          description: The list of hash samples and information for the destination.
+          items:
+            $ref: '#/components/schemas/Sample'
+          example:
+            - sha256: "e9d3470c37dada28d5a32fb53a243c5b20def35bb01abf8f5403182cc2b91fdd"
+              sha1: "de182fdcc3c0d473b90a0df0ad14c2074d1e7c50"
+              md5: "282f80e8a2cf9e0e0dd72093787d99c6"
+              magicType: "PE32 executable (GUI) Intel 80386, for MS Windows"
+              threatscore: 100
+              size: 192512
+              firstSeen: 1460108539000
+              lastSeen: 1460108539000
+              visible: true
+              avresults:
+                - signature: "Win.Trojan.Ramnit"
+                  product: "ClamAV"
+                - signature: "Win.Trojan.Parit"
+                  product: "ClamAV"
+      example:
+        query: "google.com"
+        totalresults: 10
+        moreDataAvailable: true
+        limit: 10
+        offset: 0
+        samples:
+          - sha256: "e9d3470c37dada28d5a32fb53a243c5b20def35bb01abf8f5403182cc2b91fdd"
+            sha1: "de182fdcc3c0d473b90a0df0ad14c2074d1e7c50"
+            md5: "282f80e8a2cf9e0e0dd72093787d99c6"
+            magicType: "PE32 executable (GUI) Intel 80386, for MS Windows"
+            threatscore: 100
+            size: 192512
+            firstSeen: 1460108539000
+            lastSeen: 1460108539000
+            visible: true
+            avresults:
+              - signature: "Win.Trojan.Ramnit"
+                product: "ClamAV"
+              - signature: "Win.Trojan.Parit"
+                product: "ClamAV"
+
+    Records:
+      type: array
+      description: The list of records.
+      items:
+        $ref: '#/components/schemas/Record'
+
+    Grids:
+      type: array
+      description: The list of all samples associated with the destination.
+      items:
+        $ref: '#/components/schemas/Grid'
+      example:
+        - query: 'google.com'
+          totalresults: 10
+          moreDataAvailable: true
+          limit: 10
+          offset: 0
+          samples:
+            - sha256: "e9d3470c37dada28d5a32fb53a243c5b20def35bb01abf8f5403182cc2b91fdd"
+              sha1: "de182fdcc3c0d473b90a0df0ad14c2074d1e7c50"
+              md5: "282f80e8a2cf9e0e0dd72093787d99c6"
+              magicType: "PE32 executable (GUI) Intel 80386, for MS Windows"
+              threatscore: 100
+              size: 192512
+              firstSeen: 1460108539000
+              lastSeen: 1460108539000
+              visible: true
+              avresults:
+                - signature: "Win.Trojan.Ramnit"
+                  product: "ClamAV"
+                - signature: "Win.Trojan.Parite"
+                  product: "ClamAV"
+
+    RiskScore:
+      type: object
+      description: The indicators and risk score for the destination.
+      properties:
+        indicators:
+          type: array
+          items:
+            type: object
+            description: |-
+              The properties that contribute to the risk score: `indicator`, `normalized_score`, and `score`.
+            properties:
+              indicator:
+                type: string
+              normalized_score:
+                type: integer
+              score:
+                type: number
+                format: float
+          description: |-
+            A list of `indicator`, `normalized_score`, and `score` tuples. Each element is a behavioral
+            or lexical feature that contributes to the calculation of the risk score.
+            The values of `normalized_score` range between 0 and 100,
+            while `score` is the raw outcome from the statistical algorithms.
+        risk_score:
+          type: number
+          format: float
+          description: The risk score.
+      example:
+        indicators:
+          - indicator: "Geo Popularity Score"
+            normalized_score: 2
+            score: -3.610878169999999
+          - indicator: "Keyword Score"
+            normalized_score: 3
+            score: 0.03586190445512534
+          - indicator: "Lexical"
+            normalized_score: 52
+            score: 0.525
+          - indicator: "Popularity 1 Day"
+            normalized_score: 100
+            score: 113.14
+          - indicator: "Popularity 30 Day"
+            normalized_score: 100
+            score: 112.01
+          - indicator: "Popularity 7 Day"
+            normalized_score: 100
+            score: 112.86
+          - indicator: "Popularity 90 Day"
+            normalized_score: 100
+            score: 111.4
+          - indicator: "TLD Rank Score"
+            normalized_score: 1
+            score: 0.010000315765229171
+          - indicator: "Block Status"
+            normalized_score: 0
+            score: 0
+        risk_score: 4
+
+    WhoisEmailsAndNameservers:
+      type: object
+      description: The information about the WHOIS email and nameserver.
+      properties:
+        domain:
+          type: string
+          description: The domain name.
+          example: zayget2.com
+        current:
+          type: boolean
+          description: Specifies whether the domain name is current.
+          example: true
+
+    WhoisDomain:
+      type: object
+      description: A standard WHOIS response record for a single domain.
+      properties:
+        administrativeContactFax:
+          type: string
+        whoisServers:
+          type: string
+        addresses:
+          type: array
+          items:
+            type: string
+        administrativeContactName:
+          type: string
+        zoneContactEmail:
+          type: string
+        billingContactFax:
+          type: string
+        administrativeContactTelephoneExt:
+          type: string
+        administrativeContactEmail:
+          type: string
+        technicalContactEmail:
+          type: string
+        technicalContactFax:
+          type: string
+        nameServers:
+          type: array
+          items:
+            type: string
+        zoneContactName:
+          type: string
+        billingContactPostalCode:
+          type: string
+        zoneContactFax:
+          type: string
+        registrantTelephoneExt:
+          type: string
+        zoneContactFaxExt:
+          type: string
+        technicalContactTelephoneExt:
+          type: string
+        billingContactCity:
+          type: string
+        zoneContactStreet:
+          type: array
+          items:
+            type: string
+        created:
+          type: string
+        administrativeContactCity:
+          type: string
+        registrantName:
+          type: string
+        zoneContactCity:
+          type: string
+        domainName:
+          type: string
+        zoneContactPostalCode:
+          type: string
+        administrativeContactFaxExt:
+          type: string
+        technicalContactCountry:
+          type: string
+        registrarIANAID:
+          type: string
+        updated:
+          type: string
+        administrativeContactStreet:
+          type: array
+          items:
+            type: string
+        billingContactEmail:
+          type: string
+        status:
+          type: array
+          items:
+            type: string
+        registrantCity:
+          type: string
+        billingContactCountry:
+          type: string
+        expires:
+          type: string
+        technicalContactStreet:
+          type: array
+          items:
+            type: string
+        registrantOrganization:
+          type: string
+        billingContactStreet:
+          type: array
+          items:
+            type: string
+        registrarName:
+          type: string
+        registrantPostalCode:
+          type: string
+        zoneContactTelephone:
+          type: string
+        registrantEmail:
+          type: string
+        technicalContactFaxExt:
+          type: string
+        technicalContactOrganization:
+          type: string
+        emails:
+          type: array
+          items:
+            type: string
+        registrantStreet:
+          type: array
+          items:
+            type: string
+        technicalContactTelephone:
+          type: string
+        technicalContactState:
+          type: string
+        technicalContactCity:
+          type: string
+        registrantFax:
+          type: string
+        registrantCountry:
+          type: string
+        billingContactFaxExt:
+          type: string
+        timestamp:
+          type: integer
+        zoneContactOrganization:
+          type: string
+        administrativeContactCountry:
+          type: string
+        billingContactName:
+          type: string
+        registrantState:
+          type: string
+        registrantTelephone:
+          type: string
+        administrativeContactState:
+          type: string
+        registrantFaxExt:
+          type: string
+        technicalContactPostalCode:
+          type: string
+        zoneContactTelephoneExt:
+          type: string
+        administrativeContactOrganization:
+          type: string
+        billingContactTelephone:
+          type: string
+        billingContactTelephoneExt:
+          type: string
+        zoneContactState:
+          type: string
+        administrativeContactTelephone:
+          type: string
+        billingContactOrganization:
+          type: string
+        technicalContactName:
+          type: string
+        administrativeContactPostalCode:
+          type: string
+        zoneContactCountry:
+          type: string
+        billingContactState:
+          type: string
+        auditUpdatedDate:
+          type: string
+      example:
+        administrativeContactFax: ""
+        whoisServers: ""
+        addresses:
+          - "1600 amphitheatre parkway"
+          - "please contact contact-admin@google.com, 1600 amphitheatre parkway"
+          - "2400 e. bayshore pkwy"
+        administrativeContactName: "DNS Admin"
+        zoneContactEmail: ""
+        billingContactFax: ""
+        administrativeContactTelephoneExt: ""
+        administrativeContactEmail: "dns-admin@google.com"
+        technicalContactEmail: "dns-admin@google.com"
+        technicalContactFax: "16506181499"
+        nameServers:
+          - "ns1.google.com"
+          - "ns2.google.com"
+          - "ns3.google.com"
+          - "ns4.google.com"
+        zoneContactName: ""
+        billingContactPostalCode: ""
+        zoneContactFax: ""
+        registrantTelephoneExt: ""
+        zoneContactFaxExt: ""
+        technicalContactTelephoneExt: ""
+        billingContactCity: ""
+        zoneContactStreet: []
+        created: ""
+        administrativeContactCity: "Mountain View"
+        registrantName: "Dns Admin"
+        zoneContactCity: ""
+        domainName: "google.com"
+        zoneContactPostalCode: ""
+        administrativeContactFaxExt: ""
+        technicalContactCountry: "UNITED STATES"
+        registrarIANAID: "292"
+        updated: "2011-07-20 00:00:00 UTC"
+        administrativeContactStreet:
+          - "1600 amphitheatre parkway"
+        billingContactEmail: ""
+        status:
+          - "clientDeleteProhibited"
+          - "clientTransferProhibited"
+          - "clientUpdateProhibited"
+          - "serverDeleteProhibited"
+          - "serverTransferProhibited"
+          - "serverUpdateProhibited"
+        registrantCity: "Mountain View"
+        billingContactCountry: ""
+        expires: "2020-09-14 00:00:00 UTC"
+        technicalContactStreet:
+          - "2400 e. bayshore pkwy"
+        registrantOrganization: "Google Inc."
+        billingContactStreet: []
+        registrarName: "MARKMONITOR INC."
+        registrantPostalCode: "94043"
+        zoneContactTelephone: ""
+        registrantEmail: "dns-admin@google.com"
+        technicalContactFaxExt: ""
+        technicalContactOrganization: "Google Inc."
+        emails:
+          - "dns-admin@google.com"
+        registrantStreet:
+          - "please contact contact-admin@google.com"
+          - "1600 amphitheatre parkway"
+        technicalContactTelephone: "16503300100"
+        technicalContactState: "CA"
+        technicalContactCity: "Mountain View"
+        registrantFax: "16506188571"
+        registrantCountry: "UNITED STATES"
+        billingContactFaxExt: ""
+        timestamp: 0
+        zoneContactOrganization: ""
+        administrativeContactCountry: "UNITED STATES"
+        billingContactName: ""
+        registrantState: "CA"
+        registrantTelephone: "16502530000"
+        administrativeContactState: "CA"
+        registrantFaxExt: ""
+        technicalContactPostalCode: "94043"
+        rawBase64: ""
+        zoneContctTelephoneExt: ""
+        administrativeContactOrganization: "Google Inc."
+        billingContactTelephone: ""
+        billingContactTelephoneExt: ""
+        zoneContactState: ""
+        administrativeContactTelephone: "16506234000"
+        billingContactOrganization: ""
+        technicalContactName: "DNS Admin"
+        administrativeContactPostalCode: "94043"
+        zoneContactCountry: ""
+        billingContactState: ""
+
+    MatchRecord:
+      type: object
+      description: The properties of the matching domain.
+      properties:
+        firstSeen:
+          $ref: '#/components/schemas/firstSeen'
+        name:
+          type: string
+          description: The name of the query.
+          example: example.com
+        securityCategories:
+          type: array
+          description: The list of Secure Access security categories that match the domain.
+          items:
+            type: string
+            description: A Secure Access security category.
+          example:
+            - Phishing Attacks
+            - Malware
+        firstSeenISO:
+          $ref: '#/components/schemas/firstSeenISO'
+      example:
+        expression: "exa[a-z]ple.com"
+        totalResults: 1
+        moreDataAvailable: false
+        limit: 1000
+        matches:
+          - name: example.com
+            firstSeen: 1432330927421
+            firstSeenISO: '2015-05-22T21:42:07.421Z'
+            securityCategories:
+              - Phishing Attacks
+              - Malware

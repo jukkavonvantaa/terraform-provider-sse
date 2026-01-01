@@ -1,0 +1,585 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Networks API
+  version: 2.0.0
+  description: Manage the networks registered in your organization.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: deployments/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: Networks
+  - name: Secure Access
+paths:
+  '/networks':
+    post:
+      tags:
+        - Networks
+        - Secure Access
+      description: |-
+        Create a network. Before you can create a network, contact Support to get your IP range verified.
+      summary: Create Network
+      operationId: createNetwork
+      security:
+        - oauthFlow:
+          - deployments.networks:write
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                properties:
+                  name:
+                    type: string
+                    description: The name of the network.
+                    minLength: 1
+                    maxLength: 50
+                  ipAddress:
+                    type: string
+                    description: The IP address of the network.
+                  prefixLength:
+                    $ref: '#/components/schemas/prefixLength'
+                  isDynamic:
+                    type: boolean
+                    description: Specifies whether the IP is dynamic.
+                  status:
+                    type: string
+                    description: The status of the network.
+                    pattern: ^(OPEN|CLOSED)$
+                type: object
+                required:
+                  - name
+                  - prefixLength
+                  - isDynamic
+                  - status
+              example:
+                name: network name
+                prefixLength: 32
+                isDynamic: true
+                status: OPEN
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObject'
+              example:
+                originId: 1234
+                name: name of the network
+                ipAddress: network ip address
+                prefixLength: 32
+                isDynamic: true
+                isVerified: true
+                status: OPEN
+                createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          description: Forbidden
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                properties:
+                  statusCode:
+                    type: integer
+                    description: HTTP status code
+                    example: 403
+                  error:
+                    type: string
+                    description: Shorthand error message
+                    example: Forbidden
+                  message:
+                    type: string
+                    description: Detailed error message
+                    example: >-
+                      The IP address that you provided is outside of your verified CIDR blocks.
+                type: object
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    get:
+      tags:
+        - Networks
+        - Secure Access
+      description: List the Networks in the organization.
+      summary: List Networks
+      operationId: listNetworks
+      security:
+        - oauthFlow:
+          - deployments.networks:read
+      parameters:
+        - $ref: '#/components/parameters/paginationPageParam'
+        - $ref: '#/components/parameters/paginationLimitParam'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NetworkObject'
+              example:
+                - originId: 1234
+                  name: network name
+                  ipAddress: network ip address
+                  prefixLength: 32
+                  isDynamic: true
+                  isVerified: true
+                  status: OPEN
+                  createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/networks/{networkId}':
+    get:
+      tags:
+        - Networks
+        - Secure Access
+      description: Get a Network registered in the organization.
+      summary: Get Network
+      operationId: getNetwork
+      security:
+        - oauthFlow:
+          - deployments.networks:read
+      parameters:
+        - $ref: '#/components/parameters/networkId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObject'
+              example:
+                originId: 1234
+                name: network name
+                ipAddress: network ip address
+                prefixLength: 32
+                isDynamic: true
+                isVerified: true
+                status: OPEN
+                createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+        - Networks
+        - Secure Access
+      description: Update a Network. Before you can update the network's IP address, contact Support to get your IP range verified.
+      summary: Update Network
+      operationId: updateNetwork
+      security:
+        - oauthFlow:
+          - deployments.networks:write
+      parameters:
+        - $ref: '#/components/parameters/networkId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                name:
+                  type: string
+                  description: The name of the network.
+                  minLength: 1
+                  maxLength: 50
+                ipAddress:
+                  type: string
+                  description: The IP address of the network.
+                  minLength: 7
+                prefixLength:
+                  $ref: '#/components/schemas/prefixLength'
+                isDynamic:
+                  type: boolean
+                  description: Specifies whether the IP address is dynamic.
+                status:
+                  type: string
+                  description: The status of the network.
+                  pattern: ^(OPEN|CLOSED)$
+              type: object
+              required:
+                - name
+                - isDynamic
+                - status
+            example:
+              name: network name
+              isDynamic: true
+              status: OPEN
+        description: Update a network.
+        required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkObject'
+              example:
+                originId: 1234
+                name: network name
+                ipAddress: network ip address
+                prefixLength: 32
+                isDynamic: true
+                isVerified: true
+                status: OPEN
+                createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                properties:
+                  statusCode:
+                    type: integer
+                    description: HTTP status code
+                    example: 403
+                  error:
+                    type: string
+                    description: Shorthand error message
+                    example: Forbidden
+                  message:
+                    type: string
+                    description: Detailed error message
+                    example: |-
+                      The IP address you provided is outside of your verified CIDR blocks
+                type: object
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Networks
+        - Secure Access
+      description: Delete a network registered in the organization.
+      summary: Delete Network
+      operationId: deleteNetwork
+      security:
+        - oauthFlow:
+          - deployments.networks:write
+      parameters:
+        - $ref: '#/components/parameters/networkId'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: string
+                nullable: true
+              example: null
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.umbrella.com/auth/v2/token
+          scopes:
+            deployments.networks:write: 'Write deployments networks'
+            deployments.networks:read: 'Read deployments networks'
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+    paginationPageParam:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+    paginationLimitParam:
+      name: limit
+      in: query
+      description: |-
+        The number of records to return from the collection on the page.
+      required: false
+      schema:
+        default: 100
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+
+    networkId:
+      name: networkId
+      schema:
+        type: integer
+      description: The ID of the network.
+      in: path
+      required: true
+      example: 13456
+
+  schemas:
+
+    prefixLength:
+      type: integer
+      description: |-
+        The length of the prefix. Set a prefix length that is greater than 28 and less than 33.
+      minimum: 29
+      maximum: 32
+      example: 30
+
+    NetworkObject:
+      type: object
+      description: The properties of the Network resource.
+      properties:
+        originId:
+          type: integer
+          description: The origin ID.
+        name:
+          type: string
+          description: The name of the network.
+        ipAddress:
+          type: string
+          description: The IP address of the network.
+        prefixLength:
+          $ref: '#/components/schemas/prefixLength'
+        isDynamic:
+          type: boolean
+          description: Specifies whether the network has a dynamic IP.
+        isVerified:
+          type: boolean
+          description: Specifies whether the network is verified.
+        status:
+          type: string
+          description: The status of the network.
+          pattern: ^(OPEN|CLOSED)$
+        createdAt:
+          type: string
+          description: The date and time (timestamp) when the network was created.
+          format: date-time
+          example: '2018-06-13T16:07:07.222Z'
+      required:
+        - originId
+        - name
+        - ipAddress
+        - prefixLength
+        - isDynamic
+        - isVerified
+        - status
+        - createdAt
+      example:
+        originId: 1234
+        name: name of the network
+        ipAddress: The network IP address
+        prefixLength: 32
+        isDynamic: true
+        isVerified: true
+        status: OPEN
+        createdAt: '2020-03-09T22:18:26.625Z'
+
+  responses:
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 400
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation Error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 401
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 403
+                description: HTTP status code
+              error:
+                type: string
+                example: Forbidden
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 404
+                description: HTTP status code
+              error:
+                type: string
+                example: Not Found
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 500
+                description: HTTP status code
+              error:
+                type: string
+                example: Internal error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message

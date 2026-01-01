@@ -1,0 +1,831 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access API Usage API
+  version: 2.0.0
+  description: Get the Cisco Secure Access API usage reports for an organization.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: reports/v2
+
+tags:
+  - name: API Usage Report
+    description: API Usage reports
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+paths:
+
+  /apiUsage/requests:
+    get:
+      operationId: getAPIUsageRequests
+      summary: Get Requests
+      description: |-
+        Get the information about the API requests for the organization within a specific time period, including
+        the total number of API requests for the type of client program.
+      tags:
+        - API Usage Report
+        - Secure Access
+      security:
+        - oauthFlow:
+          - reports.apiusage:read
+      parameters:
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+        - $ref: '#/components/parameters/apiKeys'
+        - $ref: '#/components/parameters/paths'
+        - $ref: '#/components/parameters/verbs'
+        - $ref: '#/components/parameters/statusCodes'
+        - $ref: '#/components/parameters/userAgents'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/requests'
+              example:
+                from: '2023-12-03'
+                to: '2023-12-04'
+                count: 100
+                items:
+                  - userAgent: 'python-requests/2.20.0'
+                    count: 2529
+                    requests:
+                      - path: 'auth/v2/token'
+                        verb: POST
+                        count: 928
+                      - path: '/reports/v2/activity/proxy'
+                        verb: GET
+                        count: 801
+                      - path: '/reports.us/v2/activity/proxy'
+                        verb: GET
+                        count: 800
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /apiUsage/responses:
+    get:
+      operationId: getAPIUsageResponses
+      summary: Get Responses
+      description: |-
+        Get the information about the API responses for the organization within a specific time period, including
+        the total number of API responses and the HTTP status codes.
+      tags:
+        - API Usage Report
+        - Secure Access
+      security:
+        - oauthFlow:
+          - reports.apiusage:read
+      parameters:
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+        - $ref: '#/components/parameters/apiKeys'
+        - $ref: '#/components/parameters/paths'
+        - $ref: '#/components/parameters/verbs'
+        - $ref: '#/components/parameters/statusCodes'
+        - $ref: '#/components/parameters/userAgents'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responses'
+              example:
+                from: '2023-12-03'
+                to: '2023-12-04'
+                count: 566
+                items:
+                  - statusCode: '401'
+                    count: 566
+                    requests:
+                      - path: "/deployments/v2/networks"
+                        verb: GET
+                        count: 546
+                      - path: "/deployments/v2/virtualappliances"
+                        verb: POST
+                        count: 16
+                      - path: "/deployments/v2/internaldomains"
+                        verb: GET
+                        count: 4
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /apiUsage/keys:
+    get:
+      operationId: getAPIUsageKeys
+      summary: Get Keys
+      description: |-
+        Get the API key usage information, including the total number of API requests within a specific time period.
+      tags:
+        - API Usage Report
+        - Secure Access
+      security:
+      - oauthFlow:
+        - reports.apiusage:read
+      parameters:
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+        - $ref: '#/components/parameters/apiKeys'
+        - $ref: '#/components/parameters/paths'
+        - $ref: '#/components/parameters/verbs'
+        - $ref: '#/components/parameters/statusCodes'
+        - $ref: '#/components/parameters/userAgents'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/keys'
+              example:
+                from: '2023-12-03'
+                to: '2023-12-04'
+                count: 566
+                items:
+                  - keyName: Deployments API key
+                    keyId: '124afg'
+                    count: 5000
+                    requests:
+                      - path: /deployments/v2/roamingcomputers
+                        verb: GET
+                        count: 4
+                      - path: /deployments/v2/networks
+                        verb: GET
+                        count: 10
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /apiUsage/summary:
+    get:
+      operationId: getAPIUsageSummary
+      summary: Get Summary
+      description: |-
+        Get the total number API requests, and the counts of the successful and failed API requests within a specific time period.
+      tags:
+        - API Usage Report
+        - Secure Access
+      security:
+        - oauthFlow:
+          - reports.apiusage:read
+      parameters:
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+        - $ref: '#/components/parameters/apiKeys'
+        - $ref: '#/components/parameters/paths'
+        - $ref: '#/components/parameters/verbs'
+        - $ref: '#/components/parameters/statusCodes'
+        - $ref: '#/components/parameters/userAgents'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/summary'
+              example:
+                data:
+                  successfulRequests: 20
+                  failedRequests: 5
+                  total: 25
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+
+  parameters:
+
+    from:
+      name: from
+      in: query
+      description: |-
+        The date and time specified in the RFC-3339 format, for example: 2023-10-01.
+        Filter the collection for data that appears after this time.
+      # ISO 8601 standard
+      required: true
+      schema:
+        type: string
+      example: '2023-10-01'
+
+    to:
+      name: to
+      in: query
+      description: |-
+        The date and time specified in the RFC-3339 format, for example: 2023-10-01.
+        Filter the collection for data that appears before this time.
+      required: true
+      schema:
+        type: string
+      example: '2023-10-01T 20:23:00Z'
+
+    apiKeys:
+      name: apiKeys
+      in: query
+      description: |-
+        Sort the collection using a list of comma-separated API key IDs.
+      required: false
+      schema:
+        type: string
+      example: '123abfs77632'
+
+    verbs:
+      name: verbs
+      in: query
+      description: |-
+        Sort the collection using a list of comma-separated HTTP verbs.
+        The HTTP verb strings are case sensitive.
+      required: false
+      schema:
+        type: string
+      example: 'GET,POST,PUT'
+
+    paths:
+      name: paths
+      in: query
+      description: |-
+        Sort the collection using a list of comma-separated API resource paths.
+      required: false
+      schema:
+        type: string
+      example: 'policies/v2/destinationlists/1234556,policies/v2/destinationlists'
+
+    statusCodes:
+      name: statusCodes
+      in: query
+      description: |-
+        Sort the collection using a list of comma-separated HTTP status codes.
+      required: false
+      schema:
+        type: string
+      example: '200,204,429'
+
+    userAgents:
+      name: userAgents
+      in: query
+      description: |-
+        Sort the collection using a list of comma-separated labels that describe the HTTP client programs.
+      required: false
+      schema:
+        type: string
+      example: 'python-requests/2.20.0,Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
+
+  schemas:
+
+    count:
+      type: integer
+      format: int32
+      description: The total number of API requests.
+      example: 450
+
+    from:
+      type: string
+      description: The date and time where to start reading in the collection.
+      example: '2023-12-03'
+
+    to:
+      type: string
+      description: The date and time where to stop reading in the collection.
+      example: '2023-12-05'
+
+    message:
+      type: string
+      description: The description of the error.
+      example: Internal Server Error
+
+    code:
+      type: integer
+      description: The status code of the error.
+      example: 500
+
+    # error condition
+    response:
+      type: object
+      properties:
+        meta:
+          type: object
+          example: {}
+        data:
+          type: object
+          properties:
+            errors:
+              type: string
+              description: The information about the error condition.
+              example: missing required parameters
+            requiredParameters:
+              type: array
+              description: The list of query parameters that you must include in the API request.
+              items:
+                type: string
+                description: The name of the query parameters on the API endpoint.
+                example: to
+              example:
+                - from
+                - to
+      example:
+        meta: {}
+        data:
+          errors: missing required parameters
+        requiredParameters:
+          - to
+          - from
+
+    requestsInformation:
+      type: array
+      description: The information about the API requests.
+      items:
+        type: object
+        required:
+          - userAgent
+          - count
+          - requests
+        properties:
+          userAgent:
+            type: string
+            description: The name of the client program.
+            example: "python-requests/2.20.0"
+          count:
+            $ref: '#/components/schemas/count'
+          requests:
+            $ref: '#/components/schemas/requestDetailsList'
+      example:
+        - userAgent: 'python-requests/2.20.0'
+          count: 2529
+          requests:
+            - path: 'auth/v2/token'
+              verb: POST
+              count: 928
+            - path: '/reports/v2/activity/proxy'
+              verb: GET
+              count: 801
+            - path: '/reports.us/v2/activity/proxy'
+              verb: GET
+              count: 800
+        - userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
+          count: 13
+          requests:
+            - path: "/policies/v2/destinationlists"
+              verb: GET
+              count: 13
+
+    requestDetailsList:
+      type: array
+      description: The list of API request information.
+      items:
+        type: object
+        required:
+          - path
+          - verb
+          - count
+        properties:
+          path:
+            type: string
+            description: The path of the API endpoint.
+            example: '/reports/v2/activity/proxy'
+          verb:
+            type: string
+            description: The name of the API operation.
+            example: GET
+          count:
+            type: integer
+            description: The number of requests to the API endpoint.
+            format: int64
+            example: 928
+        example:
+          path: '/auth/v2/token'
+          verb: POST
+          count: 928
+      example:
+        - path: '/auth/v2/token'
+          verb: POST
+          count: 928
+
+    responsesInformation:
+      type: array
+      description: The list of information about API responses for the API requests.
+      items:
+        type: object
+        required:
+          - statusCode
+          - count
+          - requests
+        properties:
+          statusCode:
+            type: string
+            description: The HTTP response status code.
+            example: '204'
+          count:
+            $ref: '#/components/schemas/count'
+          requests:
+            $ref: '#/components/schemas/requestDetailsList'
+      example:
+        - statusCode: '302'
+          count: 2667
+          requests:
+            - path: "/reports/v2/activity/proxy"
+              verb: 'GET'
+              count: 2667
+        - statusCode: '200'
+          count: 6000
+          requests:
+            - path: "/auth/v2/token"
+              verb: 'POST'
+              count: 4204
+            - path: "/reports.us/v2/activity/proxy"
+              verb: 'GET'
+              count: 2661
+        - statusCode: '401'
+          count: 566
+          requests:
+            - path: "/policies/v2/destinationlists"
+              verb: GET
+              count: 546
+            - path: "/policies/v2/destinationlists"
+              verb: POST
+              count: 16
+            - path: "/policies/v2/destinationlists/{destinationListId}"
+              verb: GET
+              count: 4
+
+    requests:
+      type: object
+      description: The information about the API requests.
+      required:
+        - from
+        - to
+        - count
+        - items
+      properties:
+        from:
+          $ref: '#/components/schemas/from'
+        to:
+          $ref: '#/components/schemas/to'
+        count:
+          $ref: '#/components/schemas/count'
+        items:
+          $ref: '#/components/schemas/requestsInformation'
+      example:
+        from: '2023-12-03'
+        to: '2023-12-04'
+        count: 100
+        items:
+          - userAgent: 'python-requests/2.20.0'
+            count: 2529
+            requests:
+              - path: 'auth/v2/token'
+                verb: POST
+                count: 928
+              - path: '/reports/v2/activity/proxy'
+                verb: GET
+                count: 801
+              - path: '/reports.us/v2/activity/proxy'
+                verb: GET
+                count: 800
+
+    responses:
+      type: object
+      description: The information about the API responses.
+      required:
+        - from
+        - to
+        - count
+        - items
+      properties:
+        from:
+          $ref: '#/components/schemas/from'
+        to:
+          $ref: '#/components/schemas/to'
+        count:
+          $ref: '#/components/schemas/count'
+        items:
+          $ref: '#/components/schemas/responsesInformation'
+      example:
+        from: '2023-12-03'
+        to: '2023-12-04'
+        count: 100
+        items:
+          - statusCode: '401'
+            count: 566
+            requests:
+              - path: "/reports/v2/activity/proxy"
+                verb: GET
+                count: 546
+              - path: "/deployments/v2/networks"
+                verb: POST
+                count: 16
+              - path: "/deployments/v2/roamingcomputers"
+                verb: GET
+                count: 4
+
+    keysInformation:
+      type: array
+      description: The information about the API key usage.
+      items:
+        type: object
+        required:
+          - count
+          - requests
+          - keyName
+          - keyId
+        properties:
+          keyName:
+            type: string
+            description: The name of the API key.
+            example: Deployments API key
+          keyId:
+            type: string
+            description: The ID of the API key.
+            example: '12345345345a'
+          count:
+            $ref: '#/components/schemas/count'
+          requests:
+            $ref: '#/components/schemas/requestDetailsList'
+      example:
+        - keyName: Reports and Policies API key
+          keyId: 'ajsdk12455555'
+          count: 400
+          requests:
+            - path: "/reports/v2/activity/proxy"
+              verb: GET
+              count: 546
+            - path: "/policies/v2/destinationlists"
+              verb: POST
+              count: 16
+            - path: "/policies/v2/destinationlists"
+              verb: GET
+              count: 4
+
+    keys:
+      type: object
+      description: The information about the API key usage.
+      required:
+        - from
+        - to
+        - count
+        - items
+      properties:
+        from:
+          $ref: '#/components/schemas/from'
+        to:
+          $ref: '#/components/schemas/to'
+        count:
+          $ref: '#/components/schemas/count'
+        items:
+          $ref: '#/components/schemas/keysInformation'
+      example:
+        from: '2023-12-03'
+        to: '2023-12-04'
+        count: 100
+        items:
+          - keyName: Reports and Policies API key
+            keyId: 'ajsdk12455555'
+            count: 400
+            requests:
+              - path: "/reports/v2/activity/proxy"
+                verb: GET
+                count: 546
+              - path: "/policies/v2/destinationlists"
+                verb: POST
+                count: 16
+              - path: "/policies/v2/destinationlists"
+                verb: GET
+                count: 4
+
+    summary:
+      type: object
+      description: The summary of the API usage.
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          description: The total number of requsts and the counts of the failed and successful requests.
+          required:
+            - successfulRequests
+            - failedRequests
+            - total
+          properties:
+            successfulRequests:
+              type: integer
+              description: The number of successful API requests.
+              example: 20
+            failedRequests:
+              type: integer
+              description: The number of failed API requests.
+              example: 5
+            total:
+              type: integer
+              description: The total number of API requests.
+              example: 25
+      example:
+        data:
+          successfulRequests: 20
+          failedRequests: 5
+          total: 25
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: Client credential flow
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.sse.cisco.com/auth/v2/token'
+          scopes:
+            reports.apiusage:read: 'Read the API Usage reports'
+
+  responses:
+
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                $ref: '#/components/schemas/message'
+              code:
+                $ref: '#/components/schemas/code'
+            example:
+              message: Bad Request
+              code: 400
+
+    # 400 error with data and meta objects
+    400ErrorMissingParams:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/response'
+          example:
+            meta: {}
+            data:
+              errors: Missing required parameters
+              requiredParameters:
+                - from
+                - to
+
+    401Error:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                $ref: '#/components/schemas/message'
+              code:
+                $ref: '#/components/schemas/code'
+            example:
+              message: Unauthorized
+              code: 401
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    403Error:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                $ref: '#/components/schemas/message'
+              code:
+                $ref: '#/components/schemas/code'
+            example:
+              message: Forbidden
+              code: 403
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    404Error:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                $ref: '#/components/schemas/message'
+              code:
+                $ref: '#/components/schemas/code'
+            example:
+              message: Not Found
+              code: 404
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+
+    500Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                $ref: '#/components/schemas/message'
+              code:
+                $ref: '#/components/schemas/code'
+            example:
+              message: Internal Server Error
+              code: 500
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'

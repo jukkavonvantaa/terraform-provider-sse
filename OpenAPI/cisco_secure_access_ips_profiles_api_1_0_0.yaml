@@ -1,0 +1,804 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access IPS Profiles API
+  version: 1.0.0
+  description: |-
+    Get the Intrusion Prevention System (IPS) profiles and IPS signatures in the Secure Access organization.
+  contact:
+    name: Cloud Security Developer Community
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+tags:
+  - name: IPS Profiles
+    description: The IPS profiles with signatures.
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+
+  /ipsSignatureProfiles:
+    get:
+      summary: List IPS Profiles
+      operationId: getIpsProfiles
+      description: |-
+        Get the list of custom and system-defined IPS profiles for the organization.
+        The system-defined IPS profiles are:
+
+        * Connectivity Over Security
+        * Balanced Security and Connectivity
+        * Security Over Connectivity
+        * Maximum Detection
+      tags:
+        - IPS Profiles
+        - Secure Access
+      security:
+        - oauthFlow:
+            - policies.ipsconfig:read
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/filters'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/meta'
+                  data:
+                    type: array
+                    description: The list of IPS profiles.
+                    items:
+                      $ref: '#/components/schemas/ipsSignatureProfile'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+    post:
+      summary: Create Custom IPS Profile
+      operationId: createCustomIpsProfile
+      description: Create a custom IPS profile in the organization.
+      tags:
+        - IPS Profiles
+        - Secure Access
+      security:
+        - oauthFlow:
+            - policies.ipsconfig:write
+      requestBody:
+        $ref: '#/components/requestBodies/ipsSignatureProfileCreate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ipsSignatureProfile'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+  /ipsSignatureProfiles/{id}:
+
+    get:
+      summary: Get IPS Profile
+      operationId: getIpsProfile
+      description: Get the IPS profile in the organization.
+      parameters:
+        - $ref: '#/components/parameters/ipsSignatureProfileId'
+      tags:
+        - IPS Profiles
+        - Secure Access
+      security:
+        - oauthFlow:
+            - policies.ipsconfig:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ipsSignatureProfile'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+    patch:
+      summary: Update IPS Profile
+      operationId: updateIpsProfile
+      description: Update the IPS profile in the organization.
+      parameters:
+        - $ref: '#/components/parameters/ipsSignatureProfileId'
+      tags:
+        - IPS Profiles
+        - Secure Access
+      security:
+        - oauthFlow:
+            - policies.ipsconfig:write
+      requestBody:
+        $ref: '#/components/requestBodies/patchOperations'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ipsSignatureProfile'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+    delete:
+      summary: Delete Custom IPS Profile
+      operationId: deleteCustomIpsProfile
+      description: Delete the custom IPS profile in the organization.
+      parameters:
+        - $ref: '#/components/parameters/ipsSignatureProfileId'
+      tags:
+        - IPS Profiles
+        - Secure Access
+      security:
+        - oauthFlow:
+            - policies.ipsconfig:write
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content: {}
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+  /ipsSignatureProfiles/{id}/signatures:
+
+    get:
+      summary: Get Signatures in IPS Profile
+      operationId: getSignaturesInSignatureProfile
+      description: Get the IPS signatures associated with the IPS profile.
+      parameters:
+        - $ref: '#/components/parameters/ipsSignatureProfileId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/order'
+        - $ref: '#/components/parameters/orderby'
+        - $ref: '#/components/parameters/filters'
+      tags:
+        - IPS Profiles
+        - Secure Access
+      security:
+        - oauthFlow:
+            - policies.ipsconfig:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/meta'
+                  data:
+                    type: array
+                    description: The list of signatures in the IPS Signature profile.
+                    items:
+                      $ref: '#/components/schemas/ipsSignature'
+                example:
+                  meta:
+                    page: 1
+                    limit: 100
+                    total: 481
+                  data:
+                    - id: e9279afc-3b0e-5b78-a2a3-ab9418fad29c
+                      gid: 1
+                      sid: 7091
+                      name: MALWARE-BACKDOOR serveme runtime detection
+                      cve: []
+                      description: |-
+                        alert tcp $HOME_NET 5555 -> $EXTERNAL_NET any ( msg:\"MALWARE-BACKDOOR serveme runtime detection\"; flow:to_client,established; content:\"ServeMe 1.x\",depth 11,nocase; metadata:policy balanced-ips drop,policy connectivity-ips drop,policy security-ips drop; reference:url,www.megasecurity.org/trojans/s/serveme/Serveme.html; reference:url,www3.ca.com/securityadvisor/pest/pest.aspx?id=453081036; classtype:trojan-activity; sid:7091; rev:6; )
+                      currentAction: block
+                      originalAction: block
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+
+components:
+
+  requestBodies:
+
+    ipsSignatureProfileCreate:
+      description: |-
+        The properties used to create the custom IPS profile.
+        **Note:** You cannot use the same `GID-SID` values for `blockList`, `warnList`, and `ignoreList`.
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The properties of the IPS profile.
+            required: [ name, systemMode, applyTo ]
+            properties:
+              applyTo:
+                $ref: '#/components/schemas/applyTo'
+              systemMode:
+                $ref: '#/components/schemas/systemMode'
+              name:
+                $ref: '#/components/schemas/ipsSignatureProfileName'
+              blockList:
+                $ref: '#/components/schemas/blockList'
+              warnList:
+                $ref: '#/components/schemas/warnList'
+              ignoreList:
+                $ref: '#/components/schemas/ignoreList'
+          example:
+            name: ips profile two
+            systemMode: detection
+            applyTo: balanced-ips
+            blockList: [ "1-28423" ]
+            warnList: [ "1-28424"]
+            ignoreList: [ "1-28425"]
+
+    patchOperations:
+      description: The properties used to update the IPS profile.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+              description: The properties of the patch operation.
+              properties:
+                op:
+                  type: string
+                  enum: [add, replace, remove]
+                  description: The type of PATCH operation. The system runs the PATCH operations in the order that they appear in the list of operations.
+                  example: add
+                path:
+                  type: string
+                  description: The path that defines the name of the attribute to update.
+                  example: '/warnList'
+                value:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: |-
+                    The value of the path attribute.
+                    When `path` is `/blockList`, `/warnList`, or `/ignoreList`, `value` accepts a string or array of strings.
+                  example: ['1-527', '125-1']
+            example:
+              - op: replace
+                path: '/systemMode'
+                value: prevention
+              - op: replace
+                path: '/name'
+                value: A new name
+              - op: add
+                path: '/warnList'
+                value: ['1-527', '125-1']
+              - op: remove
+                path: '/blockList'
+                value: ['1-423', '640-1']
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    ipsSignatureProfileId:
+      in: path
+      name: id
+      description: The ID of the IPS profile.
+      required: true
+      schema:
+        type: integer
+
+    page:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+
+    limit:
+      name: limit
+      in: query
+      description: The number of items on a page. The total number of items that are allowed on a page in the response is 100.
+      required: false
+      schema:
+        type: integer
+        default: 10
+        format: int32
+        minimum: 1
+        maximum: 100
+      example: 20
+
+    orderby:
+      name: orderby
+      in: query
+      description: |-
+        Set how the system returns the order of the signatures in the collection.
+        The order is either determined by the value of the signature `name` or `gidsid`.
+        The value is case insensitive. If you do not set `orderby`, the system returns the signatures using the `GID-SID value.
+      required: false
+      schema:
+        type: string
+        enum: [ gidsid, name ]
+        default: gidsid
+
+    order:
+      name: order
+      in: query
+      description: |-
+        Set how the system returns the order of the signatures in the collection. The order is either ascending (`asc`) or descending (`desc`).
+        The value is case insensitive. If you do not set `order`, the system returns the signatures in ascending order.
+      required: false
+      schema:
+        type: string
+        enum: [ asc, desc ]
+        default: asc
+
+    filters:
+      name: filters
+      in: query
+      schema:
+        type: string
+        enum:
+        - 'action: block | warn | ignore'
+        - 'searchStr: string'
+        - 'overridesOnly: true/false'
+      description: |-
+        Add a JSON object that sets the filter fields and values.
+        The system uses the filters to return the IPS profiles in the collection.
+        Use the `action (<string>)`, `overridesOnly(<boolean>)`, and `searchStr(<string>)` query strings.
+        For example: `{"action":"block","searchStr":"malware"}`.
+
+        * If the API request does not include the `filters` query parameter, the system only returns the `block` signatures.
+        * When you set `overridesOnly` to `true`, the system returns the signatures that were overriden and ignores the `action` filter option.
+        * Use the `SearchStr` option to partially match against signature names, GID-SIDs, or CVEs.
+      required: false
+
+  responses:
+
+    badRequest:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+
+    unauthorized:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+
+    forbidden:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+
+    notFound:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+
+    serverError:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/serverError'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            policies.ipsconfig:read: 'Read Intrusion Prevention System profiles'
+            policies.ipsconfig:write: 'Write Intrusion Prevention System profiles'
+
+  schemas:
+
+    actionCounts:
+      type: object
+      description: The properties of the counts for each type of action.
+      properties:
+        block:
+          type: integer
+          description: The number of BLOCK actions.
+          example: 345
+          readOnly: true
+        warn:
+          type: integer
+          description: The number of WARN actions.
+          example: 3455
+          readOnly: true
+        ignore:
+          type: integer
+          description: The number of IGNORE actions.
+          example: 38455
+          readOnly: true
+      example:
+        block: 25
+        warn: 25
+        ignore: 4
+
+    meta:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: The number of the page read in the collection.
+          example: 2
+        limit:
+          type: integer
+          description: The number of items on the page read in the collection.
+          example: 50
+        total:
+          type: integer
+          description: The total number of items in the collection.
+          example: 51
+
+    blockList:
+      type: array
+      description: |-
+        The list of signatures represented in the GID-SID format that the system will update to BLOCK.
+        For example, move or override signature 1-28423 from WARN to BLOCK.
+      items:
+        type: string
+        example: '1-28423'
+      example:
+        - '1-28423'
+
+    warnList:
+      type: array
+      description: |-
+        The list of signatures represented in the GID-SID format that the system will update to WARN.
+        For example, move or override signature 1-28423 from BLOCK to WARN.
+      items:
+        type: string
+        example: '1-28423'
+      example:
+        - '1-28423'
+
+    ignoreList:
+      type: array
+      description: |-
+        The list of signatures represented in the GID-SID format that the system will update to IGNORE.
+        For example, move or override signature 1-28423 from BLOCK to IGNORE.
+      items:
+        type: string
+        example: '1-28423'
+      example:
+        - '1-28423'
+
+    applyTo:
+      type: string
+      description: |-
+        The type of the system-defined IPS profile used as a template to create a custom IPS profile.
+      enum: [ max-detect-ips, security-ips, balanced-ips, connectivity-ips ]
+      example: max-detect-ips
+
+    ipsSignature:
+      type: object
+      description: The properties of the IPS signature.
+      properties:
+        id:
+          type: string
+          description: The ID of the signature.
+          example: e9279afc-3b0e-5b78-a2a3-ab9418fad29c
+        gid:
+          type: integer
+          description: |-
+            The generator ID (GID) component of the signature. The SID is used to identify the component in the IPS that generated the alert.
+          example: 1
+        sid:
+          type: integer
+          description: |-
+            The Cisco Snort or signature ID (SID) component of the signature.
+          example: 976
+        name:
+          type: string
+          description: The name of the IPS signature.
+          example: MALWARE-BACKDOOR fearless lite 1.01 runtime detection
+        cve:
+          type: array
+          description: The list of the CVE values associated with the IPS signature.
+          example: [2017-11841, 2017-11873]
+          items:
+            type: string
+            description: The CVE associated with the IPS signature.
+            example: 2017-11841
+        description:
+          type: string
+          description: The description of the IPS signature.
+          example: 'alert ( gid:1; sid:976; rev:1; msg:"(smtp) file decompression failed"; )'
+        currentAction:
+          type: string
+          nullable: true
+          description: When the `overridesOnly` filter is `true`, the system returns a non-null value.
+          example: block
+        originalAction:
+          type: string
+          nullable: true
+          description: When the `overridesOnly` filter is `true`, the system returns a non-null value.
+          example: warn
+      example:
+        id: e9279afc-3b0e-5b78-a2a3-ab9418fad29c
+        gid: 1
+        sid: 7091
+        name: MALWARE-BACKDOOR serveme runtime detection
+        cve: []
+        description: |-
+          alert tcp $HOME_NET 5555 -> $EXTERNAL_NET any ( msg:\"MALWARE-BACKDOOR serveme runtime detection\"; flow:to_client,established; content:\"ServeMe 1.x\",depth 11,nocase; metadata:policy balanced-ips drop,policy connectivity-ips drop,policy security-ips drop; reference:url,www.megasecurity.org/trojans/s/serveme/Serveme.html; reference:url,www3.ca.com/securityadvisor/pest/pest.aspx?id=453081036; classtype:trojan-activity; sid:7091; rev:6; )
+        currentAction: block
+        originalAction: block
+
+    systemMode:
+      type: string
+      enum: [ prevention, detection ]
+      description: The mode of the IPS set to either `prevention` or `detection`.
+      example: prevention
+
+    ipsSignatureProfileId:
+      type: integer
+      readOnly: true
+      description: The ID of the IPS profile.
+      example: 56
+
+    ipsSignatureProfileName:
+      type: string
+      description: |-
+        The name of the IPS Signature profile.
+        `name` is a sequence of 1—50 characters where the string does not contain the percent (%) or asterisk (*) characters.
+      example: IPS profile one
+
+    ipsSignatureProfile:
+      type: object
+      description: The properties of the IPS profile and signature lists.
+      properties:
+        id:
+          $ref: '#/components/schemas/ipsSignatureProfileId'
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        applyTo:
+          $ref: '#/components/schemas/applyTo'
+        name:
+          $ref: '#/components/schemas/ipsSignatureProfileName'
+        systemMode:
+          $ref: '#/components/schemas/systemMode'
+        blockList:
+          $ref: '#/components/schemas/blockList'
+        warnList:
+          $ref: '#/components/schemas/warnList'
+        ignoreList:
+          $ref: '#/components/schemas/ignoreList'
+        isDefault:
+          type: boolean
+          readOnly: true
+          description: Specifies whether the IPS profile is a default profile. Default profiles are read only.
+          example: true
+        actionCounts:
+          $ref: '#/components/schemas/actionCounts'
+        hitCountIntervalId:
+          type: integer
+          description: The ID of the interval where the system records the IPS signature hit count.
+          example: 3
+        hitCountResetAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2018-06-13T16:07:07.222Z"
+          description: The date and time when the system reset the signature hit count for the IPS profile.
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: "2018-06-13T16:07:07.222Z"
+          description: The date and time when the system created the IPS profile.
+        modifiedAt:
+          type: string
+          readOnly: true
+          format: date-time
+          description: The date and time when the system updated the IPS profile.
+          example: "2018-06-13T16:07:07.222Z"
+      example:
+        id: 378249
+        organizationId: 8053787
+        applyTo: connectivity-ips
+        name: custom ips profile one
+        systemMode: prevention
+        blockList:
+          - "1-28423"
+        warnList: [ "1-28424"]
+        ignoreList: [ "1-28425"]
+        isDefault: false
+        actionCounts:
+          block: 481
+          warn: 111
+          ignore: 50910
+        hitCountIntervalId: 3
+        hitCountResetAt: "2018-06-13T16:07:07.222Z"
+        createdAt: "2025-06-11T20:39:30Z"
+        modifiedAt: "2025-06-11T20:39:30Z"
+
+    organizationId:
+      type: integer
+      description: The ID of the organization.
+      example: 2345678
+
+    badRequest:
+      description: Bad Request
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Bad Request
+
+    unauthorized:
+      description: Unauthorized
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Unauthorized
+
+    forbidden:
+      description: Forbidden
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Forbidden
+
+    notFound:
+      description: Not Found
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Not Found
+
+    serverError:
+      description: Internal Server Error
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Internal Server Error

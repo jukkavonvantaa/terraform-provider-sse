@@ -1,0 +1,338 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.2
+info:
+  version: 1.0.0
+  title: Cisco Secure Access Metering API
+  description: Report on the usage metrics for the organization.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: reports/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: Usage Metrics
+  - name: Secure Access
+
+paths:
+
+  /usage/metrics:
+
+    get:
+      summary: List Usage Metrics
+      description: List the usage metrics for the organization.
+      tags:
+        - Usage Metrics
+        - Secure Access
+      operationId: getUsageMetrics
+      security:
+        - oauthFlow:
+            - reports.usage.metrics:read
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/product_id'
+        - $ref: '#/components/parameters/from'
+        - $ref: '#/components/parameters/to'
+        - $ref: '#/components/parameters/time_grouping_interval'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: Success. Usage retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - statusCode
+                  - body
+                properties:
+                  statusCode:
+                    type: integer
+                  body:
+                    type: object
+                    required:
+                      - usages
+                    properties:
+                      usages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Usage'
+                    example:
+                      usages:
+                        - organization_id: 5432871
+                          product: SWG
+                          registered_at: '2020-01-01T20:52:02.987000'
+                          usage_meter_items:
+                            bytes_in_delta: 1000000
+                            bytes_out_delta: 2000000
+                  next:
+                    type: string
+                    description: |-
+                      The URL of the next set of usage metric records in the collection.
+                      "https://api.sse.cisco.com/reports/v2/usage/metrics?from=2022-07-15T20:00:00.000&to=2022-07-16T21:00:00.000"
+                    example: "https://api.sse.com/reports/v2/usage/metrics?from=2022-07-15T20:00:00.000&to=2022-07-16T21:00:00.000"
+ 
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  parameters:
+    organization_id:
+      name: organization_id
+      in: query
+      required: true
+      schema:
+        type: integer
+      description: The unique Secure Access organization ID.
+      example: 1234567
+
+    product_id:
+      name: product_id
+      in: query
+      required: true
+      schema:
+        type: string
+        format: int32
+      description: |-
+        The unique source ID of the usage report, for example: SWG, RAVPN, CHNE.
+        Use `0` to search for all products.
+      example: '0'
+
+    from:
+      name: from
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+      description: |-
+        The start of the time window to search for records in the collection.
+        Filter for data in the collection that is recorded after this time.
+        Specify the time in ISO 8601 format.
+      example: '2020-01-01T20:52:02.987000'
+
+    to:
+      name: to
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+      description: |-
+        The end of the time window to search for records in the collection.
+        Filter for data that appears before this time.
+        Specify the time in ISO 8601 format.
+      example: '2020-02-01T20:52:02.987000'
+
+    time_grouping_interval:
+      name: time_grouping_interval
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [HOUR, DAY, WEEK, MONTH]
+      description: |-
+        A time period specified as a segment of time. The usage report is collected
+        within the time internal. Valid values are: `HOUR`, `DAY`, `WEEK`, `MONTH`.
+      example: DAY
+
+    page:
+      name: page
+      in: query
+      schema:
+          type: string
+          format: int32
+      description: |-
+        The page number that represents where to start reading in the collection.
+        A page in the collection has a maximum of 1000 records.
+        When a response has more than 1000 records, the `next` field is returned in the response.
+        The `next` field is set to the API request URL for the next page of records
+        in the collection.
+      example: '2'
+
+  responses:
+
+    400Error:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/statusCode'
+
+    401Error:
+      description: Unauthorized request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Unauthorized request
+
+    403Error:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Access Forbidden
+
+    404Error:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Not Found
+
+    500Error:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: Server error
+
+
+  # =========================================
+  # Security Schemes Components
+  # =========================================
+  securitySchemes:
+
+    oauthFlow:
+      type: oauth2
+      description: client credential flow
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            reports.usage.metrics:read: 'Get usage data'
+
+  schemas:
+
+    statusCode:
+      type: object
+      required:
+        - body
+        - statusCode
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        body:
+          type: object
+          properties:
+            Param error:
+              type: string
+              description: There is an error in the parameter(s)
+              example: "Invalid time range: Datetime needs to follow ISO8601:%Y-%m-%dT%H:%M:%S.%f, e.g. 2022-06-18T20:52:02.987000 and FROM should be earlier than TO"
+      example:
+        statusCode: 400
+        body: 
+          Param error: |-
+            Invalid time range: Datetime needs to follow ISO8601:%Y-%m-%dT%H:%M:%S.%f, e.g. 2022-06-18T20:52:02.987000 and FROM should be earlier than TO
+
+    Usage:
+      type: object
+      required:
+        - organization_id
+        - product
+        - registered_at
+        - usage_meter_items
+      properties:
+        organization_id:
+          $ref: '#/components/schemas/organization_id'
+        product:
+          $ref: '#/components/schemas/product'
+        registered_at:
+          $ref: '#/components/schemas/registered_at'
+        usage_meter_items:
+          $ref: '#/components/schemas/UsageMeterItem'
+      description: The usage data and information about this usage.
+      example:
+        organization_id: 5432871
+        product: CNHE
+        registered_at: '2020-01-01T20:52:02.987000'
+        usage_meter_items:
+          bytes_in_delta: 1000000
+          bytes_out_delta: 100000
+
+    UsageMeterItem:
+      type: object
+      required:
+        - bytes_in_delta
+        - bytes_out_delta
+      properties:
+        bytes_in_delta:
+          $ref: '#/components/schemas/bytes_in_delta'
+        bytes_out_delta:
+          $ref: '#/components/schemas/bytes_out_delta'
+      example:
+        bytes_in_delta: 1000000
+        bytes_out_delta: 2000000
+      description: The amount of data received and sent during the time window.
+
+    organization_id:
+      type: integer
+      description: The unique Secure Access organization ID.
+      format: int32
+      example: 123456
+
+    registered_at:
+      type: string
+      format: date-time
+      description: |-
+        The ISO 8601 timestamp when the usage was recorded in the origin service.
+        The timestamp uses the UTC format following the ISO 8601 date time standard.
+      example: '2020-01-01T20:52:02.987000' 
+
+    product:
+      type: string
+      format: int32
+      description: The name of the Secure Access data source service.
+      example: CNHE
+
+    bytes_in_delta:
+      type: integer
+      description: |-
+        The number of cumulative bytes received by Secure Access during the time window.
+      format: int64
+      example: 15642
+
+    bytes_out_delta:
+      type: integer
+      description: |-
+        The number of cumulative bytes sent to Secure Access during the time window.
+      format: int64
+      example: 14896

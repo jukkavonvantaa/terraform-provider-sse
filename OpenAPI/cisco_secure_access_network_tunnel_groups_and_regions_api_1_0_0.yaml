@@ -1,0 +1,2696 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.3
+info:
+  title: Cisco Secure Access Network Tunnel Groups and Regions API
+  description: Manage the Secure Access Network Tunnel Groups.
+  version: 1.0.0
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: deployments/v2
+
+tags:
+  - name: Network Tunnel Groups
+    description: Network Tunnel Groups API endpoints
+  - name: Network Tunnel Groups Regions
+    description: Network Tunnel Groups Regions API endpoints
+  - name: Network Tunnel Groups State
+    description: Network Tunnel Groups State API endpoints
+  - name: Network Tunnel Groups Peer State
+    description: Network Tunnel Groups Peer State API endpoints
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+  /networktunnelgroups:
+    get:
+      tags:
+      - Network Tunnel Groups
+      - Secure Access
+      summary: List Network Tunnel Groups
+      description: |-
+        List the Network Tunnel Groups in the organization.
+        If you enable the `includeStatuses` query parameter in your API request,
+        the response includes the `tunnelsStatus` field.
+        The maximum number of items in a hub's list of tunnel states (`tunnelsStatus`) is 10.
+      operationId: listNetworkTunnelGroups
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:read
+      parameters:
+      - $ref: '#/components/parameters/filtersNTGs'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/sortBy'
+      - $ref: '#/components/parameters/sortOrder'
+      - $ref: '#/components/parameters/includeStatuses'
+
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/networkTunnelGroupsList'
+              example:
+                data:
+                  - id: 4561237892
+                    name: New York Branch Tunnels
+                    organizationId: 123456
+                    deviceType: ASA
+                    region: us-east-1
+                    status: warning
+                    hubs:
+                      - id: 987654321
+                        isPrimary: true
+                        datacenter:
+                          name: us-east-1
+                        authId: newyorkbranchtunnels123@123456-987654321.sse.cisco.com
+                        status:
+                          status: UP
+                          time: "2025-02-05T17:53:05Z"
+                        tunnelsCount: 5
+                      - id: 147852369
+                        isPrimary: false
+                        datacenter:
+                          name: us-central-1
+                        authId: newyorkbranchtunnels123@123456-147852369.sse.cisco.com
+                        status:
+                          status: DOWN
+                          time: "2025-02-05T17:53:05Z"
+                        tunnelsCount: 0
+                    routing:
+                      type: static
+                      data:
+                        networkCIDRs:
+                          - "123.111.222.25/24"
+                          - "111.222.39.1/32"
+                    createdAt: "2024-06-12T18:04:23Z"
+                    modifiedAt: "2024-06-25T15:21:32Z"
+                offset: 0
+                limit: 10
+                total: 1
+        '400':
+          $ref: '#/components/responses/400ListError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    post:
+      tags:
+        - Network Tunnel Groups
+        - Secure Access
+      summary: Create Network Tunnel Group
+      description: Create a Network Tunnel Group in the organization.
+      operationId: addNetworkTunnelGroup
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:write
+      requestBody:
+        $ref: '#/components/requestBodies/networkTunnelGroupCreateRequest'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/networkTunnelGroupResponse'
+              example:
+                id: 4561237892
+                name: New York Branch Tunnels
+                organizationId: 123456
+                deviceType: ASA
+                region: us-east-1
+                status: disconnected
+                hubs:
+                  - id: 987654321
+                    isPrimary: true
+                    datacenter:
+                      name: us-east-1
+                      ip: '54.145.27.13'
+                    authId: newyorkbranchtunnels123@123456-987654321.sse.cisco.com
+                    status:
+                      status: DOWN
+                      time: "2025-02-05T17:53:05Z"
+                    tunnelsCount: 0
+                  - id: 147852369
+                    isPrimary: false
+                    datacenter:
+                      name: us-central-1
+                      ip: '25.132.42.15'
+                    authId: newyorkbranchtunnels123@123456-147852369.sse.cisco.com
+                    status:
+                      status: DOWN
+                      time: "2025-02-05T17:53:05Z"
+                    tunnelsCount: 0
+                routing:
+                  type: static
+                  data:
+                    networkCIDRs:
+                      - "123.111.222.25/24"
+                      - "111.222.39.1/32"
+                createdAt: "2024-06-12T18:04:23Z"
+                modifiedAt: "2024-06-25T15:21:32Z"
+        '400':
+          $ref: '#/components/responses/400ValidationError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          description: Duplicate network tunnel group name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/409Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /networktunnelgroups/{id}:
+    get:
+      tags:
+        - Network Tunnel Groups
+        - Secure Access
+      summary: Get Network Tunnel Group
+      description: Get a Network Tunnel Group in the organization.
+      operationId: getNetworkTunnelGroup
+      parameters:
+      - $ref: '#/components/parameters/id'
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/networkTunnelGroupResponse'
+              example:
+                id: 4561237892
+                name: New York Branch Tunnels
+                organizationId: 123456
+                deviceType: ASA
+                region: us-east-1
+                status: connected
+                hubs:
+                  - id: 987654321
+                    isPrimary: true
+                    datacenter:
+                      name: us-east-1
+                      ip: '54.145.27.13'
+                    authId: 'newyorkbranchtunnels123@123456-987654321.sse.cisco.com'
+                    status:
+                      status: UP
+                      time: "2025-02-05T17:53:05Z"
+                    tunnelsCount: 5
+                  - id: 147852369
+                    isPrimary: false
+                    datacenter:
+                      name: us-central-1
+                      ip: '25.132.42.15'
+                    authId: 'newyorkbranchtunnels123@123456-147852369.sse.cisco.com'
+                    status:
+                      status: UP
+                      time: "2025-02-05T17:50:05Z"
+                    tunnelsCount: 5
+                routing:
+                  type: static
+                  data:
+                    networkCIDRs:
+                      - '123.111.222.25/24'
+                      - '111.222.39.1/32'
+                createdAt: "2024-06-12T18:04:23Z"
+                modifiedAt: "2024-06-25T15:21:32Z"
+        '400':
+          $ref: '#/components/responses/400NTGIDError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    patch:
+      tags:
+        - Network Tunnel Groups
+        - Secure Access
+      summary: Update Network Tunnel Group
+      description: Update a Network Tunnel Group in the organization.
+      operationId: patchNetworkTunnelGroup
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:write
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/networkTunnelGroupPatchRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/networkTunnelGroupResponse'
+              example:
+                id: 4561237892
+                name: New York Branch Tunnels
+                organizationId: 123456
+                deviceType: ASA
+                region: us-east-1
+                status: connected
+                hubs:
+                  - id: 987654321
+                    isPrimary: true
+                    datacenter:
+                      name: us-east-1
+                      ip: '54.145.27.13'
+                    authId: 'newyorkbranchtunnels123@123456-987654321.sse.cisco.com'
+                    status:
+                      status: UP
+                      time: "2025-02-05T17:53:05Z"
+                    tunnelsCount: 5
+                  - id: 147852369
+                    isPrimary: false
+                    datacenter:
+                      name: us-central-1
+                      ip: '25.132.42.15'
+                    authId: 'newyorkbranchtunnels123@123456-147852369.sse.cisco.com'
+                    status:
+                      status: UP
+                      time: "2025-02-05T17:53:05Z"
+                    tunnelsCount: 5
+                routing:
+                  type: static
+                  data:
+                    networkCIDRs:
+                      - '123.111.222.25/24'
+                      - '111.222.39.1/32'
+                createdAt: "2024-06-12T18:04:23Z"
+                modifiedAt: "2024-06-25T15:21:32Z"
+
+        '400':
+          $ref: '#/components/responses/400ValidationError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          description: Duplicate network tunnel group name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/409Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Network Tunnel Groups
+        - Secure Access
+      summary: Delete Network Tunnel Group
+      description: Delete a Network Tunnel Group in the organization.
+      operationId: deleteNetworkTunnelGroup
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:write
+      parameters:
+      - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+        '400':
+          $ref: '#/components/responses/400NTGIDError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /networktunnelgroups/{id}/state:
+    get:
+      tags:
+      - Network Tunnel Groups State
+      - Secure Access
+      summary: Get State of Network Tunnel Group
+      description: |-
+        Get the status information for the Network Tunnel Group in the organization.
+        The maximum number of items in a hub's list of tunnel states (`tunnelsStatus`) is 10.
+      operationId: getNetworkTunnelGroupState
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:read
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/networkTunnelGroupStateResponse'
+              example:
+                id: 4561237892
+                name: "New York Branch Tunnels"
+                organizationId: 123456
+                status: warning
+                hubs:
+                  - id: 987654321
+                    isPrimary: true
+                    datacenter:
+                      name: us-east-1
+                    status:
+                      status: UP
+                      time: '2023-06-30T16:07:07.222Z'
+                    tunnelsStatus:
+                      - time: "2023-06-30T16:07:07.222Z"
+                        status: "UP"
+                        dc: "chi1.edc"
+                        dcName: "Equinix Chicago"
+                        dcDesc: "Chicago, Illinois - US"
+                        ikeState: "ESTABLISHED"
+                        ipsecState: "INSTALLED"
+                        peerId: "123456789009876543211234"
+                        peerIp: "198.18.195.1"
+                        peerPort: "4500"
+                        localIp: "198.25.43.19"
+                        localPort: '2456'
+                        ike:
+                          age: '6194'
+                          dhGroup: MODP_2048
+                          prfAlgo: "PRF_HMAC_SHA1"
+                          encAlgo: "AES_CBC"
+                          initiatorSpi: "cf065c564a511834"
+                          responderSpi: "a3cd5c8533c80069"
+                        ipsec:
+                          age: "6194"
+                          integrityAlgo: "HMAC_SHA1_96"
+                          encAlgo: "NULL"
+                          encKeySize: "128"
+                          spiIn: "c6ef7503"
+                          spiOut: "00010102"
+                          peerSelectors:
+                            - 0.0.0.0/0"
+                        data:
+                          packetsIn: "10"
+                          bytesIn: "1000"
+                          idleTimeIn: "100"
+                          packetsOut: "10"
+                          bytesOut: "1000"
+                          idleTimeOut: "100"
+                          initialized: "2023-06-30T16:07:01.245623734Z"
+                        routingStats:
+                          clientRouteStats:
+                            isClipped: false
+                            stats:
+                              - cidr: '25.10.10.24/32'
+                                origin: bgp
+                                priority: 1
+                          cloudRouteStats:
+                            isClipped: false
+                            stats:
+                              - cidr: "ff22::/120"
+                                origin: bgp
+                                priority: 1
+                              - cidr: "11.0.0.0/16"
+                                origin: bgp
+                                priority: 2
+        '400':
+          $ref: '#/components/responses/400NTGIDError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /networktunnelgroups/{id}/peers:
+    get:
+      tags:
+      - Network Tunnel Groups Peer State
+      - Secure Access
+      summary: Get Tunnel States for Peers
+      description: Get the state of all peers (tunnels) within an organization's Network Tunnel Group and Hub.
+      operationId: getPeersState
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:read
+      parameters:
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/peerSortBy'
+      - $ref: '#/components/parameters/sortOrder'
+      - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/tunnelState'
+        '400':
+          $ref: '#/components/responses/400NTGIDError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /networktunnelgroups/{id}/networktunnelhubs/{hub_id}/peers/{peer_id}/state:
+    get:
+      tags:
+      - Network Tunnel Groups Peer State
+      - Secure Access
+      summary: Get Tunnel State
+      description: Get the state of a peer (tunnel) within an organization's Network Tunnel Group and Hub.
+      operationId: getPeerState
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:read
+      parameters:
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/hub_id'
+      - $ref: '#/components/parameters/peer_id'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tunnelState'
+        '400':
+          $ref: '#/components/responses/400NTGIDError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /networktunnelgroupsstate:
+    get:
+      tags:
+      - Network Tunnel Groups State
+      - Secure Access
+      summary: List State of Network Tunnel Groups
+      description: |-
+        Get the state for each Network Tunnel Group in the organization.
+        The maximum number of items in a hub's list of tunnel states (`tunnelsStatus`) is 10.
+      operationId: getNetworkTunnelGroupBulkState
+      security:
+        - oauthFlow:
+            - deployments.networktunnelgroups:read
+      parameters:
+      - $ref: '#/components/parameters/offset'
+      - name: limit
+        in: query
+        description: |-
+          An integer that represents the number of records to return in the response.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 10
+      - $ref: '#/components/parameters/sortBy'
+      - $ref: '#/components/parameters/sortOrder'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/networkTunnelGroupBulkStateResponse'
+        '400':
+          $ref: '#/components/responses/400BulkStatesError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  /regions:
+    get:
+      tags:
+        - Network Tunnel Groups Regions
+        - Secure Access
+      summary: List Regions for Network Tunnel Groups
+      description: List the available regions for the Network Tunnel Groups.
+      operationId: listNetworkTunnelGroupRegions
+      security:
+        - oauthFlow:
+            - deployments.regions:read
+      parameters:
+      - $ref: '#/components/parameters/filtersRegions'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/regionList'
+              example:
+                regions:
+                  - name: US East 1
+                    region: us-east-1
+                    description: US East (N. Virginia)
+                    continent: North America
+                  - name: US West 2
+                    region: us-west-2
+                    description: US West (N. California)
+                    continent: North America
+                bgp:
+                  asNumber: '64512'
+                  peerIPs:
+                    - '169.254.0.9'
+                    - '169.254.0.5'
+                  peerRange: '169.254.0.0/24'
+        '400':
+          $ref: '#/components/responses/400RegionsError'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+
+  # =========================================
+  # Security Schemes
+  # =========================================
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: client credential flow
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            deployments.networktunnelgroups:read: 'Read network tunnel groups deployments'
+            deployments.networktunnelgroups:write: 'Write network tunnel groups deployments'
+            deployments.regions:read: 'Read regions for network tunnel groups deployments'
+
+
+  # =========================================
+  # Parameters
+  # =========================================
+
+  parameters:
+
+    id:
+      in: path
+      name: id
+      description: The ID of the Network Tunnel Group.
+      required: true
+      schema:
+        type: integer
+      example: 123455
+
+    hub_id:
+      name: hub_id
+      in: path
+      description: The ID of the Network Tunnel Hub.
+      required: true
+      schema:
+        type: integer
+      example: 1234567
+
+    peer_id:
+      name: peer_id
+      in: path
+      description: The ID of the peer (tunnel).
+      required: true
+      schema:
+        type: integer
+      example: 123455
+
+    includeStatuses:
+      name: includeStatuses
+      in: query
+      description: Specify whether to include the IPsec tunnel status field (`tunnelsStatus`) for each hub.
+      schema:
+        type: boolean
+        default: false
+      example: true
+
+    offset:
+      in: query
+      name: offset
+      required: false
+      description: |-
+        An integer that represents the place to start reading in the collection.
+        When the offset is set to `0`, the system returns the first page from the collection.
+        If the `limit` is 10, the `offset` for the next page is 10.
+        The default value is 0.
+      schema:
+        type: integer
+        default: 0
+      example: 10
+
+    limit:
+      in: query
+      name: limit
+      required: false
+      description: |-
+        An integer that represents the number of records to return in the response.
+        The default value is 10.
+      schema:
+        type: integer
+        default: 10
+      example: 25
+
+    sortBy:
+      name: sortBy
+      in: query
+      description: Specify the field the system will use to sort the items from the collection in the response.
+      schema:
+        type: string
+        enum: [name, status, createdAt, modifiedAt]
+        default: name
+
+    peerSortBy:
+      name: sortBy
+      in: query
+      description: Specify the field that will be used to sort the items from the collection in the response.
+      schema:
+        type: string
+        enum: [hubId, peerId, modifiedAt]
+        default: modifiedAt
+
+    sortOrder:
+      in: query
+      name: sortOrder
+      description: Specify the sort order (ascending or descending) for the items in the response.
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: asc
+      example: asc
+
+    filtersNTGs:
+      name: filters
+      in: query
+      description: |-
+        Filter the network tunnel groups by one or more properties:
+
+        * **name** - The name of a network tunnel group. The value of `name` is a sequence of case-insensitive characters.
+        * **exactName** - The sequence of case-insensitive characters that exactly match the name of the network tunnel group.
+          Including `exactName` as a filter, causes the system to ignore the `name` filter.
+        * **networkTunnelGroupIds** - The comma-separated list of network tunnel group IDs.
+        * **exactAuthIdPrefix** - The case-sensitive value of the network tunnel hub auth ID prefix or the IP.
+        * **region** - The region for the network tunnel group. The value of `region` is a sequence of case-insensitive characters.
+        * **status** - The status of the network tunnel group. Valid values are "connected", "disconnected", and "warning".
+        * **duplicateCIDRs** - List the network tunnel groups that have duplicate CIDRs.
+          Provide the CIDRs and optionally provide the regional scope and region properties.
+          Enabling the regional scope allows the system to find only duplicates within the same region.
+          You can not use the `duplicateCIDRs` filter with any other filter.
+
+        Specify the filters in the JSON format.
+
+        Example:
+
+        ```
+        {
+            "name": "Branch 1 Network Tunnel Group",
+            "region": "us-east-1"
+        }
+        ```
+        or
+
+        Example:
+
+        ```
+        {
+            "duplicateCIDRs":
+            {
+                "cidrs": "10.0.0.0/8,10.01.0.0/16",
+                "regionalScope": true,
+                "region": "us-east"
+            }
+        }
+
+      schema:
+        $ref: '#/components/schemas/filtersNTGsObject'
+
+    filtersRegions:
+      name: filters
+      in: query
+      description: |-
+        Filter the regions by one or more properties: `peerIP` or `latitude` and `longitude`.
+
+        * **peerIP** - List the regions in ascending order based on the distance of the regions to the location of the given peer IP.
+          You can only set a public IP for `peerIP`. If `latitude` and `longitude` are provided, `peerIP` is ignored.
+        * **latitude** and **longitude** - List the regions in ascending order based on the distance of the regions from the provided coordinates.
+          When included with a request, set both `latitude` and `longitude`.
+
+        Specify the filters in the JSON format.
+
+        Examples:
+
+        ```
+        {
+          "peerIP": "25.123.22.10"
+        }
+        ```
+
+        ```
+        {
+          "latitude": 39.0299604,
+          "longitude": -77.4771231
+        }
+        ```
+      schema:
+        $ref: '#/components/schemas/filtersRegionsObject'
+
+
+  # =========================================
+  # Request Bodies
+  # =========================================
+  requestBodies:
+
+    networkTunnelGroupCreateRequest:
+      description: Create the Network Tunnel Group.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Create the Network Tunnel Group with the specific properties.
+            required:
+              - name
+              - region
+              - authIdPrefix
+              - passphrase
+            properties:
+              name:
+                $ref: '#/components/schemas/name'
+              region:
+                $ref: '#/components/schemas/region'
+              deviceType:
+                $ref: '#/components/schemas/deviceType'
+              authIdPrefix:
+                description: |-
+                  An IP address or ID for the network tunnel. The value of `authIdPrefix` is used to generate the ID portion of
+                  the Pre-Shared Key (PSK).
+
+                  * If you provide an IP, then you should include two IP addresses.
+                  * If you provide a string, ensure that the string is a sequence of 8–100 characters.
+                    The string should not have any special characters besides the period(**.**), underscore(**_**), and dash(**-**) characters.
+                oneOf:
+                  - type: string
+                    description: A descriptive label for the tunnel.
+                    example: networktunnelone
+                  - type: array
+                    description: A list of the IP addresses for the tunnel.
+                    items:
+                      type: string
+                      description: An IP address for the tunnel.
+                      example: '20.21.23.24'
+                    example: ['20.21.23.24', '30.21.25.26']
+              passphrase:
+                type: string
+                description: |-
+                  The passphrase for the primary and secondary tunnels.
+                  Provide a sequence of characters where the length of the passphrase is 16–64 characters.
+                  The passphrase must contain at least one upper and one lowercase letter as well as one numeral.
+                  The passphrase may not include special characters.
+                example: t3stingTunn3lNow
+              routing:
+                $ref: '#/components/schemas/routingRequest'
+          example:
+            name: Test Tunnel One
+            region: us-east-1
+            authIdPrefix: networktunnelone
+            passphrase: t3stingTunn3lNow
+
+    networkTunnelGroupPatchRequest:
+      required: true
+      description: Update the properties of the Network Tunnel Group.
+      content:
+        application/json:
+          schema:
+            type: array
+            description: |-
+              The Network Tunnel Group patch request payload object.
+              If there are duplicate operations for the same path, only the last operation is applied.
+            items:
+              type: object
+              description: The properties of the Network Tunnel Group.
+              properties:
+                op:
+                  type: string
+                  enum:
+                    - replace
+                  description: The operation that needs to be done. The only available operation is `replace`.
+                  example: replace
+                path:
+                  type: string
+                  description: |-
+                    The path of the property that needs to be updated.
+                    Available paths are `/name`, `/authIdPrefix`, `/passphrase`, `/region`, and `/routing`.
+                  example: /name
+                value:
+                  oneOf:
+                    - type: string
+                      description: The new value for the property.
+                      example: Tunnel Name - Updated
+                    - $ref: '#/components/schemas/routingRequest'
+              required:
+                - op
+                - path
+                - value
+            example:
+              - op: replace
+                path: /name
+                value: Tunnel Name - Updated
+              - op: replace
+                path: /authIdPrefix
+                value: brooklynbranchtunnels
+              - op: replace
+                path: /passphrase
+                value: n3wTunn3lNow1234567890
+              - op: replace
+                path: /region
+                value: us-west-2
+              - op: replace
+                path: /routing
+                value: {
+                  "type": "bgp",
+                  "data": {
+                    "asNumber": "1234"
+                  }
+                }
+  schemas:
+    id:
+      type: integer
+      description: The ID of the Network Tunnel Group.
+      readOnly: true
+      example: 456123789
+
+    name:
+      type: string
+      description: |-
+        The name of the Network Tunnel Group.
+        A Network Tunnel Group name is a sequence of 1–50 characters. The `name` field cannot have any special characters other than spaces and hyphens.
+      example: New York Branch Tunnels
+
+    organizationId:
+      type: integer
+      description: The ID of the organization.
+      readOnly: true
+      example: 123556
+
+    deviceType:
+      type: string
+      description: |-
+        The type of device that establishes the network tunnel. The default value is `other`.
+      enum:
+        - ASA
+        - AWS S2S VPN
+        - AZURE S2S VPN
+        - FTD
+        - ISR
+        - Meraki MX
+        - Viptela cEdge
+        - Viptela vEdge
+        - other
+      example: ASA
+
+    status:
+      type: string
+      enum: [connected, disconnected, warning]
+      description: The status of the Network Tunnel Group.
+      example: connected
+
+    region:
+      type: string
+      description: The name of the region that the system uses to obtain the primary and secondary data centers for the Hubs.
+      example: us-east-1
+
+    hubId:
+      type: integer
+      readOnly: true
+      description: The ID of the Hub.
+      example: 987654321
+
+    isPrimary:
+      type: boolean
+      description: Specifies whether the Hub is a primary data center.
+      readOnly: true
+      example: true
+
+    datacenter:
+      type: object
+      properties:
+        name:
+          type: string
+          description:  The name of the data center for the Hub.
+          readOnly: true
+          example: dc-1-0-0
+
+    datacenterWithIP:
+      type: object
+      properties:
+        name:
+          type: string
+          description:  The name of the data center for the Hub.
+          readOnly: true
+          example: dc-1-0-0
+        ip:
+          type: string
+          description: The IP address of the data center for the Hub.
+          readOnly: true
+          example: 54.145.27.13
+
+    authId:
+      type: string
+      readOnly: true
+      description: An IP address or email used to authenticate the tunnel.
+      example: newyorkbranchtunnels123@123456-987654321.sse.cisco.com
+
+    tunnelsCount:
+      type: integer
+      description: The number of tunnels in the hub.
+      readOnly: true
+      example: 5
+
+    networkCIDRS:
+      type: array
+      description: The public and private address ranges that are used internally by your organization.
+      items:
+        type: string
+        example: 123.111.222.25/24
+      example:
+        - 123.111.222.25/24
+
+    asNumber:
+      type: string
+      description: |-
+        The border gateway protocol (BGP) autonomous system (AS) number for private access network tunnels.
+        Only required for the `bgp` routing type. Any other routing types except `bgp` are ignored.
+        Specify an integer between 0–65536.
+      example: '5432'
+
+    bgpHopCount:
+      type: integer
+      description: |-
+        Indicates how many network hops a packet can traverse before being discarded by a router. It can only
+        be an integer from 1 to 64 and if it is defined, then at least of BGP neighbor CIDR must be provided.
+      example: 10
+
+    bgpNeighborCIDRs:
+      type: array
+      description: |-
+        The list of CIDR netmasks to limit the customer peers that can talk to the headend BGP.
+        The system allows a maximum of 20 CIDRs.
+      example: ["10.0.0.0/8", "95.24.45.50/32"]
+      items:
+        type: string
+        example: 10.0.0.0/8
+
+    bgpServerSubnets:
+      type: array
+      description: |-
+        The list of BGP server custom IP address ranges applicable only when the device type is `Azure S2S VPN`.
+        The two ranges must be unique and have the `/32` mask.
+      example: ["169.254.0.1/32","169.254.0.1/32"]
+      items:
+        type: string
+        example: "169.254.0.1/32"
+
+    createdAt:
+      type: string
+      format: date-time
+      readOnly: true
+      description: The date and time (timestamp) when the network tunnel group was created.
+      example: "2024-06-12T18:04:23Z"
+
+    modifiedAt:
+      type: string
+      format: date-time
+      readOnly: true
+      description: The date and time of the last update (timestamp) for the network tunnel group.
+      example: "2024-06-25T15:21:32Z"
+
+    hubs:
+      type: array
+      description: |-
+        The list of Hubs for a Network Tunnel Group.
+        Only one Hub is the primary data center.
+      items:
+        type: object
+        description: The properties of the Hub.
+        properties:
+          id:
+            $ref: '#/components/schemas/hubId'
+          isPrimary:
+            $ref: '#/components/schemas/isPrimary'
+          datacenter:
+            $ref: '#/components/schemas/datacenter'
+          authId:
+            $ref: '#/components/schemas/authId'
+          status:
+            $ref: '#/components/schemas/hubState'
+          tunnelsCount:
+            $ref: '#/components/schemas/tunnelsCount'
+
+    hubsWithIP:
+      type: array
+      description: |-
+        The list of Hubs for a Network Tunnel Group.
+        Only one Hub is the primary data center.
+      items:
+        type: object
+        description: The properties of the Hub.
+        properties:
+          id:
+            $ref: '#/components/schemas/hubId'
+          isPrimary:
+            $ref: '#/components/schemas/isPrimary'
+          datacenter:
+            $ref: '#/components/schemas/datacenterWithIP'
+          authId:
+            $ref: '#/components/schemas/authId'
+          status:
+            $ref: '#/components/schemas/hubState'
+          tunnelsCount:
+            $ref: '#/components/schemas/tunnelsCount'
+
+    hubsWithState:
+      type: array
+      description: |-
+        The list of Hubs for a Network Tunnel Group.
+        Only one Hub is the primary data center.
+      items:
+        type: object
+        description: The properties of the Hub.
+        properties:
+          id:
+            type: integer
+            readOnly: true
+            description: The ID of the Hub.
+            example: 987654321
+          isPrimary:
+            type: boolean
+            description: Specifies whether the Hub is a primary data center.
+            readOnly: true
+            example: true
+          datacenter:
+            type: object
+            properties:
+              name:
+                type: string
+                description:  The name of the data center for the Hub.
+                readOnly: true
+                example: sse-use-1-0-0
+          status:
+            $ref: '#/components/schemas/hubState'
+          tunnelsStatus:
+              $ref: '#/components/schemas/tunnelsStatus'
+      example:
+        - id: 987654321
+          isPrimary: true
+          datacenter:
+            name: us-east-1
+            ip: '54.145.27.13'
+          status:
+            status: UP
+            time: '2023-06-30T16:07:07.222Z'
+          tunnelsStatus: []
+        - id: 147852369
+          isPrimary: false
+          datacenter:
+            name: us-central-1
+            ip: '25.132.42.15'
+          status:
+            status: UP
+            time: '2023-06-30T16:07:07.222Z'
+          tunnelsStatus: []
+
+    tunnelsStatus:
+      type: array
+      description: |-
+        The list of the states for the Network Tunnels.
+        The maximum number of items in the list of tunnel states is 10.
+      maxItems: 10
+      items:
+        $ref: '#/components/schemas/tunnelState'
+      example:
+        - time: "2023-06-30T16:07:07.222Z"
+          status: UP
+          dc: chi1.edc
+          dcName: Equinix Chicago
+          dcDesc: Chicago, Illinois - US
+          ikeState: ESTABLISHED
+          ipsecState: INSTALLED
+          peerId: "123456789009876543211234"
+          peerIp: "198.18.195.1"
+          peerPort: "4500"
+          localIp: "198.25.43.19"
+          localPort: "2456"
+          ike:
+            age: "6194"
+            dhGroup: "MODP_2048"
+            prfAlgo: "PRF_HMAC_SHA1"
+            encAlgo: "AES_CBC"
+            initiatorSpi: "cf065c564a511834"
+            responderSpi: "a3cd5c8533c80069"
+          ipsec:
+            age: "6194"
+            integrityAlgo: "HMAC_SHA1_96"
+            encAlgo: "NULL"
+            encKeySize: "128"
+            spiIn: "c6ef7503"
+            spiOut: "00010102"
+            peerSelectors:
+              - "0.0.0.0/0"
+            data:
+              packetsIn: "10"
+              bytesIn: "1000"
+              idleTimeIn: "100"
+              packetsOut: "10"
+              bytesOut: "1000"
+              idleTimeOut: "100"
+              initialized: "2023-06-30T16:07:01.245623734Z"
+            routingStats:
+              clientRouteStats:
+              isClipped: false
+              stats:
+                - cidr: "25.10.10.24/32"
+                  origin: "bgp"
+                  priority: 1
+            cloudRouteStats:
+              isClipped: false
+              stats:
+                - cidr: "ff22::/120"
+                  origin: "bgp"
+                  priority: 1
+                - cidr: "11.0.0.0/16"
+                  origin: "bgp"
+                  priority: 2
+
+    routingRequest:
+      type: object
+      description: |-
+        The routing information for the network tunnel.
+        The `nat` routing type is used when the tunnels in your organization connect to network spaces with overlapping IP address spaces.
+
+        If the routing type is `nat`, then set the `data` field to null or an empty string.
+        If the routing type is `bgp`, then set the `data` field with the `asNumber` field.
+        If the routing type is `static`, then set the `data` field with the `networkCIDRs` field.
+      required:
+        - type
+        - data
+      properties:
+        type:
+          type: string
+          description: |-
+            The type of the route.
+          enum:
+            - static
+            - bgp
+            - nat
+        data:
+          description: The list of network CIDR addresses or the autonomous system (AS) number.
+          oneOf:
+            - $ref: '#/components/schemas/staticDataRequestObj'
+            - $ref: '#/components/schemas/bgpDataRequestObj'
+            - type: string
+          example:
+            networkCIDRs:
+              - 123.111.222.25/24
+              - 111.222.39.1/32
+      example:
+        type: bgp
+        data:
+          asNumber: '5432'
+
+    routingResponse:
+      type: object
+      required: [type, data]
+      description: |-
+        The routing information for the network tunnel.
+
+        If the routing type is `nat`, then the `data` field is empty.
+        If the routing type is `bgp`, then `data` includes the `asNumber` field.
+        If the routing type is `static`, then `data` includes the `networkCIDRs` field.
+      properties:
+        type:
+          type: string
+          description: The type of the route.
+          enum:
+            - static
+            - bgp
+            - nat
+        data:
+          description: The list of network CIDR addresses or the autonomous system (AS) number.
+          oneOf:
+            - $ref: '#/components/schemas/staticDataResponseObj'
+            - $ref: '#/components/schemas/bgpDataResponseObj'
+            - type: string
+          example:
+            networkCIDRs:
+              - 123.111.222.25/24
+              - 111.222.39.1/32
+      example:
+        type: bgp
+        data:
+          asNumber: '5432'
+
+    staticDataRequestObj:
+      type: object
+      description: The list of network CIDRs.
+      required: ['networkCIDRs']
+      properties:
+        networkCIDRs:
+          $ref: '#/components/schemas/networkCIDRS'
+      example:
+        networkCIDRs:
+          - 123.111.222.25/24
+          - 111.222.39.1/32
+
+    staticDataResponseObj:
+      type: object
+      description: The list of network CIDRs.
+      required: ['networkCIDRs']
+      properties:
+        networkCIDRs:
+          $ref: '#/components/schemas/networkCIDRS'
+      example:
+        networkCIDRs:
+          - 123.111.222.25/24
+          - 111.222.39.1/32
+
+    bgpDataRequestObj:
+      type: object
+      description: The autonomous system (AS) number for the private access tunnels.
+      required: ['asNumber']
+      properties:
+        asNumber:
+          $ref: '#/components/schemas/asNumber'
+        bgpHopCount:
+          $ref: '#/components/schemas/bgpHopCount'
+        bgpNeighborCIDRs:
+          $ref: '#/components/schemas/bgpNeighborCIDRs'
+        bgpServerSubnets:
+          $ref: '#/components/schemas/bgpServerSubnets'
+      example:
+        asNumber: '5432'
+
+    bgpDataResponseObj:
+      type: object
+      required: ['asNumber']
+      description: The autonomous system (AS) number for the private access tunnels.
+      properties:
+        asNumber:
+          $ref: '#/components/schemas/asNumber'
+        bgpHopCount:
+          $ref: '#/components/schemas/bgpHopCount'
+        bgpNeighborCIDRs:
+          $ref: '#/components/schemas/bgpNeighborCIDRs'
+        bgpServerSubnets:
+          $ref: '#/components/schemas/bgpServerSubnets'
+      example:
+        asNumber: '5432'
+
+    networkTunnelGroupsList:
+      type: object
+      description: List the Network Tunnel Groups in the organization.
+      properties:
+        data:
+          type: array
+          description: The list of Network Tunnel Groups.
+          items:
+            $ref: '#/components/schemas/networkTunnelGroupListResponse'
+          example:
+            - id: 4561237892
+              name: New York Branch Tunnels
+              organizationId: 123456
+              deviceType: ASA
+              region: us-east-1
+              status: connected
+              hubs:
+                - id: 987654321
+                  isPrimary: true
+                  datacenter:
+                    name: us-east-1
+                    ip: '54.145.27.13'
+                  authId: newyorkbranchtunnels123@123456-987654321.sse.cisco.com
+                  status:
+                    status: UP
+                    time: "2025-02-05T17:53:05Z"
+                  tunnelsCount: 5
+                - id: 147852369
+                  isPrimary: false
+                  datacenter:
+                    name: us-central-1
+                    ip: '25.132.42.15'
+                  authId: newyorkbranchtunnels123@123456-147852369.sse.cisco.com
+                  status:
+                    status: UP
+                    time: "2025-02-05T17:50:05Z"
+                  tunnelsCount: 5
+              routing:
+                type: static
+                data:
+                  networkCIDRs:
+                    - "123.111.222.25/24"
+                    - "111.222.39.1/32"
+              createdAt: "2024-06-12T18:04:23Z"
+              modifiedAt: "2024-06-25T15:21:32Z"
+        offset:
+          type: integer
+          description: An integer that represents the place to start reading in the collection.
+          example: 1
+        limit:
+          type: integer
+          description: The number of records returned on a page.
+          example: 100
+        total:
+          type: integer
+          description: The total number of records returned.
+          example: 100
+      example:
+        data:
+          - id: 4561237892
+            name: New York Branch Tunnels
+            organizationId: 123456
+            deviceType: ASA
+            region: us-east-1
+            status: connected
+            hubs:
+              - id: 987654321
+                isPrimary: true
+                datacenter:
+                  name: us-east-1
+                  ip: '54.145.27.13'
+                authId: newyorkbranchtunnels123@123456-987654321.sse.cisco.com
+              - id: 147852369
+                isPrimary: false
+                datacenter:
+                  name: us-central-1
+                  ip: '25.132.42.15'
+                authId: newyorkbranchtunnels123@123456-147852369.sse.cisco.com
+            routing:
+              type: static
+              data:
+                networkCIDRs:
+                  - "123.111.222.25/24"
+                  - "111.222.39.1/32"
+        offset: 0
+        limit: 10
+        total: 1
+
+    filtersNTGsObject:
+      type: object
+      description: The filters for the Network Tunnel Groups.
+      properties:
+        name:
+          type: string
+          description: The name of a Network Tunnel Group. The value of `name` is a sequence of case-insensitive characters.
+          example: New York Branch Tunnels
+        exactName:
+          type: string
+          description: |-
+            The sequence of case-insensitive characters that exactly match the name of the Network Tunnel Group.
+            When `exactName` is included as a filter, `name` is ignored.
+          example: Branch 1 Tunnel
+        region:
+          type: string
+          description: The region for the Network Tunnel Group. The value of `region` is a sequence of case-insensitive characters.
+          example: us-east-1
+        networkTunnelGroupIds:
+          type: string
+          description: The comma-separated list of Network Tunnel Group IDs.
+          example: '1234,456'
+        exactAuthIdPrefix:
+          type: string
+          description: The case-sensitive value of the auth ID prefix (`authIdPrefix`) or IP for the network tunnel Hub.
+          example: 'tunnelprefix1'
+        status:
+          $ref: '#/components/schemas/status'
+        duplicateCIDRs:
+          type: string
+          description: |-
+            List the network tunnel groups that have duplicate CIDRs.
+            Provide the CIDRs and optionally provide the regional scope and region properties.
+            If the regional scope is enabled, only duplicates in the same region are found.
+            You can not use the `duplicateCIDRs` filter with any other filter.
+          example:
+            '{
+              "cidrs": "10.0.0.0/8,10.01.0.0/16",
+              "regionalScope": true,
+              "region": us-east
+            }'
+
+    filtersRegionsObject:
+      type: object
+      description: |-
+        The filters for the regions of the Network Tunnel Groups.
+        You can set either the `peerIP` filter or both the `latitude` and `longitude` filters.
+      properties:
+        peerIP:
+          type: string
+          description: |-
+            Provide the public IP address of a peer (tunnel).
+            List the regions sorted in ascending order and based on the regional distances from
+            the geolocation of the provided peer IP.
+            Only a public IP is allowed as the value of `peerIP`. `peerIP` is ignored if you provide `latitude` and `longitude`.</br>
+            **Note:** If you set the `latitude` and `longitude` filters, the `peerIP` filter is ignored.
+          example: 25.123.22.10
+        latitude:
+          type: number
+          format: double
+          description: |-
+            List the regions in ascending order based on the distance of the regions from the provided coordinates.
+            **Note:** Set both the `latitude` and `longitude` filters together.
+          example: 39.0299604
+        longitude:
+          type: number
+          format: double
+          description: |-
+            List the regions in ascending order based on the distance of the regions from the provided coordinates.
+          example: -77.4771231
+        status:
+          type: string
+          description: |-
+            Specify either all regions or only the regions that can accept new tunnels.
+            Set the value of the `status` filter as `all` or `available`.
+            The default value is `available`.
+          example: all
+
+    networkTunnelGroupListResponse:
+      type: object
+      description: The properties of the Network Tunnel Group in the organization.
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        deviceType:
+          $ref: '#/components/schemas/deviceType'
+        region:
+          $ref: '#/components/schemas/region'
+        status:
+          $ref: '#/components/schemas/status'
+        hubs:
+          $ref: '#/components/schemas/hubs'
+        routing:
+          $ref: '#/components/schemas/routingResponse'
+        createdAt:
+          $ref: '#/components/schemas/createdAt'
+        modifiedAt:
+          $ref: '#/components/schemas/modifiedAt'
+      example:
+        id: 4561237892
+        name: New York Branch Tunnels
+        organizationId: 123456
+        deviceType: ASA
+        region: us-east-1
+        status: connected
+        hubs:
+          - id: 987654321
+            isPrimary: true
+            datacenter:
+              name: us-east-1
+            authId: 'newyorkbranchtunnels123@123456-987654321.sse.cisco.com'
+            status:
+              status: UP
+              time: "2025-02-05T17:53:05Z"
+            tunnelsCount: 5
+          - id: 147852369
+            isPrimary: false
+            datacenter:
+              name: us-central-1
+            authId: 'newyorkbranchtunnels123@123456-147852369.sse.cisco.com'
+            status:
+              status: UP
+              time: "2025-02-05T17:53:05Z"
+            tunnelsCount: 5
+        routing:
+          type: static
+          data:
+            networkCIDRs:
+              - '123.111.222.25/24'
+              - '111.222.39.1/32'
+        createdAt: "2024-06-12T18:04:23Z"
+        modifiedAt: "2024-06-25T15:21:32Z"
+
+    networkTunnelGroupResponse:
+      type: object
+      description: The properties of the Network Tunnel Group in the organization.
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        deviceType:
+          $ref: '#/components/schemas/deviceType'
+        region:
+          $ref: '#/components/schemas/region'
+        status:
+          $ref: '#/components/schemas/status'
+        hubs:
+          $ref: '#/components/schemas/hubsWithIP'
+        routing:
+          $ref: '#/components/schemas/routingResponse'
+        createdAt:
+          $ref: '#/components/schemas/createdAt'
+        modifiedAt:
+          $ref: '#/components/schemas/modifiedAt'
+      example:
+        id: 4561237892
+        name: New York Branch Tunnels
+        organizationId: 123456
+        deviceType: ASA
+        region: us-east-1
+        status: connected
+        hubs:
+          - id: 987654321
+            isPrimary: true
+            datacenter:
+              name: us-east-1
+              ip: '54.145.27.13'
+            authId: 'newyorkbranchtunnels123@123456-987654321.sse.cisco.com'
+            status:
+              status: UP
+              time: "2025-02-05T17:53:05Z"
+            tunnelsCount: 5
+          - id: 147852369
+            isPrimary: false
+            datacenter:
+              name: us-central-1
+              ip: '25.132.42.15'
+            authId: 'newyorkbranchtunnels123@123456-147852369.sse.cisco.com'
+            status:
+              status: UP
+              time: "2025-02-05T17:53:05Z"
+            tunnelsCount: 5
+        routing:
+          type: static
+          data:
+            networkCIDRs:
+              - '123.111.222.25/24'
+              - '111.222.39.1/32'
+        createdAt: "2024-06-12T18:04:23Z"
+        modifiedAt: "2024-06-25T15:21:32Z"
+
+    networkTunnelGroupStateResponse:
+      type: object
+      description: The status information for the Network Tunnel Group.
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        organizationId:
+          $ref: '#/components/schemas/organizationId'
+        status:
+          $ref: '#/components/schemas/status'
+        hubs:
+          $ref: '#/components/schemas/hubsWithState'
+      example:
+        id: 4561237892
+        name: "New York Branch Tunnels"
+        organizationId: 123456
+        status: warning
+        hubs:
+          - id: 987654321
+            isPrimary: true
+            datacenter:
+              name: us-central-1
+              ip: '54.145.27.13'
+            status:
+              status: UP
+              time: '2023-06-30T16:07:07.222Z'
+            tunnelsStatus:
+              - time: "2023-06-30T16:07:07.222Z"
+                status: "UP"
+                dc: "chi1.edc"
+                dcName: "Equinix Chicago"
+                dcDesc: "Chicago, Illinois - US"
+                ikeState: "ESTABLISHED"
+                ipsecState: "INSTALLED"
+                peerId: "123456789009876543211234"
+                peerIp: "198.18.195.1"
+                peerPort: "4500"
+                localIp: "198.25.43.19"
+                localPort: '2456'
+                ike:
+                  age: '6194'
+                  dhGroup: MODP_2048
+                  prfAlgo: "PRF_HMAC_SHA1"
+                  encAlgo: "AES_CBC"
+                  initiatorSpi: "cf065c564a511834"
+                  responderSpi: "a3cd5c8533c80069"
+                ipsec:
+                  age: "6194"
+                  integrityAlgo: "HMAC_SHA1_96"
+                  encAlgo: "NULL"
+                  encKeySize: "128"
+                  spiIn: "c6ef7503"
+                  spiOut: "00010102"
+                  peerSelectors:
+                    - 0.0.0.0/0"
+                data:
+                  packetsIn: "10"
+                  bytesIn: "1000"
+                  idleTimeIn: "100"
+                  packetsOut: "10"
+                  bytesOut: "1000"
+                  idleTimeOut: "100"
+                  initialized: "2023-06-30T16:07:01.245623734Z"
+                routingStats:
+                  clientRouteStats:
+                    isClipped: false
+                    stats:
+                      - cidr: '25.10.10.24/32'
+                        origin: bgp
+                        priority: 1
+                  cloudRouteStats:
+                    isClipped: false
+                    stats:
+                      - cidr: "ff22::/120"
+                        origin: bgp
+                        priority: 1
+                      - cidr: "11.0.0.0/16"
+                        origin: bgp
+                        priority: 2
+    hubState:
+      type: object
+      description: The properties of a Hub for the Network Tunnel Group.
+      required: [time, status]
+      properties:
+        time:
+            type: string
+            readOnly: true
+            format: date-time
+            description: The date and time (UTC time, with milliseconds) when the state event record was generated.
+            example: "2023-06-30T16:07:07.222Z"
+        status:
+          type: string
+          readOnly: true
+          description: |
+            The high-level status of the Hub:
+            * UP - The hub is active.
+            * DOWN - The hub is inactive.
+          enum:
+            - UP
+            - DOWN
+          example: UP
+      example:
+        time: "2023-06-30T16:07:07.222Z"
+        status: UP
+
+    tunnelState:
+      type: object
+      description: The status information of the established Network Tunnel.
+      properties:
+        time:
+          type: string
+          readOnly: true
+          format: date-time
+          description: The date and time (UTC time with milliseconds) when the state event record was generated.
+          example: '2023-06-30T16:07:07.222Z'
+        status:
+          type: string
+          readOnly: true
+          description: |-
+            The only available value is `UP`, which indicates that the tunnel is active.
+          example: UP
+        dc:
+          type: string
+          readOnly: true
+          description: The domain name of the data center.
+          example: 'chi1.edc'
+        dcName:
+          type: string
+          readOnly: true
+          description: The name of the data center.
+          example: Equinix Chicago
+        dcDesc:
+          type: string
+          readOnly: true
+          description: The city and country, or regional location of the data center.
+          example: Chicago, Illinois - US
+        ikeState:
+          type: string
+          readOnly: true
+          description: |-
+            IKE SA State:
+            * CREATED
+            * CONNECTING
+            * ESTABLISHED
+            * PASSIVE
+            * REKEYING
+            * REKEYED
+            * DELETING
+            * DESTROYING
+          enum:
+            - CREATED
+            - CONNECTING
+            - ESTABLISHED
+            - PASSIVE
+            - REKEYING
+            - REKEYED
+            - DELETING
+            - DESTROYING
+          example: ESTABLISHED
+        ipsecState:
+          type: string
+          readOnly: true
+          description: |-
+            IPsec state:
+            * CREATED
+            * ROUTED
+            * INSTALLING
+            * INSTALLED
+            * UPDATING
+            * REKEYING
+            * REKEYED
+            * RETRYING
+            * DELETING
+            * DELETED
+            * DESTROYING
+          enum:
+            - CREATED
+            - ROUTED
+            - INSTALLING
+            - INSTALLED
+            - UPDATING
+            - REKEYING
+            - REKEYED
+            - RETRYING
+            - DELETING
+            - DELETED
+            - DESTROYING
+          example: INSTALLED
+        peerId:
+          type: string
+          readOnly: true
+          description: The IKE ID of the remote peer.
+          example: 'unique-value@1234567-234567812-sse.cisco.com'
+        peerIp:
+          type: string
+          readOnly: true
+          description: The IP address of the remote peer.
+          example: '198.18.195.1'
+        peerPort:
+          type: string
+          readOnly: true
+          description: The port of the remote peer.
+          example: '4500'
+        localIp:
+          type: string
+          readOnly: true
+          description: |-
+            The public IP address assigned to an endpoint device (for example: ISR, Viptela).
+          example: "198.25.43.19"
+        localPort:
+          type: string
+          readOnly: true
+          description: The port on the device.
+          example: "2456"
+        ike:
+          $ref: "#/components/schemas/tunnelIKEState"
+        ipsec:
+          $ref: "#/components/schemas/tunnelIPSecState"
+        data:
+          $ref: "#/components/schemas/tunnelDataState"
+        routingStats:
+          $ref: "#/components/schemas/tunnelRoutingStats"
+      example:
+        time: "2023-06-30T16:07:07.222Z"
+        status: UP
+        dc: chi1.edc
+        dcName: Equinix Chicago
+        dcDesc: Chicago, Illinois - US
+        ikeState: ESTABLISHED
+        ipsecState: INSTALLED
+        peerId: "123456789009876543211234"
+        peerIp: "198.18.195.1"
+        peerPort: "4500"
+        localIp: "198.25.43.19"
+        localPort: "2456"
+        ike:
+          age: "6194"
+          dhGroup: "MODP_2048"
+          prfAlgo: "PRF_HMAC_SHA1"
+          encAlgo: "AES_CBC"
+          initiatorSpi: "cf065c564a511834"
+          responderSpi: "a3cd5c8533c80069"
+        ipsec:
+          age: "6194"
+          integrityAlgo: "HMAC_SHA1_96"
+          encAlgo: "NULL"
+          encKeySize: "128"
+          spiIn: "c6ef7503"
+          spiOut: "00010102"
+          peerSelectors:
+            - "0.0.0.0/0"
+        data:
+          packetsIn: "10"
+          bytesIn: "1000"
+          idleTimeIn: "100"
+          packetsOut: "10"
+          bytesOut: "1000"
+          idleTimeOut: "100"
+          initialized: "2023-06-30T16:07:01.245623734Z"
+        routingStats:
+          clientRouteStats:
+            isClipped: false
+            stats:
+              - cidr: "25.10.10.24/32"
+                origin: "bgp"
+                priority: 1
+          cloudRouteStats:
+            isClipped: false
+            stats:
+              - cidr: "ff22::/120"
+                origin: "bgp"
+                priority: 1
+              - cidr: "11.0.0.0/16"
+                origin: "bgp"
+                priority: 2
+
+    tunnelIKEState:
+      type: object
+      description: The IKE session state of the Network Tunnel.
+      properties:
+        age:
+          type: string
+          readOnly: true
+          description: Established state age in seconds.
+          example: "6194"
+        dhGroup:
+          type: string
+          readOnly: true
+          description: IKE Diffie-Hellman group.
+          example: "MODP_2048"
+        prfAlgo:
+          type: string
+          readOnly: true
+          description: IKE pseudo random function.
+          example: "PRF_HMAC_SHA1"
+        encAlgo:
+          type: string
+          readOnly: true
+          description: IKE encryption algorithm.
+          example: "AES_CBC"
+        initiatorSpi:
+          type: string
+          readOnly: true
+          description: Hex encoded initiator SPI / cookie.
+          example: "cf065c564a511834"
+        responderSpi:
+          type: string
+          readOnly: true
+          description: Hex encoded responder SPI / cookie.
+          example: "a3cd5c8533c80069"
+
+    tunnelIPSecState:
+      type: object
+      description: The IPsec session state and configuration information for the network tunnel.
+      properties:
+        age:
+          type: string
+          readOnly: true
+          description: The installed state age in seconds.
+          example: "6194"
+        integrityAlgo:
+          type: string
+          readOnly: true
+          description: The ESP or AH integrity algorithm name.
+          example: "HMAC_SHA1_96"
+        encAlgo:
+          type: string
+          readOnly: true
+          description: The ESP encryption algorithm name.
+          example: "NULL"
+        encKeySize:
+          type: string
+          readOnly: true
+          description: The ESP encryption key size (optional field, not available with NULL encryption).
+          example: "128"
+        spiIn:
+          type: string
+          readOnly: true
+          description: The Hex encoded inbound SPI.
+          example: "c6ef7503"
+        spiOut:
+          type: string
+          readOnly: true
+          description: The Hex encoded outbound SPI.
+          example: "00010102"
+        peerSelectors:
+          type: array
+          readOnly: true
+          description: The peer traffic selectors.
+          items:
+            type: string
+            description: The selector expression.
+            example: "0.0.0.0/0"
+
+    tunnelDataState:
+      type: object
+      description: The properties of the state of the tunnel.
+      properties:
+        packetsIn:
+          type: string
+          description: The number of processed input packets (tunnel ingress).
+          readOnly: true
+          example: "10"
+        bytesIn:
+          type: string
+          readOnly: true
+          description: The number of processed input bytes (tunnel ingress).
+          example: "1000"
+        idleTimeIn:
+          type: string
+          readOnly: true
+          description: The seconds since the last inbound packet (the time that the tunnel is idle).
+          example: "100"
+        packetsOut:
+          type: string
+          readOnly: true
+          description: The number of processed output packets (tunnel egress).
+          example: "10"
+        bytesOut:
+          type: string
+          readOnly: true
+          description: The number of processed output bytes (tunnel egress).
+          example: '1000'
+        idleTimeOut:
+          type: string
+          readOnly: true
+          description: The seconds since the last outbound packet (the time that the tunnel is idle).
+          example: '100'
+        initialized:
+          type: string
+          readOnly: true
+          description: The time when the packet and byte counters were initialized to 0.
+          example: "2023-10-19T22:15:12.765623734Z"
+
+    tunnelRoutingStats:
+      type: object
+      description: The routing statistics for a peer (tunnel).
+      properties:
+        clientRouteStats:
+          type: object
+          description: The properties of the client routing statistics.
+          properties:
+            isClipped:
+              type: boolean
+              description: Indicates whether the routing statistics for the client route are truncated.
+              example: false
+            stats:
+              type: array
+              description: The list of the client routing statistics.
+              items:
+                type: object
+                description: The properties of the client routing statistics.
+                properties:
+                  cidr:
+                    type: string
+                    description: The client routing CIDR address.
+                    example: "8.0.0.0/16"
+                  origin:
+                    type: string
+                    description: The origin of the client routing.
+                    example: bgp
+                  priority:
+                    type: integer
+                    description: The priority of the client routing.
+                    example: 1
+        cloudRouteStats:
+          type: object
+          description: The properites of the cloud routing statistics.
+          properties:
+            isClipped:
+              type: boolean
+              description: Indicates whether cloud route stats array has been truncated
+              example: false
+            stats:
+              type: array
+              description: The list of the cloud routing statistics.
+              items:
+                type: object
+                description: The properties of the cloud routing statistics.
+                properties:
+                  cidr:
+                    type: string
+                    description: The cloud routing CIDR address.
+                    example: "21.10.11.0/24"
+                  origin:
+                    type: string
+                    description: The origin of the cloud routing.
+                    example: bgp
+                  priority:
+                    type: integer
+                    description: The priority of the cloud routing.
+                    example: 1
+
+    networkTunnelGroupBulkStateResponse:
+      type: object
+      description: The information about the Network Tunnel Groups and Hubs in the organization.
+      properties:
+        offset:
+          type: integer
+          description: An integer that represents the place to start reading in the collection.
+          example: 0
+        limit:
+          type: integer
+          description: The number of items returned in the response.
+          example: 10
+        total:
+          type: integer
+          description: The total number of items read from the collection.
+          example: 1
+        data:
+          type: array
+          description: The list of the Network Tunnel Groups in the organization.
+          items:
+            $ref: '#/components/schemas/networkTunnelGroupStateResponse'
+          example:
+            - id: 4561237892
+              name: New York Branch Tunnels
+              organizationId: 123456
+              status: warning
+              hubs:
+                - id: 987654321
+                  isPrimary: true
+                  datacenter:
+                    name: us-east-1
+                  status:
+                    time: "2023-06-30T16:07:07.222Z"
+                    status: UP
+                  tunnelsStatus:
+                    - time: "2023-06-30T16:07:07.222Z"
+                      status: UP
+                      dc: "chi1.edc"
+                      dcName: "Equinix Chicago"
+                      dcDesc: "Chicago, Illinois - US"
+                      ikeState: "ESTABLISHED"
+                      ipsecState: "INSTALLED"
+                      peerId: "123456789009876543211234"
+                      peerIp: "198.18.195.1"
+                      peerPort: "4500"
+                      localIp: "198.25.43.19"
+                      localPort: '2456'
+                      ike:
+                        age: '6194'
+                        dhGroup: MODP_2048
+                        prfAlgo: "PRF_HMAC_SHA1"
+                        encAlgo: "AES_CBC"
+                        initiatorSpi: "cf065c564a511834"
+                        responderSpi: "a3cd5c8533c80069"
+                      ipsec:
+                        age: "6194"
+                        integrityAlgo: "HMAC_SHA1_96"
+                        encAlgo: "NULL"
+                        encKeySize: "128"
+                        spiIn: "c6ef7503"
+                        spiOut: "00010102"
+                        peerSelectors:
+                          - 0.0.0.0/0"
+                      data:
+                        packetsIn: "10"
+                        bytesIn: "1000"
+                        idleTimeIn: "100"
+                        packetsOut: "10"
+                        bytesOut: "1000"
+                        idleTimeOut: "100"
+                        initialized: "2023-06-30T16:07:01.245623734Z"
+                - id: 987654322
+                  isPrimary: false
+                  datacenter:
+                    name: us-central-1
+                  status:
+                    time: "2023-06-30T16:08:25.123Z"
+                    status: UP
+                  tunnelsStatus:
+                    - time: "2023-06-30T16:08:25.123Z"
+                      status: UP
+                      dc: "chi1.edc"
+                      dcName: "Equinix Chicago"
+                      dcDesc: "Chicago, Illinois - US"
+                      ikeState: "ESTABLISHED"
+                      ipsecState: "INSTALLED"
+                      peerId: "123456789009876543211234"
+                      peerIp: "198.18.195.1"
+                      peerPort: "4500"
+                      localIp: "198.25.43.19"
+                      localPort: '2456'
+                      ike:
+                        age: '6194'
+                        dhGroup: MODP_2048
+                        prfAlgo: "PRF_HMAC_SHA1"
+                        encAlgo: "AES_CBC"
+                        initiatorSpi: "cf065c564a511834"
+                        responderSpi: "a3cd5c8533c80069"
+                      ipsec:
+                        age: "6194"
+                        integrityAlgo: "HMAC_SHA1_96"
+                        encAlgo: "NULL"
+                        encKeySize: "128"
+                        spiIn: "c6ef7503"
+                        spiOut: "00010102"
+                        peerSelectors:
+                          - 0.0.0.0/0"
+                      data:
+                        packetsIn: "10"
+                        bytesIn: "1000"
+                        idleTimeIn: "100"
+                        packetsOut: "10"
+                        bytesOut: "1000"
+                        idleTimeOut: "100"
+                        initialized: "2023-06-30T16:07:01.245623734Z"
+
+    regionList:
+      type: object
+      description: The list of regions associated with the tunnel.
+      properties:
+        regions:
+          type: array
+          description: The list of regions for the Network Tunnel Groups.
+          items:
+            type: object
+            description: The properties of the region.
+            required: ['name', 'region', 'description', 'continent']
+            properties:
+              name:
+                type: string
+                description: The name of a region.
+                readOnly: true
+                example: US East 1
+              region:
+                type: string
+                description: The ID of a region.
+                readOnly: true
+                example: us-east-1
+              description:
+                type: string
+                description: The country and location of a region.
+                readOnly: true
+                example: US West (N. California)
+              continent:
+                type: string
+                readOnly: true
+                description: The continent where the region is located.
+                example: North America
+        bgp:
+          $ref: '#/components/schemas/bgp'
+      example:
+        regions:
+          - name: US East 1
+            region: us-east-1
+            description: US East (N. Virginia)
+            continent: North America
+          - name: US West 2
+            region: us-west-2
+            description: US West (N. California)
+            continent: North America
+        bgp:
+          asNumber: '64512'
+          peerIPs:
+            - '169.254.0.9'
+            - '169.254.0.5'
+          peerRange: '169.254.0.0/24'
+
+    bgp:
+      type: object
+      properties:
+        asNumber:
+          type: string
+          description: The BGP autonomous system (AS) number.
+          readOnly: true
+          example: '12345'
+        peerIPs:
+          type: array
+          description: The list of BGP peer IP addresses.
+          items:
+            type: string
+            description: A border gateway protocol (BGP) peer IP address.
+            readOnly: true
+            example: '10.20.0.1'
+          example:
+            - '10.20.0.1'
+            - '10.20.0.2'
+        peerRange:
+          type: string
+          description: The range of BGP peer addresses.
+          readOnly: true
+          example: '169.254.0.0/24'
+      example:
+        asNumber: '12345'
+        peerIPs:
+          - '10.20.0.1'
+        peerRange: '169.254.0.0/24'
+
+    400ValidationError:
+      oneOf:
+        - type: object
+          properties:
+            error:
+              type: string
+              description: Error message explaining the reason for failure.
+              example: Validation Error
+            requestId:
+              type: string
+              description: The ID of the request.
+              example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+            validationErrors:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Indicates the problem with the tunnel name.
+                  example: Attribute value is blank.
+                region:
+                  type: string
+                  description: Indicates the problem with the region.
+                  example: Attribute value does not exist.
+                deviceType:
+                  type: string
+                  description: Indicates the problem with the device type.
+                  example: Attribute value is invalid.
+                authId:
+                  type: string
+                  description: Indicates the problem with the tunnel auth ID.
+                  example: Attribute value is invalid.
+                passphrase:
+                  type: string
+                  description: Indicates the problem with the passphrase.
+                  example: Attribute value is invalid.
+                routing:
+                  type: string
+                  description: Indicates the problem with the routing.
+                  example: Attribute value is invalid.
+        - type: object
+          properties:
+            error:
+              type: string
+              description: Error message explaining the reason for failure.
+              example: Invalid request body.
+            requestId:
+              type: string
+              description: The ID of the request.
+              example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+    # 400 Bad Request network tunnel groups list error
+    400ListError:
+      oneOf:
+        - type: object
+          properties:
+            error:
+              type: string
+              description: Error message explaining the reason for failure.
+              example: |-
+                "includeStatuses" query param is invalid
+            requestId:
+              type: string
+              description: The ID of the request.
+              example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+        - type: object
+          properties:
+            error:
+              type: string
+              description: Error message explaining the reason for failure.
+              example: Validation Error
+            requestId:
+              type: string
+              description: The ID of the request.
+              example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+            validationErrors:
+              type: object
+              properties:
+                limit:
+                  type: string
+                  description: Indicates the problem with the limit.
+                  example: Value should be a number from 1 to 200.
+                offset:
+                  type: string
+                  description: Indicates the problem with the offset.
+                  example: Attribute value is invalid.
+                sortBy:
+                  type: string
+                  description: Indicates the problem with the sortBy.
+                  example: must be one of [name status createdAt modifiedAt].
+                authId:
+                  type: string
+                  description: Indicates the problem with the sortOrder.
+                  example: must be one of [asc desc].
+
+    # 400 Bad Request network tunnel groups get error
+    400NTGIDError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: |-
+            Network tunnel group ID is invalid.
+        requestId:
+          type: string
+          description: The ID of the request.
+          example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+    # 400 Bad Request network tunnel groups state error
+    400BulkStatesError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Validation Error
+        requestId:
+          type: string
+          description: The ID of the request.
+          example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+        validationErrors:
+          type: object
+          properties:
+            limit:
+              type: string
+              description: Indicates the problem with the limit.
+              example: Value should be a number from 1 to 200.
+            offset:
+              type: string
+              description: Indicates the problem with the offset.
+              example: Attribute value is invalid.
+            sortBy:
+              type: string
+              description: Indicates the problem with the sortBy.
+              example: must be one of [name status createdAt modifiedAt].
+            sortOrder:
+              type: string
+              description: Indicates the problem with the sortOrder.
+              example: must be one of [asc desc].
+
+    # 400 Bad Request regions error
+    400RegionsError:
+      oneOf:
+        - type: object
+          properties:
+            error:
+              type: string
+              description: Error message explaining the reason for failure.
+              example: |-
+                Provided IP is in the 'Do Not Sell My Personal Information' list
+            requestId:
+              type: string
+              description: The ID of the request.
+              example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+        - type: object
+          properties:
+            error:
+              type: string
+              description: Error message explaining the reason for failure.
+              example: Validation Error
+            requestId:
+              type: string
+              description: The ID of the request.
+              example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+            validationErrors:
+              type: object
+              properties:
+                peerIP:
+                  type: string
+                  description: Indicates the problem with the peer IP in query param.
+                  example: Filter value must be a public IPv4.
+                latitude:
+                  type: string
+                  description: Indicates the problem with latitude.
+                  example: Filter value is not valid.
+                longitude:
+                  type: string
+                  description: Indicates the problem with longitude.
+                  example: Filter value is missing.
+    401Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Authorization token is invalid.
+        requestId:
+          type: string
+          description: The ID of the request.
+          example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+    403Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Access Forbidden
+        requestId:
+          type: string
+          description: The ID of the request.
+          example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+    404Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Not Found
+        requestId:
+          type: string
+          description: The ID of the request.
+          example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+    409Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Conflict–Network tunnel group name must be unique.
+        requestId:
+          type: string
+          description: The ID of the request.
+          example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+    500Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message explaining the reason for failure.
+          example: Internal Server Error
+        requestId:
+          type: string
+          description: The ID of the request.
+          example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+
+  # =========================================
+  # Responses Components
+  # =========================================
+  responses:
+
+    400ValidationError:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/400ValidationError'
+
+    400ListError:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/400ListError'
+
+    400NTGIDError:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/400NTGIDError'
+
+    400BulkStatesError:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/400BulkStatesError'
+
+    400RegionsError:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/400RegionsError'
+
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/401Error'
+
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/403Error'
+
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/404Error'
+
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/500Error'

@@ -1,0 +1,420 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Tenant Controls Profiles API
+  version: 1.0.0
+  description: Get the Tenant Controls Profiles in the Secure Access organization.
+  contact:
+    name: Cloud Security Developer Community
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: policies/v2
+tags:
+  - name: Tenant Controls Profiles
+    description: The Tenant Controls Profiles settings.
+  - name: Secure Access
+
+security:
+  - oauthFlow: []
+
+paths:
+
+  /tenantControls/profiles:
+
+    get:
+      tags:
+        - Tenant Controls Profiles
+        - Secure Access
+      summary: List Tenant Controls Profiles
+      description: Get the Tenant Controls profiles for the organization.
+      operationId: getTenantControlsProfiles
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      security:
+        - oauthFlow:
+            - policies.tenantControlsProfiles:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTenantControlsProfilesResponse'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    page:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+
+    limit: 
+      name: limit
+      in: query
+      description: The number of items on a page. The maximum items that are allowed on a page in the response are 100.
+      required: false
+      schema:
+        type: integer
+        default: 10
+        format: int32
+        minimum: 1
+        maximum: 100
+      example: 20
+
+  responses:
+
+    badRequest:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/badRequest'
+
+    unauthorized:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/unauthorized'
+
+    forbidden:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/forbidden'
+
+    notFound:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/notFound'
+
+    serverError:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/serverError'
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            policies.tenantControlsProfiles:read: 'Read Tenant Controls Profiles'
+
+  schemas:
+
+    tenantControlsRestrictions:
+      type: array
+      description: The list of tenant controls.
+      items:
+        type: object
+        description: The properties of the tenant control.
+        properties:
+          application_id:
+            type: integer
+            description: The ID of the application.
+            example: 5000116
+          application_name:
+            type: string
+            description: The name of the application.
+            example: YouTube
+          description:
+            $ref: '#/components/schemas/description'
+          id:
+            type: integer
+            description: The ID of the tenant control.
+            example: 304346
+          key_field_type:
+            type: string
+            description: The type of the key field.
+            example: enum
+          key_id:
+            type: integer
+            description: The ID of the key.
+            example: 10
+          key_name:
+            type: string
+            description: The name of the key.
+            example: category
+          value:
+            type: string
+            description: The value of the key category.
+            example: Music
+
+    ListTenantControlsProfilesResponse:
+          type: array
+          description: The list of Tenant Controls profiles in the organization.
+          items:
+            type: object
+            description: The properties of the Tenant Control profile.
+            properties:
+              created_at:
+                $ref: '#/components/schemas/created_at'
+              id:
+                $ref: '#/components/schemas/id'
+              is_default:
+                $ref: '#/components/schemas/is_default'
+              modified_at:
+                $ref: '#/components/schemas/modified_at'
+              name:
+                $ref: '#/components/schemas/name'
+              org_id:
+                $ref: '#/components/schemas/org_id'
+              restrictions:
+                $ref: '#/components/schemas/tenantControlsRestrictions'
+          example:
+            - created_at: '2024-04-04T18:35:24.108190'
+              id: 28034
+              is_default: true
+              modified_at: '2025-06-04T17:51:54.713559'
+              name: tenant controls profile one
+              org_id: 8053787
+              restrictions:
+                - application_id: 5000116
+                  application_name: YouTube
+                  description: sample description
+                  id: 304346
+                  key_field_type: enum
+                  key_id: 10
+                  key_name: category
+                  value: Music
+
+    id:
+      type: integer
+      description: The ID of the Tenant Controls profile.
+      example: 1234567
+
+    org_id:
+      type: integer
+      description: The ID of the organization.
+      example: 1234568
+
+    description:
+      type: string
+      description: The text that describes the Tenant Control profile setting.
+      example: The application for securing the AI model.
+
+    name:
+      type: string
+      description: The name of the Tenant Controls profile.
+      example: tenant controls profile one
+
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: The date and time when the system created the Tenant Controls profile setting.
+      example: '2024-12-13T16:07:07.222Z'
+
+    modified_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: The date and time when the system modified the Tenant Controls profile setting.
+      example: '2024-12-13T16:07:07.222Z'
+
+    is_default:
+      type: boolean
+      example: true
+      description: Specifies whether the setting is the default setting.
+
+    badRequest:
+      description: Bad Request
+      type: object
+      properties:
+        status:
+          type: object
+          description: Validation Error
+          properties:
+            code:
+              type: integer
+              example: 400
+              description: HTTP status error code
+            text:
+              type: string
+              example: Bad Request
+              description: HTTP status error text
+        data:
+          type: object
+          description: Validation Error
+          properties:
+            message:
+              type: string
+              example: Bad Request
+              description: Error message
+
+    unauthorized:
+      description: Unauthorized
+      type: object
+      properties:
+        status:
+          type: object
+          description: Unauthorized
+          properties:
+            code:
+              type: integer
+              example: 401
+              description: HTTP status error code
+            text:
+              type: string
+              example: Unauthorized
+              description: HTTP status error text
+        data:
+          type: object
+          description: Unauthorized
+          properties:
+            message:
+              type: string
+              example: Unauthorized
+              description: Error message
+
+    forbidden:
+      description: Forbidden
+      type: object
+      properties:
+        status:
+          type: object
+          description: Forbidden
+          properties:
+            code:
+              type: integer
+              example: 403
+              description: HTTP status error code
+            text:
+              type: string
+              example: Forbidden
+              description: HTTP status error text
+        data:
+          type: object
+          description: Forbidden
+          properties:
+            message:
+              type: string
+              example: Forbidden
+              description: Error message
+
+    notFound:
+      description: Not Found
+      type: object
+      properties:
+        status:
+          type: object
+          description: Resource Not Found
+          properties:
+            code:
+              type: integer
+              example: 404
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Not Found'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Resource Not Found
+          properties:
+            message:
+              type: string
+              example: Not Found
+              description: Error message
+
+    serverError:
+      description: Internal Server Error
+      type: object
+      properties:
+        status:
+          type: object
+          description: Internal Server Error
+          properties:
+            code:
+              type: integer
+              example: 500
+              description: HTTP status error code
+            text:
+              type: string
+              example: 'Internal Server Error'
+              description: HTTP status error text
+        data:
+          type: object
+          description: Internal Server Error
+          properties:
+            message:
+              type: string
+              example: Internal Server Error
+              description: Error message

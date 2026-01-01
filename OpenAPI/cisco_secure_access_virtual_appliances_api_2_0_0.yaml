@@ -1,0 +1,540 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Virtual Appliances API
+  version: 2.0.0
+  description: Manage the Virtual Appliances (VAs) in your organization.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: deployments/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: Virtual Appliances
+  - name: Secure Access
+
+paths:
+
+  '/virtualappliances':
+    get:
+      tags:
+        - Virtual Appliances
+        - Secure Access
+      description: List the virtual appliances in the organization.
+      summary: List Virtual Appliances
+      operationId: listVirtualAppliances
+      security:
+        - oauthFlow:
+          - deployments.virtualappliances:read
+      parameters:
+        - $ref: '#/components/parameters/paginationPageParam'
+        - $ref: '#/components/parameters/paginationLimitParam'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualApplianceObject'
+              example:
+                - originId: 1234
+                  name: Name of the Virtual Appliance
+                  siteId: 1
+                  isUpgradable: true
+                  state:
+                    connectedToConnector: VA connector status
+                    hasLocalDomainConfigured: VA local domain configuration
+                    queryFailureRateAcceptable: VA query failure rate acceptable
+                    receivedInternalDNSQueries: VA received internal DNS queries
+                    redundantWithinSite: VA redundant within site
+                    syncing: VA syncing
+                  health: VA health
+                  type: Type of VA
+                  settings:
+                    internalIPs:
+                      - internal IP
+                    externalIP: external IP
+                    hostType: host type
+                    uptime: 1
+                    isDnscryptEnabled: true
+                    version: "Version of VA"
+                    upgradeError: Upgrade error
+                    domains:
+                      - domain name
+                    lastSyncTime: '2020-03-09T22:18:26.625Z'
+                  createdAt: '2020-03-09T22:18:26.625Z'
+                  modifiedAt: '2020-03-09T22:18:26.625Z'
+                  stateUpdatedAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/virtualappliances/{virtualApplianceId}':
+    get:
+      tags:
+        - Virtual Appliances
+        - Secure Access
+      description: Get a virtual appliance in the organization.
+      summary: Get Virtual Appliance
+      operationId: getVirtualAppliance
+      security:
+        - oauthFlow:
+          - deployments.virtualappliances:read
+      parameters:
+        - $ref: '#/components/parameters/virtualApplianceId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualApplianceObject'
+              example:
+                originId: 1234
+                name: Name of VA
+                siteId: 1
+                isUpgradable: true
+                state:
+                  connectedToConnector: VA connector status
+                  hasLocalDomainConfigured: VA local domain configuration
+                  queryFailureRateAcceptable: VA query failure rate acceptable
+                  receivedInternalDNSQueries: VA received internal DNS queries
+                  redundantWithinSite: VA redundant within site
+                  syncing: VA syncing
+                health: VA health
+                type: Type of VA
+                settings:
+                  internalIPs:
+                    - internal IP
+                  externalIP: external IP
+                  hostType: host type
+                  uptime: 1
+                  isDnscryptEnabled: true
+                  version: Version of VA
+                  upgradeError: Upgrade error
+                  domains:
+                    - domain name
+                lastSyncTime: '2020-03-09T22:18:26.625Z'
+                createdAt: '2020-03-09T22:18:26.625Z'
+                modifiedAt: '2020-03-09T22:18:26.625Z'
+                stateUpdatedAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    put:
+      tags:
+        - Virtual Appliances
+        - Secure Access
+      description: Update a virtual appliance in the organization.
+      summary: Update Virtual Appliance
+      operationId: updateVirtualAppliance
+      security:
+        - oauthFlow:
+          - deployments.virtualappliances:write
+      parameters:
+        - $ref: '#/components/parameters/virtualApplianceId'
+      requestBody:
+        content:
+          application/json:
+            schema: 
+              properties:
+                siteId:
+                  type: integer
+                  description: The ID of the site.
+                  minimum: 1
+              type: object
+              required:
+                - siteId
+            example:
+              siteId: 10
+        description: Update the virtual appliance.
+        required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualApplianceObject'
+              example:
+                originId: 1234
+                name: Name of the VA
+                isUpgradable: true
+                health: VA health
+                type: Type of VA
+                stateUpdatedAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Virtual Appliances
+        - Secure Access
+      description: Delete a virtual appliance in the organization.
+      summary: Delete Virtual Appliance
+      operationId: deleteVirtualAppliance
+      security:
+        - oauthFlow:
+          - deployments.virtualappliances:write
+      parameters:
+        - $ref: '#/components/parameters/virtualApplianceId'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content: {}
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            deployments.virtualappliances:write: 'Write deployments virtual appliances'
+            deployments.virtualappliances:read: 'Read deployments virtual appliances'
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+    paginationPageParam:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+    paginationLimitParam:
+      name: limit
+      in: query
+      description: The number of records in the collection to return on the page.
+      required: false
+      schema:
+        default: 100
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+
+    virtualApplianceId:
+      name: virtualApplianceId
+      schema:
+        type: integer
+      description: The origin ID (originId) of the virtual appliance.
+      in: path
+      required: true
+      example: 135678
+
+  schemas:
+
+    VirtualApplianceObject:
+      type: object
+      description: The properties of the virtual appliance.
+      properties:
+        originId:
+          type: integer
+          description: The origin ID of the virtual appliance.
+        name:
+          type: string
+          description: The name of the virtual appliance.
+        siteId:
+          type: integer
+          description: The site ID of the virtual appliance.
+        isUpgradable:
+          type: boolean
+          description: Specifies whether you can upgrade the virtual appliance (VA) to the latest VA version.
+        state:
+          additionalProperties: false
+          type: object
+          description: The properties for the state of the virtual appliance.
+          properties:
+            connectedToConnector:
+              type: string
+              description: The virtual appliance that is connected to the connector status.
+            hasLocalDomainConfigured:
+              type: string
+              description: The virtual appliance has local domain configuration.
+            queryFailureRateAcceptable:
+              type: string
+              description: The failure rate of the query for the virtual appliance is acceptable.
+            receivedInternalDNSQueries:
+              type: string
+              description: The virtual appliance received internal DNS queries.
+            redundantWithinSite:
+              type: string
+              description: The virtual appliance is redundant within site.
+            syncing:
+              type: string
+              description: The virtual appliance is syncing.
+        health:
+          type: string
+          description: A description of the health of the virtual appliance.
+        type:
+          type: string
+          description: The type of the virtual appliance.
+        settings:
+          type: object
+          description: The properties of the settings on the virtual appliance.
+          additionalProperties: false
+          properties:
+            internalIPs:
+              type: array
+              description: A list of internal IP addresses.
+              items:
+                type: string
+            externalIP:
+              type: string
+              description: The external IP address.
+            hostType:
+              type: string
+              description: The type of the host.
+            uptime:
+              type: integer
+              description: The uptime in seconds.
+            isDnscryptEnabled:
+              type: boolean
+              description: Specifies whether DNSCrypt is enabled.
+            version:
+              type: string
+              description: Specifies the version of the virtual appliance.
+            upgradeError:
+              type: string
+              description: Specifies the upgrade error.
+            domains:
+              type: array
+              description: The list of domains.
+              items:
+                type: string
+            lastSyncTime:
+              type: string
+              format: date-time
+              description: The date and time (ISO8601 timestamp) of the last sync.
+              example: '2018-06-13T16:07:07.222Z'
+        createdAt:
+          type: string
+          format: date-time
+          description: |-
+            The date and time (ISO8601 timestamp) when the VA was created.
+          example: '2018-06-13T16:07:07.222Z'
+        modifiedAt:
+          type: string
+          format: date-time
+          description: |-
+            The date and time (ISO8601 timestamp) when the VA was modified.
+          example: '2018-06-13T16:07:07.222Z'
+        stateUpdatedAt:
+          type: string
+          format: date-time
+          description: The date and time (ISO8601 timestamp) when the virtual appliance's state was updated.
+          example: '2018-06-13T16:07:07.222Z'
+      required:
+        - originId
+        - name
+        - isUpgradable
+        - health
+        - type
+        - stateUpdatedAt
+      example:
+        originId: 1234
+        name: Name of the VA
+        isUpgradable: true
+        health: VA health
+        type: Type of VA
+        stateUpdatedAt: '2020-03-09T22:18:26.625Z'
+
+  responses:
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 400
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation Error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 401
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 403
+                description: HTTP status code
+              error:
+                type: string
+                example: Forbidden
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 404
+                description: HTTP status code
+              error:
+                type: string
+                example: Not Found
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 500
+                description: HTTP status code
+              error:
+                type: string
+                example: Internal error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message

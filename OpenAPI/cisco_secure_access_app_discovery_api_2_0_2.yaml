@@ -1,0 +1,1864 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access App Discovery API
+  description: |-
+    The App Discovery API provides an overall view of application and protocol activity in your environment
+    and the potential risk indicated by this network traffic.
+  version: 2.0.2
+  contact:
+    name: Cloud Security Developer Community
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: reports/v2
+
+tags:
+ - name: Applications
+ - name: Application Categories
+ - name: Protocols
+ - name: Identities
+ - name: Secure Access
+
+paths:
+
+  /appDiscovery/applications:
+
+    get:
+      tags:
+        - Applications
+        - Secure Access
+      summary: List Applications
+      description: List all discovered applications.
+      operationId: getApplicationsAppDiscovery
+      parameters:
+        - $ref: '#/components/parameters/sources'
+        - $ref: '#/components/parameters/identity'
+        - $ref: '#/components/parameters/labels'
+        - $ref: '#/components/parameters/controllable'
+        - $ref: '#/components/parameters/weightedRisk'
+        - $ref: '#/components/parameters/categories'
+        - $ref: '#/components/parameters/subcategory'
+        - $ref: '#/components/parameters/subcategory_content_types'
+        - $ref: '#/components/parameters/appTypes'
+        - $ref: '#/components/parameters/date'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/applicationsSort'
+        - $ref: '#/components/parameters/order'
+        - $ref: '#/components/parameters/label_timestamp'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationList'
+              example:
+                items:
+                  - id: 1234ay7
+                    name: Secure Access
+                    label: approved
+                    weightedRisk: low
+                    category: Security
+                    subcategory: Content Management
+                    subcategory_content_types: ['Conversational Chat', 'Other']
+                    appType: saas
+                    sources:
+                      - name: cdfw
+                        events: 50
+                        blockedEvents: 25
+                      - name: dns
+                        events: 35
+                        blockedRequests: 14
+                      - name: swg
+                        totalTraffic: 150
+                        bytesIn: 50
+                        bytesOut: 100
+                        blockedBytesOut: 15
+                    firstDetected: '2022-01-01T00:00:00.000Z'
+                    lastDetected: '2022-01-01T00:00:00.000Z'
+                currentPage: 1
+                totalPages: 126
+                itemsCount: 251
+
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    patch:
+      tags:
+        - Applications
+        - Secure Access
+      summary: Update Applications
+      description: Update the labels for the applications.
+      operationId: patchApplications
+      requestBody:
+        $ref: '#/components/requestBodies/BulkApplicationBody'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:write
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkLabelApplications'
+              example:
+                timestamp: '2022-01-01T00:00:00.000Z'
+                number_of_apps: 45
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/applications/{applicationId}:
+
+    get:
+      tags:
+        - Applications
+        - Secure Access
+      summary: Get Application
+      description: Get an application by ID.
+      operationId: getApplication
+      parameters:
+      - $ref: '#/components/parameters/applicationId'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationObject'
+              example:
+                id: eaqYExba
+                name: Umbrella
+                description: Offers threat intelligence solutions.
+                label: approved
+                weightedRisk: low
+                category: Security
+                appType: saas
+                url: 'https://umbrella.cisco.com/products/umbrella-investigate'
+                vendor: Cisco
+                identitiesCount: 5
+                sources:
+                  - name: cdfw
+                    events: 50
+                    blockedEvents: 25
+                  - name: dns
+                    events: 35
+                    blockedRequests: 14
+                  - name: swg
+                    totalTraffic: 150
+                    bytesIn: 50
+                    bytesOut: 100
+                    blockedBytesOut: 15
+                firstDetected: '2022-01-01T00:00:00.000Z'
+                lastDetected: '2022-01-01T00:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    patch:
+      tags:
+        - Applications
+        - Secure Access
+      summary: Update Application
+      description: Update the label for the application. Provide an application label in the request body.
+      operationId: updateApplication
+      parameters:
+      - $ref: '#/components/parameters/applicationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label]
+              properties:
+                label:
+                  $ref: '#/components/schemas/Label'
+            example:
+              label: approved
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:write
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationObject'
+              example:
+                id: eaqYExba
+                name: Umbrella
+                description: Offers threat intelligence solutions.
+                label: approved
+                weightedRisk: low
+                category: Security
+                appType: saas
+                url: 'https://umbrella.cisco.com/products/umbrella-investigate'
+                vendor: Cisco
+                identitiesCount: 5
+                sources:
+                  - name: cdfw
+                    events: 50
+                    blockedEvents: 25
+                  - name: dns
+                    events: 35
+                    blockedRequests: 14
+                  - name: swg
+                    totalTraffic: 150
+                    bytesIn: 50
+                    bytesOut: 100
+                    blockedBytesOut: 15
+                firstDetected: '2022-01-01T00:00:00.000Z'
+                lastDetected: '2022-01-01T00:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/applications/{applicationId}/risk:
+
+    get:
+      tags:
+        - Applications
+        - Secure Access
+      summary: Get Application Risk
+      description: Get the risk for the application.
+      operationId: getApplicationRisk
+      parameters:
+        - $ref: '#/components/parameters/applicationId'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationRisk'
+              example:
+                id: eaqYExba
+                name: Secure Access
+                weightedRisk: veryLow
+                businessRisk: low
+                usageType: indirect
+                webReputation: 50
+                financialViability: medium
+                dataStorage: structured
+                vendorCompliance:
+                  - name: PCI_DSS
+                    description: |-
+                      The Payment Card Industry Data Security Standard (PCI DSS)
+                      is a widely accepted set of policies and procedures intended
+                      to optimize the security of credit, debit, and cash card transactions
+                      and protect cardholders against misuse of their personal information.
+                    status: true
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/applications/{applicationId}/identities:
+
+    get:
+      tags:
+        - Applications
+        - Secure Access
+      summary: List Application Identities
+      description: List all identities for the application.
+      operationId: getApplicationIdentities
+      parameters:
+        - $ref: '#/components/parameters/applicationId'
+        - $ref: '#/components/parameters/date'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/identitiesSort'
+        - $ref: '#/components/parameters/order'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationIdentityList'
+              example:
+                items:
+                 - id: 10000
+                   name: My Identity
+                   sources:
+                    - name: dns
+                      requests: 100
+                      blockedRequests: 100
+                   firstDetected: '2022-01-01T00:00:00.000Z'
+                   lastDetected: '2022-01-01T00:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/applications/{applicationId}/attributes:
+    get:
+      tags:
+        - Applications
+        - Secure Access
+      summary: List Application Attributes
+      description: List all attributes for the application.
+      operationId: getApplicationAttributes
+      parameters:
+        - $ref: '#/components/parameters/applicationId'
+        - $ref: '#/components/parameters/attributeCategories'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationAttributeCategoryList'
+              example:
+                attributesCategories:
+                  - id: '2'
+                    name: 'Data Security'
+                    attributes:
+                      - id: '17'
+                        name: 'SSL Cert Key Size'
+                        description: 'The SSL certificate key size refers to the length of the cryptographic key'
+                        values:
+                          - name: 'size'
+                            value: '2048'
+                            createdOn: '2023-07-06T09:23:53.552924+00:00'
+                            updatedOn: '2023-08-21T16:49:19.151159+00:00'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/protocols:
+
+    get:
+      tags:
+        - Protocols
+        - Secure Access
+      summary: List Protocols
+      description: List all protocols.
+      operationId: getProtocols
+      parameters:
+        - $ref: '#/components/parameters/identity'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/protocolsSort'
+        - $ref: '#/components/parameters/order'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolList'
+              example:
+                items:
+                  - id: 0j1b5Eh
+                    name: ftp
+                    description: File Transfer Protocol
+                    events: 100
+                    blockedEvents: 50
+                    firstDetected: '2022-01-01T00:00:00.000Z'
+                    lastDetected: '2022-01-01T00:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/protocols/{protocolId}:
+
+    get:
+      tags:
+        - Protocols
+        - Secure Access
+      summary: Get Protocol
+      description: Get protocol by ID.
+      operationId: getProtocol
+      parameters:
+        - $ref: '#/components/parameters/protocolId'
+        - $ref: '#/components/parameters/date'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolObject'
+              example:
+                id: 0j1b5EmA
+                name: ftp
+                description: File Transfer Protocol
+                identitiesCount: 5
+                events: 100
+                blockedEvents: 50
+                firstDetected: '2022-01-01T00:00:00.000Z'
+                lastDetected: '2022-01-01T00:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/protocols/{protocolId}/identities:
+
+    get:
+      tags:
+        - Identities
+        - Secure Access
+      summary: List Protocol Identities
+      description: List identities for a specific protocol.
+      operationId: getProtocolIdentities
+      parameters:
+        - $ref: '#/components/parameters/protocolId'
+        - $ref: '#/components/parameters/date'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/identitiesSort'
+        - $ref: '#/components/parameters/order'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolIdentityList'
+              example:
+                items:
+                  - id: 10000
+                    name: My Identity
+                    events: 100
+                    blockedEvents: 50
+                    firstDetected: '2022-01-01T00:00:00.000Z'
+                    lastDetected: '2022-01-01T00:00:00.000Z'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/applicationCategories:
+
+    get:
+      tags:
+        - Application Categories
+        - Secure Access
+      summary: List Application Categories
+      description: List all application categories.
+      operationId: getApplicationCategories
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      security:
+        - oauthFlow:
+          - reports.appDiscovery:read
+      responses:
+        '200':
+          description: OK
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationCategoryList'
+              example:
+                items:
+                  - name: Security
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /appDiscovery/applications/info:
+    get:
+      tags:
+        - Applications
+        - Secure Access
+      description: List the information about the applications.
+      operationId: getApplicationsInfo
+      summary: List Information for Applications
+      parameters:
+        - $ref: '#/components/parameters/sources'
+        - $ref: '#/components/parameters/identity'
+        - $ref: '#/components/parameters/labels'
+        - $ref: '#/components/parameters/controllable'
+        - $ref: '#/components/parameters/weightedRisk'
+        - $ref: '#/components/parameters/categories'
+        - $ref: '#/components/parameters/subcategory'
+        - $ref: '#/components/parameters/subcategory_content_types'
+        - $ref: '#/components/parameters/appTypes'
+        - $ref: '#/components/parameters/date'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/applicationsInfoSort'
+        - $ref: '#/components/parameters/order'
+        - $ref: '#/components/parameters/label_timestamp'
+        - $ref: '#/components/parameters/app_ids'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationListWithInfo'
+              example:
+                items:
+                  - id: 0JdbV4dy
+                    name: Twitter
+                    label: unreviewed
+                    weightedRisk: low
+                    category: Social Networking
+                    subcategory: Social Networking
+                    subcategory_content_types: [ 'Conversational Chat', 'Other' ]
+                    appType: saas
+                    sources:
+                      - name: cdfw
+                        events: 0
+                        blockedEvents: 0
+                      - name: swg
+                        totalTraffic: 0
+                        bytesIn: 0
+                        bytesOut: 0
+                        blockedBytesOut: 0
+                      - name: dns
+                        requests: 3
+                        blockedRequests: 0
+                    firstDetected: '2022-01-01T00:00:00.000Z'
+                    lastDetected: '2022-01-01T00:00:00.000Z'
+                    description: |-
+                      Online social networking service that enables users to send
+                      and read short messages called tweets.
+                    url: https://twitter.com
+                    vendor: Twitter
+                    identitiesCount: 1
+                currentPage: 1
+                totalPages: 126
+                itemsCount: 251
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+
+  headers:
+
+    Link:
+      schema:
+        type: string
+      description: |-
+        Links to related resources, in the format defined by
+        [RFC 5988](https://tools.ietf.org/html/rfc5988#section-5).
+        If there is a next page, this header includes a link with relation type
+        `next` to the next page.
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: client credential flow
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            reports.appDiscovery:write: 'Write reports app discovery'
+            reports.appDiscovery:read: 'Read reports app discovery'
+
+  parameters:
+
+    applicationId:
+      in: path
+      name: applicationId
+      description: The ID of the application.
+      required: true
+      schema:
+        type: string
+
+    protocolId:
+      in: path
+      name: protocolId
+      description: The ID of the protocol.
+      required: true
+      schema:
+        type: string
+
+    limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+      description: The maximum number of items to return in the collection.
+
+    offset:
+      in: query
+      name: offset
+      schema:
+        type: integer
+      description: The number of items to skip before starting to collect the result set.
+
+    applicationsSort:
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum:
+          - firstDetected
+          - lastDetected
+          - weightedRisk
+          - name
+      description: Specify the name of a field to sort the applications.
+      example: firstDetected
+
+    labelTimestamp:
+      in: query
+      name: labelTimestamp
+      schema:
+        type: string
+        format: date-time
+      description: The date and time (ISO 8601 timestamp) when the label was updated.
+      example: '2025-01-01T00:00:00.000Z'
+
+    applicationsInfoSort:
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum:
+          - firstDetected
+          - lastDetected
+          - weightedRisk
+          - name
+          - vendor
+          - identities
+          - dnsRequests
+          - firewallEvents
+          - blockedDnsRequests
+          - traffic
+          - inboundWebTraffic
+          - ruleStatus
+          - scannable
+          - totalEvents
+          - labels
+          - subcategory
+      description: Specify the name of a field to sort the information for the applications.
+
+    protocolsSort:
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum:
+          - firstDetected
+          - lastDetected
+      description: Specify the name of a field to sort the application protocols.
+      example: firstDetected
+
+    identitiesSort:
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum:
+          - firstDetected
+          - lastDetected
+      description: Specify the name of a field to sort the application identities.
+      example: lastDetected
+
+    order:
+      in: query
+      name: order
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+      description: |-
+        Specify the order to sort the collection. Valid values are: `asc` (ascending)
+        or `desc` (descending).
+      example: asc
+
+    label_timestamp:
+      in: query
+      name: label_timestamp
+      schema:
+        type: string
+        format: date-time
+      example: '2022-01-01T00:00:00.000Z'
+      description: |-
+        Filter the result set on the date and time (ISO 8601 timestamp) when the system updated the label.
+
+    sources:
+      in: query
+      name: sources
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+            - dns
+            - swg
+            - cdfw
+      style: form
+      explode: false
+      description: |-
+        Specify the types of log source to filter the collection.
+        Valid values are: `dns`, `swg`, `cdfw`.
+      example: ['cdfw']
+
+    labels:
+      in: query
+      name: labels
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/Label'
+      style: form
+      explode: false
+      description: |-
+        Specify the types of application classification to filter the collection.
+        Valid values are: `unreviewed`, `approved`, `notApproved`, `underAudit`.
+      example: ['approved']
+
+    weightedRisk:
+      in: query
+      name: weightedRisk
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/WeightedRisk'
+      style: form
+      explode: false
+      description: |-
+        Specify the list of application weighted risk to filter the collection.
+        Valid values are: `veryLow`, `low`, `medium`, `high`, `veryHigh`.
+      example: ['low']
+
+    categories:
+      in: query
+      name: categories
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      description: Specify the list of application category to filter the collection.
+      example: ['Security']
+
+    subcategory:
+      in: query
+      name: subcategory
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      description: Specify the list of application subcategory to filter the collection.
+      example: ['Security']
+
+    subcategory_content_types:
+      in: query
+      name: subcategory_content_types
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      description: Specify the list of content types for the application subcategory to filter the collection.
+      example: ['Conversational Chat']
+
+    app_ids:
+      in: query
+      name: app_ids
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      description: The IDs of the applications to use when filtering the collection.
+      example: ['1356']
+
+    attributeCategories:
+      in: query
+      name: categories
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: false
+      description: The categories of the attributes to use when filtering the collection.
+      example: ['Compliance']
+
+    controllable:
+      in: query
+      name: controllable
+      schema:
+        type: string
+        enum:
+          - all
+          - advanced
+      description: |-
+        Specify the type of controllable applications to filter the collection.
+        Valid values are: `all`, `advanced`.
+      example: advanced
+
+    identity:
+      in: query
+      name: identity
+      schema:
+        type: integer
+      description: Specify the entity ID to filter the collection.
+      example: 12355
+
+    appTypes:
+      in: query
+      name: appTypes
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/AppType'
+        example:
+         - saas
+         - paas
+         - iaas
+      style: form
+      explode: false
+      description: |-
+        Specify the types of application to filter the collection.
+        Valid values are: `saas`, `paas`, and `iaas`.
+      example: ['paas']
+
+    date:
+      in: query
+      name: date
+      schema:
+        type: string
+        format: date
+      description: |-
+        Specify a date to search for data within a twenty-four hour time period.
+        If you do not provide a date, the last 90 days period is used to query the collection.
+      example: '2022-01-01'
+
+  responses:
+
+    InvalidRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  requestBodies:
+    BulkApplicationBody:
+      description: A JSON object containing application information for bulk label update.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              label:
+                $ref: '#/components/schemas/Label'
+              applicationsList:
+                type: array
+                description: Provide a list of application ID to update.
+                items:
+                  type: string
+                minItems: 1
+                maxItems: 1000
+                example: ['abd1']
+          example:
+            label: approved
+            applicationsList: ['1a', '2bcsd']
+
+  schemas:
+
+    Error:
+      type: object
+      description: The error message returned in the response.
+      properties:
+        message:
+          type: string
+
+    Label:
+      type: string
+      description: |-
+        The application label. Valid values are: `unreviewed`, `approved`, `notApproved`, `underAudit`.
+      enum:
+        - unreviewed
+        - approved
+        - notApproved
+        - underAudit
+      example: approved
+
+    WeightedRisk:
+      type: string
+      description: The risk the app poses to the environment.
+      enum:
+        - veryLow
+        - low
+        - medium
+        - high
+        - veryHigh
+      example: low
+
+    AppType:
+      type: string
+      description: The type of the app.
+      enum:
+        - saas
+        - paas
+        - iaas
+      example: saas
+
+    BusinessRisk:
+      type: string
+      description: The business risk of the app.
+      enum:
+        - veryLow
+        - low
+        - medium
+        - high
+        - veryHigh
+        - na
+      example: na
+
+    BulkLabelApplications:
+      type: object
+      description: The properties of multiple apps that are updated at the same time.
+      properties:
+        timestamp:
+          type: string
+          description: The date and time (ISO 8601 timestamp) that the system updated the labels on the applications.
+          format: date-time
+          example: '2022-01-01T00:00:00.000Z'
+        number_of_apps:
+          type: integer
+          description: The number of apps updated
+          example: 25
+      example:
+        timestamp: '2022-01-01T00:00:00.000Z'
+        number_of_apps: 45
+
+    UsageType:
+      type: string
+      description: |-
+        The type of usage. Valid values are: `personal`, `corporate` (higher risk), or
+        `indirect` (lower risk, e.g. content delivery network).
+      enum:
+        - indirect
+        - personal
+        - corporate
+        - na
+      example: na
+
+    FinancialViability:
+      type: string
+      description: |-
+        Financial risk to the service provider, based on Dun & Bradstreet's Dynamic Risk Score.
+      enum:
+        - low
+        - medium
+        - high
+        - veryHigh
+        - na
+      example: high
+
+    DataStorage:
+      type: string
+      description: |-
+        The form of the stored data.
+        Valid values are: `noStorage`, `structured`, `unstructured`, or `na`.
+      enum:
+        - noStorage
+        - structured
+        - unstructured
+        - na
+      example: noStorage
+
+    DnsSource:
+      type: object
+      description: The properties of the app's DNS requests.
+      properties:
+        name:
+          type: string
+          description: The type of traffic associated with the source.
+          enum:
+            - dns
+          example: dns
+        requests:
+          type: integer
+          description: The number of DNS requests for this app.
+          example: 100
+        blockedRequests:
+          type: integer
+          description: The number of DNS requests blocked, based on the policy configurations.
+          example: 50
+      example:
+        name: dns
+        requests: 100
+        blockedRequests: 35
+
+    SwgSource:
+      type: object
+      description: The properties of the app's web requests.
+      properties:
+        name:
+          type: string
+          description: The type of traffic associated with the source.
+          enum:
+            - swg
+          example: swg
+        totalTraffic:
+          type: integer
+          description: The total number of bytes inbound and outbound for this app in your environment.
+          example: 150
+        bytesIn:
+          type: integer
+          description: The number of bytes received (inbound).
+          example: 50
+        bytesOut:
+          type: integer
+          description: The number of bytes sent (outbound).
+          example: 100
+        blockedBytesOut:
+          type: integer
+          description: The number of bytes of outbound traffic that are blocked.
+          example: 90
+      example:
+        name: swg
+        totalTraffic: 200
+        bytesIn: 100
+        bytesOut: 100
+        blockedBytesOut: 49
+
+    CdfwSource:
+      type: object
+      description: The properties of the app's requests that are managed by the cloud-delivered firewall (CDFW).
+      properties:
+        name:
+          type: string
+          description: The type of traffic associated with the source.
+          enum:
+            - cdfw
+          example: cdfw
+        events:
+          type: integer
+          description: The number of CDFW L7 events for this app.
+          example: 100
+        blockedEvents:
+          type: integer
+          description: The number of CDFW L7 events that are blocked.
+          example: 50
+      example:
+        name: cdfw
+        events: 50
+        blockedEvents: 25
+
+    Sources:
+      type: array
+      description: |-
+        The list of app sources where the sources are DNS, Web (Secure Web Gateway), and cloud-delivered firewall (CDFW) traffic events.
+        The list can contain one or more of the source types.
+      items:
+        anyOf:
+          - $ref: '#/components/schemas/DnsSource'
+          - $ref: '#/components/schemas/SwgSource'
+          - $ref: '#/components/schemas/CdfwSource'
+      example:
+        - name: cdfw
+          events: 50
+          blockedEvents: 25
+
+    ApplicationList:
+      type: object
+      description: The object that contains the list of application properties.
+      properties:
+        items:
+          type: array
+          description: The list of application properties.
+          items:
+            $ref: '#/components/schemas/ApplicationInList'
+        currentPage:
+          type: integer
+          description: The index of the current page in the collection.
+          example: 1
+        totalPages:
+          type: integer
+          description: The total number of pages in the collection.
+          example: 100
+        itemsCount:
+          type: integer
+          description: The number of items in the collection.
+          example: 10
+      example:
+        items:
+          - id: ea890yb
+            name: Secure Access
+            label: unreviewed
+            weightedRisk: low
+            category: Security
+            subcategory: Security
+            subcategory_content_types: [ 'Conversational Chat', 'Other' ]
+            appType: saas
+            sources:
+              - name: dns
+                requests: 100
+                blockedRequests: 100
+            firstDetected: '2022-01-01T00:00:00.000Z'
+            lastDetected: '2022-01-01T00:00:00.000Z'
+        currentPage: 1
+        totalPages: 126
+        itemsCount: 251
+
+    ApplicationListWithInfo:
+      type: object
+      description: The properties of the information for the applications.
+      properties:
+        items:
+          type: array
+          description: The list of information about the applications.
+          items:
+            $ref: '#/components/schemas/ApplicationObject'
+        currentPage:
+          type: integer
+          description: The index of the current page in the collection.
+          example: 1
+        totalPages:
+          type: integer
+          description: The total number of pages in the collection.
+          example: 100
+        itemsCount:
+          type: integer
+          description: The number of items in the collection.
+          example: 10
+      example:
+        items:
+          - id: 0JdbV4dy
+            name: Twitter
+            label: unreviewed
+            weightedRisk: low
+            category: Social Networking
+            appType: saas
+            sources:
+              - name: cdfw
+                events: 0
+                blockedEvents: 0
+              - name: swg
+                totalTraffic: 0
+                bytesIn: 0
+                bytesOut: 0
+                blockedBytesOut: 0
+              - name: dns
+                requests: 3
+                blockedRequests: 0
+            firstDetected: '2025-01-01T00:00:00.000Z'
+            lastDetected: '2025-01-01T00:00:00.000Z'
+            description: |-
+              Online social networking service that enables users to send
+              and read short messages called tweets.
+            url: https://twitter.com
+            vendor: Twitter
+            identitiesCount: 1
+        currentPage: 1
+        totalPages: 126
+        itemsCount: 251
+
+    category:
+      type: string
+      description: The category of the app.
+      example: Security
+
+    subcategory:
+      type: string
+      description: The subcategory applied to the app.
+      example: Security
+
+    subcategory_content_types:
+      type: array
+      description: The list of content types for the subcategory applied to the app.
+      items:
+        type: string
+        description: The content type of the subcategory applied to the app.
+      example: [ 'Conversational Chat', 'Other' ]
+
+    ApplicationInList:
+      type: object
+      required: ['id', 'name', 'label', 'weightedRisk', 'category', 'appType', 'sources', 'firstDetected', 'lastDetected', 'subcategory', 'subcategory_content_types']
+      description: The list of properties about the discovered apps.
+      properties:
+        id:
+          type: string
+          description: The ID of the app.
+          example: eaqYExba
+        name:
+          type: string
+          description: The name of the app.
+          example: Secure Access
+        label:
+          $ref: '#/components/schemas/Label'
+        weightedRisk:
+          $ref: '#/components/schemas/WeightedRisk'
+        category:
+          $ref: '#/components/schemas/category'
+        appType:
+          $ref: '#/components/schemas/AppType'
+        sources:
+          $ref: '#/components/schemas/Sources'
+        firstDetected:
+          type: string
+          description: The date and time (ISO 8601 timestamp) when the system first detected the app.
+          format: date-time
+          example: '2022-01-01T00:00:00.000Z'
+        lastDetected:
+          type: string
+          description: The date and time (ISO 8601 timestamp) when the system last detected the app.
+          format: date-time
+          example: '2022-01-01T00:00:00.000Z'
+        subcategory:
+          $ref: '#/components/schemas/subcategory'
+        subcategory_content_types:
+          $ref: '#/components/schemas/subcategory_content_types'
+      example:
+        id: ea890ya
+        name: Secure Access
+        label: approved
+        weightedRisk: low
+        category: Security
+        subcategory: Security
+        subcategory_content_types: [ 'Conversational Chat', 'Other' ]
+        appType: saas
+        sources:
+          - name: dns
+            requests: 100
+            blockedRequests: 100
+        firstDetected: '2022-01-01T00:00:00.000Z'
+        lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ApplicationObject:
+      type: object
+      description: The properties of the app.
+      required: ['id', 'name', 'description', 'label', 'weightedRisk', 'category', 'appType', 'url', 'vendor', 'identitiesCount', 'sources', 'firstDetected', 'lastDetected']
+      properties:
+        id:
+          type: string
+          description: The ID of the app.
+          example: eaqYExba
+        name:
+          type: string
+          description: The name of the app.
+          example: Secure Access
+        description:
+          type: string
+          description: The description of the app.
+          example: Offers threat intelligence solutions.
+        label:
+          $ref: '#/components/schemas/Label'
+        weightedRisk:
+          $ref: '#/components/schemas/WeightedRisk'
+        category:
+          type: string
+          description: The category applied to the app.
+          example: Security
+        subcategory:
+          $ref: '#/components/schemas/subcategory'
+        subcategory_content_types:
+          $ref: '#/components/schemas/subcategory_content_types'
+        appType:
+          $ref: '#/components/schemas/AppType'
+        url:
+          type: string
+          description: The URL of the app.
+          example: 'https://umbrella.cisco.com/products/umbrella-investigate'
+        vendor:
+          type: string
+          description: The vendor that owns the app.
+          example: 'Cisco'
+        identitiesCount:
+          type: integer
+          description: The number of identities.
+          example: 5
+        sources:
+          $ref: '#/components/schemas/Sources'
+        firstDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system first detected the app.
+          example: '2022-01-01T00:00:00.000Z'
+        lastDetected:
+          type: string
+          description: The date and time (ISO 8601 timestamp) when the system last detected the app.
+          format: date-time
+          example: '2022-01-01T00:00:00.000Z'
+
+      example:
+        id: eaqYExba
+        name: Umbrella
+        description: The properties of the app.
+        label: unreviewed
+        weightedRisk: low
+        category: Security
+        appType: saas
+        url: 'https://umbrella.cisco.com/products/umbrella-investigate'
+        vendor: Cisco Systems
+        identitiesCount: 25
+        sources:
+          - name: dns
+            requests: 100
+            blockedRequests: 100
+        firstDetected: '2022-01-01T00:00:00.000Z'
+        lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ApplicationRisk:
+      type: object
+      description: The information about the application risk.
+      properties:
+        id:
+          type: string
+          description: The ID of app.
+          example: eaqYExba
+        name:
+          type: string
+          description: The name of the app.
+          example: Secure Access
+        weightedRisk:
+          $ref: '#/components/schemas/WeightedRisk'
+        businessRisk:
+          $ref: '#/components/schemas/BusinessRisk'
+        usageType:
+          $ref: '#/components/schemas/UsageType'
+        webReputation:
+          type: integer
+          description: |-
+            Provides accurate conclusions about a given host by tracking a broad set
+            of attributes and using sophisticated security modeling.
+            Powered by Talos Security Intelligence.
+          example: 50
+        financialViability:
+          $ref: '#/components/schemas/FinancialViability'
+        dataStorage:
+          $ref: '#/components/schemas/DataStorage'
+        vendorCompliance:
+          type: array
+          description: The list of compliance information for the vendor.
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: The name of the certificate.
+                enum:
+                  - PCI_DSS
+                  - HIPAA
+                  - FEDRAMP
+                  - 'ISO 27001 / 27002'
+                  - COBIT
+                  - SP800_53
+                  - BITS
+                  - GAPP
+              description:
+                type: string
+                description: The description of the certificate.
+                example: |-
+                  The Payment Card Industry Data Security Standard (PCI DSS)
+                  is a widely accepted set of policies and procedures intended to optimize
+                  the security of credit, debit and cash card transactions and protect
+                  cardholders against misuse of their personal information.
+              status:
+                type: boolean
+                description: Specifies whether the certificate is verified.
+                example: true
+
+    ApplicationIdentityList:
+      type: object
+      description: The list of identity information for the application.
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationIdentity'
+      example:
+        items:
+         - id: 10000
+           name: My Identity
+           sources:
+            - name: dns
+              requests: 100
+              blockedRequests: 100
+           firstDetected: '2022-01-01T00:00:00.000Z'
+           lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ApplicationIdentity:
+      type: object
+      required: ['id', 'name', 'sources', 'firstDetected', 'lastDetected']
+      description: The application identity information.
+      properties:
+        id:
+          type: integer
+          description: The ID of the identity.
+          example: 10000
+        name:
+          type: string
+          description: The name of the identity.
+          example: My Identity
+        sources:
+          $ref: '#/components/schemas/Sources'
+        firstDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system first detected the identity for the application.
+          example: '2022-01-01T00:00:00.000Z'
+        lastDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system last detected the identity for the application.
+          example: '2022-01-01T00:00:00.000Z'
+      example:
+        id: 10000
+        name: My identity
+        sources:
+          - name: dns
+            requests: 100
+            blockedRequests: 100
+        firstDetected: '2022-01-01T00:00:00.000Z'
+        lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ApplicationAttributeCategoryList:
+      type: object
+      description: The list of application attribute category.
+      properties:
+        attributesCategories:
+            type: array
+            items:
+              $ref: '#/components/schemas/ApplicationAttributeCategory'
+      example:
+        attributesCategories:
+          - id: '2'
+            name: 'Data Security'
+            attributes:
+              - id: '17'
+                name: 'SSL Cert Key Size'
+                description: 'The SSL certificate key size refers to the length of the cryptographic key.'
+                values:
+                  - name: 'size'
+                    value: '2048'
+                    createdOn: '2023-07-06T09:23:53.552924+00:00'
+                    updatedOn: '2023-08-21T16:49:19.151159+00:00'
+
+    ApplicationAttributeCategory:
+      type: object
+      description: The application's attribute category.
+      properties:
+        id:
+          type: string
+          description: The ID of the attribute category.
+          example: '2'
+        name:
+          type: string
+          description: The name of the attribute category.
+          example: 'Data Security'
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationAttribute'
+      example:
+        id: '2'
+        name: 'Data Security'
+        attributes:
+          - id: '17'
+            name: 'SSL Cert Key Size'
+            description: 'The SSL certificate key size refers to the length of the cryptographic key.'
+            values:
+              - name: 'size'
+                value: '2048'
+                createdOn: '2023-07-06T09:23:53.552924+00:00'
+                updatedOn: '2023-08-21T16:49:19.151159+00:00'
+
+    ApplicationAttribute:
+      type: object
+      description:  The application attribute information.
+      properties:
+        id:
+          type: string
+          description: The ID of the attribute.
+          example: '17'
+        name:
+          type: string
+          description: The name of the attribute.
+          example: 'SSL Cert Key Size'
+        description:
+          type: string
+          description: The description of the attribute.
+          example: 'The SSL certificate key size refers to the length of the cryptographic key.'
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationAttributeValue'
+      example:
+        id: '17'
+        name: 'SSL Cert Key Size'
+        description: 'The SSL certificate key size refers to the length of the cryptographic key'
+        values:
+          - name: 'size'
+            value: '2048'
+            createdOn: '2023-07-06T09:23:53.552924+00:00'
+            updatedOn: '2023-08-21T16:49:19.151159+00:00'
+
+    ApplicationAttributeValue:
+      type: object
+      description: The app's attribute value information.
+      properties:
+        name:
+          type: string
+          description: The name of the attribute value.
+          example: 'size'
+        value:
+          type: string
+          description: The value of the attribute value.
+          example: '2048'
+        createdOn:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system created the application attribute.
+          example: '2023-07-06T09:23:53.552924+00:00'
+        updatedOn:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system updated the application attribute.
+          example: '2023-08-21T16:49:19.151159+00:00'
+      example:
+        name: 'size'
+        value: '2048'
+        createdOn: '2023-07-06T09:23:53.552924+00:00'
+        updatedOn: '2023-08-21T16:49:19.151159+00:00'
+
+    ProtocolList:
+      type: object
+      description: The list of the app's protocol information.
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProtocolObjectInList'
+      example:
+        items:
+          - id: 0j1b5Em
+            name: ftp
+            description: File Transfer Protocol
+            events: 100
+            blockedEvents: 50
+            firstDetected: '2022-01-01T00:00:00.000Z'
+            lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ProtocolObjectInList:
+      type: object
+      description: The app's protocol information.
+      required: ['id', 'name', 'description', 'events', 'blockedEvents', 'firstDetected', 'lastDetected']
+      properties:
+        id:
+          type: string
+          description: The ID of the protocol.
+          example: 0j1b5EmA
+        name:
+          type: string
+          description: The name of the protocol.
+          example: ftp
+        description:
+          type: string
+          description: The description of the protocol.
+          example: File Transfer Protocol
+        events:
+          type: integer
+          example: 100
+        blockedEvents:
+          type: integer
+          example: 50
+        firstDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system first detected the app protocol.
+          example: '2022-01-01T00:00:00.000Z'
+        lastDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system last detected the app protocol.
+          example: '2022-01-01T00:00:00.000Z'
+      example:
+        id: 0j1b5EmA
+        name: ftp
+        description: File Transfer Protocol
+        events: 100
+        blockedEvents: 50
+        firstDetected: '2022-01-01T00:00:00.000Z'
+        lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ProtocolObject:
+      type: object
+      description: The app's protocol information.
+      properties:
+        id:
+          type: string
+          description: The ID of the protocol.
+          example: 0j1b5EmA
+        name:
+          type: string
+          description: The name of the protocol.
+          example: ftp
+        description:
+          type: string
+          description: The description of the protocol.
+          example: File Transfer Protocol
+        identitiesCount:
+          type: integer
+          description: The number of identities.
+          example: 5
+        events:
+          type: integer
+          description: The number of identity events.
+          example: 100
+        blockedEvents:
+          type: integer
+          description: The number of blocked events for the identities.
+          example: 50
+        firstDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system first detected the protocol for the identities.
+          example: '2022-01-01T00:00:00.000Z'
+        lastDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system last detected the protocol for the identities.
+          example: '2022-01-01T00:00:00.000Z'
+      example:
+        id: 0j1b5Em
+        name: ftp
+        description: File Transfer Protocol
+        identitiesCount: 5
+        events: 100
+        blockedEvents: 40
+        firstDetected: '2022-01-01T00:00:00.000Z'
+        lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ProtocolIdentityList:
+      type: object
+      description: The list of the app's identity information.
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProtocolIdentity'
+      example:
+        items:
+          - id: 10000
+            name: My Identity
+            events: 100
+            blockedEvents: 50
+            firstDetected: '2022-01-01T00:00:00.000Z'
+            lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ProtocolIdentity:
+      type: object
+      description: The app's identity information.
+      properties:
+        id:
+          type: integer
+          description: The ID of the identity.
+          example: 10000
+        name:
+          type: string
+          description: The name of the identity.
+          example: My Identity
+        events:
+          type: integer
+          example: 100
+          description: The number of events for the identity.
+        blockedEvents:
+          type: integer
+          description: The number of blocked events for the identity.
+          example: 50
+        firstDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system first detected the identity.
+          example: '2022-01-01T00:00:00.000Z'
+        lastDetected:
+          type: string
+          format: date-time
+          description: The date and time (ISO 8601 timestamp) when the system last detected the identity.
+          example: '2022-01-01T00:00:00.000Z'
+      example:
+        id: 10000
+        name: My identity
+        events: 100
+        blockedEvents: 40
+        firstDetected: '2022-01-01T00:00:00.000Z'
+        lastDetected: '2022-01-01T00:00:00.000Z'
+
+    ApplicationCategoryList:
+      type: object
+      description: The list of application categories.
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationCategory'
+      example:
+        items:
+          - name: Security
+
+    ApplicationCategory:
+      type: object
+      description: The application category information.
+      properties:
+        name:
+          type: string
+          description: The name of the application category.
+          example: Security
+      example:
+        name: Security

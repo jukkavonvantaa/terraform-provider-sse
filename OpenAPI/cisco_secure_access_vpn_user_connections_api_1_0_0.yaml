@@ -1,0 +1,581 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.2
+info:
+  version: 1.0.0
+  title: Cisco Secure Access VPN User Connections API
+  description: Manage your Secure Access remote access VPN connections.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: admin/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+ - name: VPN Sessions
+ - name: Secure Access
+
+paths:
+
+  /vpn/userConnections:
+
+    get:
+      summary: List VPN Connections
+      description: List the VPN sessions created by your organization.
+      tags:
+        - VPN Sessions
+        - Secure Access
+      operationId: getVpnSessions
+      security:
+        - oauthFlow:
+            - admin.vpn:read
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/region'
+        - $ref: '#/components/parameters/profileName'
+        - $ref: '#/components/parameters/sortBy'
+        - $ref: '#/components/parameters/sortOrder'
+        - $ref: '#/components/parameters/usernames'
+      responses:
+        '200':
+          $ref: '#/components/responses/ListVpnSessions'
+        '400':
+          $ref: '#/components/responses/invalidRequestError'
+        '401':
+          $ref: '#/components/responses/unauthorizedError'
+        '403':
+          $ref: '#/components/responses/forbiddenError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+        #'default':
+        #  $ref: '#/components/responses/invalidRequestError'
+
+    put:
+      summary: Disconnect VPN Users
+      description: Disconnect the remote VPN sessions.
+      tags:
+        - VPN Sessions
+        - Secure Access
+      operationId: updateVpnConnections
+      security:
+        - oauthFlow:
+            - admin.vpn:write
+      requestBody:
+        $ref: '#/components/requestBodies/VpnSessionsUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/TerminateSessionsResponse'
+        '207':
+          description: Multi-Status
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TerminateSessions'
+        '400':
+          $ref: '#/components/responses/invalidRequestError'
+        '401':
+          $ref: '#/components/responses/unauthorizedError'
+        '403':
+          $ref: '#/components/responses/forbiddenError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+        #'default':
+        #  $ref: '#/components/responses/invalidRequestError'
+
+components:
+
+  headers:
+
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+
+
+  # =========================================
+  # Parameters Components
+  # =========================================
+  parameters:
+
+    offset:
+      in: query
+      name: offset
+      required: false
+      description: The place to start reading in the collection. The default offset is 0.
+      schema:
+        type: integer
+        format: int32
+        default: 0
+      example: 1
+
+    limit:
+      in: query
+      name: limit
+      required: false
+      description: |-
+        The number of items to return on the page. The default limit is 100.
+      schema:
+        type: integer
+        format: int32
+        default: 100
+        maximum: 1000
+      example: 25
+
+    usernames:
+      in: query
+      name: usernames
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          description: The email address for the VPN connection.
+          example: vpnuser@cisco.com
+      style: form
+      explode: false
+      description: The comma-separated list of email addresses for the VPN users.
+      example: [ vpnuser@cisco.com, user@cisco.com ]
+
+    region:
+      in: query
+      name: region
+      required: false
+      schema:
+        type: string
+      description: The region where the VPN session occurs.
+
+    profileName:
+      in: query
+      name: profileName
+      required: false
+      schema:
+        type: string
+      description: The name of the VPN profile.
+      example: East cost VPN profile
+
+    # review use of plural (usernames)
+    sortBy:
+      in: query
+      name: sortBy
+      required: false
+      schema:
+        type: string
+        default: username
+        enum:
+          - username
+      description: Filter the collection on the VPN session property.
+      example: username
+
+    sortOrder:
+      in: query
+      name: sortOrder
+      required: false
+      schema:
+        type: string
+        default: asc
+        enum:
+          - asc
+          - desc
+      description: Sort the collection in either ascending or descending order.
+      example: desc
+
+  securitySchemes:
+
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            admin.vpn:read: 'Read the remote access VPN user connections.'
+            admin.vpn:write: 'Update the remote access VPN user connections.'
+
+
+  # =========================================
+  # Responses Components
+  # =========================================
+  responses:
+
+    ListVpnSessions:
+      description: OK
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListVpnSessions'
+          example:
+            offset: 1
+            limit: 100
+            total: 100
+            data:
+              - username: user@cisco.com
+                deviceName: device-one
+              #assignedIp: 1.1.192.168
+                publicIp: 1.1.192.168
+                sessionId: 1425345a
+                loginTime: '2021-12-13T16:07:07.222Z'
+                profileName: East coast VPN profile
+            cursorId: 1e122c65-00ee-4b1d-81f4-236c3f1d8a16
+
+    TerminateSessionsResponse:
+      description: OK
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TerminateSessions'
+          example:
+            statusCode: '200'
+            message: Successfully disconnected the VPN sessions.
+
+    invalidRequestError:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+              description:
+                type: string
+            example:
+              message: 'error'
+              description: Bad Request
+
+    unauthorizedError:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+        WWW-Authenticate:
+          schema:
+            type: string
+          description: A challenge response for the intended resource.
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The request is not authorized.
+            properties:
+              message:
+                type: string
+                example: success
+                enum: [success, error]
+              description:
+                type: string
+            example:
+              message: 'error'
+              description: Unauthorized request
+
+    forbiddenError:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The request is forbidden.
+            properties:
+              message:
+                type: string
+                example: success
+                enum: [success, error]
+              description:
+                type: string
+            example:
+              message: 'error'
+              description: Forbidden
+
+    notFoundError:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            description: The request failed because the resource doesn't exist.
+            properties:
+              message:
+                type: string
+                example: error
+                enum: [success, error]
+              description:
+                type: string
+            example:
+              message: 'error'
+              description: Not Found
+
+    internalServerError:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: Error message explaining the reason for failure.
+                example: Internal Server Error
+              requestId:
+                type: string
+                description: The ID of the request.
+                example: 7d318524-d5a4-4fd8-8b29-ad295b2f035b
+
+  # =========================================
+  # Request Bodies Components
+  # =========================================
+  requestBodies:
+
+    VpnSessionsUpdate:
+      description: |-
+        Update the VPN connections.
+        Add a list of 1-500 email addresses for the users in the organization.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - action
+            properties:
+              action:
+                $ref: '#/components/schemas/action'
+              usernames:
+                $ref: '#/components/schemas/usernames'
+              sessions:
+                $ref: '#/components/schemas/sessions'
+              profileName:
+                $ref: '#/components/schemas/profileName'
+              region:
+                $ref: '#/components/schemas/region'
+          example:
+            action: disconnect
+
+    # handle various data types
+    VpnSessionsUpdateAnyOf:
+      description: |-
+        Update the VPN connections.
+        Add a list of 1-500 email addresses for the users in the organization.
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - action
+              - data
+            properties:
+              action:
+                $ref: '#/components/schemas/action'
+              data:
+                anyOf:
+                  - $ref: '#/components/schemas/usernames'
+                  - $ref: '#/components/schemas/sessions'
+                  - $ref: '#/components/schemas/profileName'
+                  - $ref: '#/components/schemas/region'
+          example:
+            action: disconnect
+            data: [ user1@cisco.com, user2@cisco.com ]
+
+  # =========================================
+  # Schemas Components
+  # =========================================
+  schemas:
+
+    action:
+      type: string
+      description: The type of action to take on the VPN session.
+      enum:
+        - disconnect
+      default: disconnect
+      example: disconnect
+
+    usernames:
+      type: array
+      items:
+        type: string
+        description: An email address for the VPN user.
+        example: name@domain.com
+      description: |-
+        The list of email addresses for the VPN users. The list can contain 1-500 email addresses.
+      example:
+        - name@domain.com
+
+    sessions:
+      type: array
+      items:
+        type: string
+        example: "12345a"
+        description: The session ID for the remote VPN connection.
+      description: The list of session IDs.
+      example:
+        - "1355a6"
+        - "ab3xyrt"
+
+    region:
+      type: string
+      description: The region where the action occurs on the VPN connection.
+      example: West coast
+
+    profileName:
+      type: string
+      description: The name of the VPN profile.
+      example: East coast VPN profile
+
+    ListVpnSessions:
+      type: object
+      description: The properties of the VPN sessions.
+      required: [ offset, limit, total, data ]
+      properties:
+        offset:
+          type: integer
+          description: The place to start reading in the collection.
+          example: 10
+        limit:
+          type: integer
+          description: The maximum number of records in the collection returned on the response.
+          example: 100
+        total:
+          type: integer
+          description: The total number of items read from the collection.
+          example: 1000
+        cursorId:
+          type: string
+          description:  The ID of the cursor that paginates the collection.
+          example: 1e122c65-00ee-4b1d-81f4-236c3f1d8a16
+        data:
+          type: array
+          description: The list of VPN sessions.
+          items:
+            type: object
+            description: The properties of the VPN session.
+            properties:
+              username:
+                type: string
+                description: The email address of the VPN user.
+                example: user@cisco.com
+              deviceName:
+                type: string
+                description: The name of the device that has the VPN session.
+                example: device-one
+              assignedIp:
+                type: string
+                pattern: '^(?:10\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.(?:[0-9]{1,3}\.){1}[0-9]{1,3}|192\.168\.(?:[0-9]{1,3}\.){1}[0-9]{1,3})$'
+                description: A nonroutable (an RFC 1918 compliant IP address) IPv4 address that is assigned to the VPN connection.
+              assignedIpv6:
+                type: string
+                pattern: '^([0-9a-fA-F]{1,4}:){7}([0-9a-fA-F]{1,4})$'
+                description: The IPv6 address that is assigned to the VPN session.
+              publicIp:
+                type: string
+                pattern: '^(25[0-5]|2[0-4]\d|[1]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[1]?\d{1,2})){3}$'
+                description: The public IP address for the VPN session.
+              sessionId:
+                type: string
+                description: The session ID.
+                example: 15afasfb
+              loginTime:
+                type: string
+                description: The date and time that the session was created.
+                format: date-time
+                readOnly: true
+                example: '2021-12-13T16:07:07.222Z'
+              profileName:
+                $ref: '#/components/schemas/profileName'
+      example:
+        offset: 1
+        limit: 100
+        total: 100
+        data:
+          - username: user@cisco.com
+            deviceName: device-one
+            #assignedIp: 1.1.192.168
+            publicIp: 1.1.192.168
+            sessionId: 1425345a
+            loginTime: '2021-12-13T16:07:07.222Z'
+            profileName: East coast VPN profile
+        cursorId: 1e122c65-00ee-4b1d-81f4-236c3f1d8a16
+
+    TerminateSessions:
+      type: object
+      required:
+        - message
+      description: The state and information about the disconnected sessions.
+      properties:
+        statusCode:
+          type: string
+          description: The status code that describes whether the sessions were disconnected.
+        message:
+          type: string
+          description: The informational message that describes the disconnected sessions.
+        failed:
+          description: The information that describes the action that failed for the VPN sessions.
+          type: object
+          properties:
+            usernames:
+              $ref: '#/components/schemas/usernames'
+            sessions:
+              $ref: '#/components/schemas/sessions'
+      example:
+        statusCode: '207'
+        message: Disconnected the VPN sessions.
+        failed:
+          usernames:
+            - test.user1@cisco.com
+            - test.user2@cisco.com
+        sessions: []

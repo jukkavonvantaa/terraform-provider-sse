@@ -1,0 +1,651 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access DNS Forwarders API
+  version: 1.0.0
+  description: Manage the Secure Access virtual appliances and network entities, which are deployed in the organization as conditional DNS forwarders.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: deployments/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: DNS Forwarders
+  - name: Secure Access
+
+paths:
+
+  '/dnsForwarders':
+    get:
+      tags:
+        - DNS Forwarders
+        - Secure Access
+      description: List the DNS Forwarders in the organization.
+      summary: List DNS Forwarders
+      operationId: listDnsForwarders
+      security:
+        - oauthFlow:
+          - deployments.dnsforwarders:read
+      parameters:
+        - $ref: '#/components/parameters/paginationPageParam'
+        - $ref: '#/components/parameters/paginationLimitParam'
+        - $ref: '#/components/parameters/typeParam'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSForwarderListResponse'
+              example:
+                - originId: 124566
+                  state: {}
+                  settings:
+                    internalIPs:
+                      - 1.1.1.1
+                    externalIP: 10.211.204.133
+                  health: unknown
+                  type: network_dns_forwarder
+                  createdAt: '2025-02-09T22:18:26.625Z'
+                  modifiedAt: '2025-02-09T22:18:26.625Z'
+                  stateUpdatedAt: '2025-02-13T16:07:07.222Z'
+                  name: dns-forwarder-one
+                  isUpgradable: false
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    post:
+      description: Add a DNS Forwarder in the organization.
+      summary: Create DNS Forwarder
+      operationId: createDnsForwarder
+      tags:
+        - DNS Forwarders
+        - Secure Access
+      security:
+        - oauthFlow:
+          - deployments.dnsforwarders:write
+      requestBody:
+        $ref: '#/components/requestBodies/DNSForwarderCreateRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSForwarderCreateResponse'
+              example:
+                asset_id: 646404381
+                type: network_dns_forwarder
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/dnsForwarders/{dnsForwardersId}':
+    get:
+      tags:
+        - DNS Forwarders
+        - Secure Access
+      description: Get the properties for a DNS Forwarder.
+      summary: Get DNS Forwarder
+      operationId: getDnsForwarder
+      security:
+        - oauthFlow:
+          - deployments.dnsforwarders:read
+      parameters:
+        - $ref: '#/components/parameters/dnsforwardersId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSForwarderObject'
+              example:
+                originId: 124566
+                state: {}
+                settings:
+                  internalIPs:
+                    - 1.1.1.1
+                  externalIP: 10.211.204.133
+                siteId: 6689200
+                health: unknown
+                type: network_dns_forwarder
+                createdAt: '2025-02-09T22:18:26.625Z'
+                modifiedAt: '2025-02-09T22:18:26.625Z'
+                stateUpdatedAt: '2025-02-13T16:07:07.222Z'
+                name: dns-forwarder-one
+                isUpgradable: false
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    put:
+      tags:
+        - DNS Forwarders
+        - Secure Access
+      description: Update the properties of a DNS Forwarder.
+      summary: Update DNS Forwarder
+      operationId: updateDnsForwarder
+      security:
+        - oauthFlow:
+          - deployments.dnsforwarders:write
+      parameters:
+        - $ref: '#/components/parameters/dnsforwardersId'
+      requestBody:
+        $ref: '#/components/requestBodies/DNSForwarderUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DNSForwarderObject'
+              example:
+                originId: 124566
+                state: {}
+                settings:
+                  internalIPs:
+                    - 1.1.1.1
+                  externalIP: 10.211.204.133
+                siteId: 6689200
+                health: unknown
+                type: network_dns_forwarder
+                createdAt: '2025-02-09T22:18:26.625Z'
+                modifiedAt: '2025-02-09T22:18:26.625Z'
+                stateUpdatedAt: '2025-02-13T16:07:07.222Z'
+                name: dns-forwarder-one
+                isUpgradable: false
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - DNS Forwarders
+        - Secure Access
+      description: Remove the registered DNS Forwarder in the organization.
+      summary: Delete DNS Forwarder
+      operationId: deleteDnsForwarder
+      security:
+        - oauthFlow:
+          - deployments.dnsforwarders:write
+      parameters:
+        - $ref: '#/components/parameters/dnsforwardersId'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content: {}
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: Client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            deployments.dnsforwarders:write: 'Write deployments DNS forwarders'
+            deployments.dnsforwarders:read: 'Read deployments DNS forwarders'
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    paginationPageParam:
+      name: page
+      in: query
+      description: |-
+        The number of a page to begin reading in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+
+    paginationLimitParam:
+      name: limit
+      in: query
+      description: The number of records in the collection to return on the page.
+      required: false
+      schema:
+        default: 100
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+      example: 10
+
+    dnsforwardersId:
+      name: dnsForwardersId
+      in: path
+      schema:
+        type: integer
+      description: The origin ID (originId) of the DNS Forwarder.
+      required: true
+      example: 135678
+
+    typeParam:
+      name: type
+      in: query
+      description: The comma-separated string of types for the DNS Forwarders.
+      schema:
+        type: string
+      required: true
+      example: 'virtual_appliance,network_dns_forwarder'
+
+  requestBodies:
+
+    DNSForwarderCreateRequest:
+      description: Create the DNS Forwarder.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DNSForwarderObjectCreate'
+          example:
+            name: dns forwarder one
+            type: network_dns_forwarder
+            internalIPs:
+              - 1.1.1.1
+
+    DNSForwarderUpdateRequest:
+      description: Update the DNS Forwarder.
+      required: true
+      content:
+          application/json:
+            schema:
+             $ref: '#/components/schemas/DNSForwarderObjectUpdate'
+            example:
+              name: dns-forwarder-one
+              internalIPs:
+                - 1.1.1.1
+              siteId: 6689200
+
+  schemas:
+
+    name:
+      type: string
+      description: The descriptive name of the DNS Forwarder.
+      example: label-1
+
+    internalIPs:
+      type: array
+      description: The list of private IP addresses for the DNS forwarder.
+      items:
+        type: string
+        description: The private IP address of the DNS forwarder.
+        example: 1.1.1.1
+      example:
+        - 1.1.1.1
+
+    typeNetworkDNSForwarder:
+      type: string
+      description: The type of the DNS Forwarder.
+      enum: [network_dns_forwarder]
+      example: network_dns_forwarder
+
+    type:
+      type: string
+      description: The type of the DNS Forwarder.
+      enum: [network_dns_forwarder, virtual_appliance, connector, domain_controller]
+      example: network_dns_forwarder
+
+    DNSForwarderCreateResponse:
+      type: object
+      description: The properties of the DNS forwarder.
+      properties:
+        type:
+          $ref: '#/components/schemas/typeNetworkDNSForwarder'
+        originId:
+          $ref: '#/components/schemas/originId'
+      example:
+        type: network_dns_forwarder
+        originId: 647132588
+
+    settings:
+      type: object
+      description: The internal and external IP addresses for the DNS Forwarder.
+      additionalProperties: false
+      properties:
+        internalIPs:
+          $ref: '#/components/schemas/internalIPs'
+        externalIP:
+          type: string
+          description: The external IP address of the DNS Forwarder.
+          example: '10.211.204.133'
+      example:
+        internalIPs:
+          - 1.1.1.1
+        externalIP: '10.211.204.133'
+
+    createdAt:
+      type: string
+      format: date-time
+      description: The date and time (ISO8601 timestamp) when the system created the DNS Forwarder.
+      example: '2025-02-13T16:07:07.222Z'
+
+    modifiedAt:
+      type: string
+      format: date-time
+      description: |-
+        The date and time (ISO8601 timestamp) when the system modified the DNS Forwarder.
+      example: '2025-02-13T16:07:07.222Z'
+
+    stateUpdatedAt:
+      type: string
+      format: date-time
+      description: The date and time (ISO8601 timestamp) when the system updated the state of the DNS Forwarder.
+      example: '2025-02-13T16:07:07.222Z'
+
+    siteId:
+      type: integer
+      description: The ID of the Site in Secure Access.
+      example: 6689200
+
+    DNSForwarderListResponse:
+      type: array
+      description: The list of DNS Forwarders in the organization.
+      items:
+        $ref: '#/components/schemas/DNSForwarderObject'
+      example:
+        - originId: 124566
+          type: network_dns_forwarder
+          name: dns-forwarder-one
+          internalIPs:
+            - 1.1.1.1
+          siteId: 6689200
+          health: unknown
+          createdAt: '2025-02-09T22:18:26.625Z'
+          modifiedAt: '2025-02-09T22:18:26.625Z'
+
+    originId:
+      type: integer
+      description: The unique identifier of the DNS Forwarder.
+      example: 2456
+
+    DNSForwarderObjectCreate:
+      type: object
+      description: The properties of the DNS Forwarder.
+      required: [name, type, internalIPs]
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        type:
+          $ref: '#/components/schemas/typeNetworkDNSForwarder'
+        internalIPs:
+          $ref: '#/components/schemas/internalIPs'
+      example:
+        name: dns forwarder one
+        type: network_dns_forwarder
+        internalIPs:
+          - 1.1.1.1
+
+    DNSForwarderObjectUpdate:
+      type: object
+      description: Update the properties of the DNS Forwarder.
+      required: [siteId]
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        internalIPs:
+          $ref: '#/components/schemas/internalIPs'
+        siteId:
+          $ref: '#/components/schemas/siteId'
+      example:
+        name: dns-forwarder-one
+        internalIPs:
+          - 1.1.1.1
+        siteId: 6689200
+
+    DNSForwarderObject:
+      type: object
+      description: The properties of the DNS Forwarder.
+      required: [originId]
+      properties:
+        originId:
+          $ref: '#/components/schemas/originId'
+        state:
+          type: object
+          description: The properties of the state for the DNS Forwarder.
+          example: {}
+        settings:
+          $ref: '#/components/schemas/settings'
+        siteId:
+          $ref: '#/components/schemas/siteId'
+        health:
+          type: string
+          description: The label that describes the health of the DNS Forwarder.
+          example: unknown
+        type:
+          $ref: '#/components/schemas/type'
+        createdAt:
+          $ref: '#/components/schemas/createdAt'
+        modifiedAt:
+          $ref: '#/components/schemas/modifiedAt'
+        stateUpdatedAt:
+          $ref: '#/components/schemas/stateUpdatedAt'
+        name:
+          $ref: '#/components/schemas/name'
+        isUpgradable:
+          type: boolean
+          description: Specifies whether the DNS Forwarder can receive software upgrades.
+          example: false
+      example:
+        originId: 124566
+        state: {}
+        settings:
+          internalIPs:
+            - 1.1.1.1
+          externalIP: 10.211.204.133
+        siteId: 6689200
+        health: unknown
+        type: network_dns_forwarder
+        createdAt: '2025-02-09T22:18:26.625Z'
+        modifiedAt: '2025-02-09T22:18:26.625Z'
+        stateUpdatedAt: '2025-02-13T16:07:07.222Z'
+        name: dns-forwarder-one
+        isUpgradable: false
+
+  responses:
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 400
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation Error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 401
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 403
+                description: HTTP status code
+              error:
+                type: string
+                example: Forbidden
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 404
+                description: HTTP status code
+              error:
+                type: string
+                example: Not Found
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 500
+                description: HTTP status code
+              error:
+                type: string
+                example: Internal error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message

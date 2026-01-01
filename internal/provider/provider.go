@@ -5,8 +5,9 @@ package provider
 
 import (
 	"context"
-	"net/http"
+	"os"
 
+	"github.com/cisco/terraform-provider-sse/internal/apiclient"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -37,7 +38,7 @@ type ScaffoldingProviderModel struct {
 }
 
 func (p *ScaffoldingProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "scaffolding"
+	resp.TypeName = "sse"
 	resp.Version = p.version
 }
 
@@ -64,40 +65,68 @@ func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.Config
 	// Configuration values are now available.
 	// if data.Endpoint.IsNull() { /* ... */ }
 
-	// Example client configuration for data sources and resources
-	client := http.DefaultClient
+	// Retrieve configuration from environment variables
+	clientID := os.Getenv("SSE_CLIENT_KEY")
+	if clientID == "" {
+		// Fallback to old variable name for backward compatibility or user convenience
+		clientID = os.Getenv("SSE_CLIENT_ID")
+	}
+	clientSecret := os.Getenv("SSE_CLIENT_SECRET")
+	tokenURL := os.Getenv("SSE_TOKEN_URL")
+
+	if tokenURL == "" {
+		tokenURL = "https://api.sse.cisco.com/auth/v2/token"
+	}
+
+	if clientID == "" || clientSecret == "" {
+		resp.Diagnostics.AddError(
+			"Missing Configuration",
+			"SSE_CLIENT_KEY (or SSE_CLIENT_ID) and SSE_CLIENT_SECRET environment variables must be set.",
+		)
+		return
+	}
+
+	// Create the API client
+	client := apiclient.NewAPIClient(tokenURL, clientID, clientSecret)
+	if client == nil {
+		resp.Diagnostics.AddError(
+			"Client Creation Failed",
+			"Failed to create API client. Check your configuration.",
+		)
+		return
+	}
+
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
 
 func (p *ScaffoldingProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewExampleResource,
+		NewNetworkObjectResource,
+		NewAccessRuleResource,
+		NewDestinationListResource,
+		NewServiceObjectResource,
+		NewPrivateResourceGroupResource,
+		NewPrivateResourceResource,
 	}
 }
 
 func (p *ScaffoldingProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
-	return []func() ephemeral.EphemeralResource{
-		NewExampleEphemeralResource,
-	}
+	return []func() ephemeral.EphemeralResource{}
 }
 
 func (p *ScaffoldingProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewExampleDataSource,
+		NewNetworkTunnelGroupsDataSource,
 	}
 }
 
 func (p *ScaffoldingProvider) Functions(ctx context.Context) []func() function.Function {
-	return []func() function.Function{
-		NewExampleFunction,
-	}
+	return []func() function.Function{}
 }
 
 func (p *ScaffoldingProvider) Actions(ctx context.Context) []func() action.Action {
-	return []func() action.Action{
-		NewExampleAction,
-	}
+	return []func() action.Action{}
 }
 
 func New(version string) func() provider.Provider {

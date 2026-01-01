@@ -1,0 +1,506 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.1
+info:
+  title: Cisco Secure Access Sites API
+  version: 2.0.0
+  description: Create and manage Sites in the organization.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: deployments/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+  - name: Sites
+  - name: Secure Access
+
+paths:
+
+  '/sites':
+    post:
+      tags:
+        - Sites
+        - Secure Access
+      description: Create a Site in the organization.
+      summary: Create Site
+      operationId: createSite
+      security:
+        - oauthFlow:
+          - deployments.sites:write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                name:
+                  $ref: '#/components/schemas/name'
+              type: object
+              required:
+                - name
+            example:
+              name: A site name
+        description: Register a Site.
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteObject'
+              example:
+                originId: 1234
+                name: Name of the Site
+                siteId: 14
+                isDefault: false
+                type: Type of Site
+                internalNetworkCount: 10
+                vaCount: 2
+                modifiedAt: '2020-03-09T22:18:26.625Z'
+                createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    get:
+      tags:
+        - Sites
+        - Secure Access
+      description: List the Sites in the organization.
+      summary: List Sites
+      operationId: listSites
+      security:
+        - oauthFlow:
+          - deployments.sites:read
+      parameters:
+        - $ref: '#/components/parameters/paginationPageParam'
+        - $ref: '#/components/parameters/paginationLimitParam'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SiteObject'
+              example:
+                - originId: 1234
+                  name: Name of the Site
+                  siteId: 14
+                  isDefault: false
+                  modifiedAt: '2020-03-09T22:18:26.625Z'
+                  createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+  '/sites/{siteId}':
+    get:
+      tags:
+        - Sites
+        - Secure Access
+      description: Get a Site in the organization.
+      summary: Get Site
+      operationId: getSite
+      security:
+        - oauthFlow:
+          - deployments.sites:read
+      parameters:
+        - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteObject'
+              example:
+                originId: 1234
+                name: Name of the site
+                siteId: 14
+                isDefault: false
+                modifiedAt: '2020-03-09T22:18:26.625Z'
+                createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    put:
+      tags:
+        - Sites
+        - Secure Access
+      description: Update a Site in the organization.
+      summary: Update Site
+      operationId: updateSite
+      security:
+        - oauthFlow:
+          - deployments.sites:write
+      parameters:
+        - $ref: '#/components/parameters/siteId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                name:
+                  $ref: '#/components/schemas/name'
+              type: object
+              required:
+                - name
+            example:
+              name: my network and site
+        description: Update the properties of the Site.
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteObject'
+              example:
+                originId: 1234
+                name: Name of the Site
+                siteId: 12
+                isDefault: false
+                modifiedAt: '2020-03-09T22:18:26.625Z'
+                createdAt: '2020-03-09T22:18:26.625Z'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+    delete:
+      tags:
+        - Sites
+        - Secure Access
+      description: Delete a Site in the organization.
+      summary: Delete Site
+      operationId: deleteSite
+      security:
+        - oauthFlow:
+          - deployments.sites:write
+      parameters:
+        - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: No Content
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content: {}
+          #content:
+          #  application/json:
+          #    schema:
+          #      type: string
+          #     nullable: true
+          #    example: null
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+  securitySchemes:
+    oauthFlow:
+      type: oauth2
+      description: Client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            deployments.sites:write: 'Write deployments Sites'
+            deployments.sites:read: 'Read deployments Sites'
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+    paginationPageParam:
+      name: page
+      in: query
+      description: |-
+        The number of a page in the collection.
+      required: false
+      schema:
+        default: 1
+        type: integer
+        format: int32
+        minimum: 1
+
+    paginationLimitParam:
+      name: limit
+      in: query
+      description: |-
+        The number of items in the collection to return on the page.
+      required: false
+      schema:
+        default: 100
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+
+    siteId:
+      name: siteId
+      schema:
+        type: integer
+      description: The ID of the Site.
+      in: path
+      required: true
+      example: 13545
+
+  schemas:
+
+    name:
+      type: string
+      description: |-
+        The name of the Site. The name is a sequence of 1–255 characters.
+      minLength: 1
+      maxLength: 255
+      example: site-one
+
+    SiteObject:
+      type: object
+      properties:
+        originId:
+          type: integer
+          description: The origin ID of the Site.
+          example: 13456
+        name:
+          $ref: '#/components/schemas/name'
+        siteId:
+          type: integer
+          description: The ID of the Site.
+          example: 1356
+        isDefault:
+          type: boolean
+          description: Specifies whether the Site is the default Site.
+          example: true
+        type:
+          type: string
+          description: The type of the Site.
+        internalNetworkCount:
+          type: integer
+          description: The number of internal networks that are associated with the Site.
+          example: 20
+        vaCount:
+          type: integer
+          description: The number of virtual appliances that are associated with the Site.
+          example: 25
+        createdAt:
+          type: string
+          format: date-time
+          description: |
+            The date and time (ISO 8601 timestamp) when the Site was created.
+          example: '2018-06-13T16:07:07.222Z'
+        modifiedAt:
+          type: string
+          format: date-time
+          description: |-
+            The date and time (ISO 8601 timestamp) when the Site was modified.
+          example: '2018-06-13T16:07:07.222Z'
+      required:
+        - originId
+        - name
+        - siteId
+        - isDefault
+        - modifiedAt
+        - createdAt
+      example:
+        originId: 1234
+        name: Name of the site
+        siteId: 14
+        isDefault: false
+        modifiedAt: '2020-03-09T22:18:26.625Z'
+        createdAt: '2020-03-09T22:18:26.625Z'
+
+  responses:
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 400
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation Error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 401
+                description: HTTP status code
+              error:
+                type: string
+                example: Validation error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 403
+                description: HTTP status code
+              error:
+                type: string
+                example: Forbidden
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 404
+                description: HTTP status code
+              error:
+                type: string
+                example: Not Found
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              statusCode:
+                type: integer
+                example: 500
+                description: HTTP status code
+              error:
+                type: string
+                example: Internal error
+                description: A brief description of the error
+              message:
+                type: string
+                description: Detailed error message

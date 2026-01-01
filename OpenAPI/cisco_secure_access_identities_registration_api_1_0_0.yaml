@@ -1,0 +1,511 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.2
+info:
+  version: 1.0.0
+  title: Cisco Secure Access Identities Registration API
+  description: Manage the Secure Access identity endpoints and security groups tags (SGTs) for the identities in the organization.
+  contact:
+    name: Cloud Security Developer Community
+
+servers:
+  - url: https://api.sse.cisco.com/{basePath}
+    variables:
+      basePath:
+        default: deployments/v2
+
+security:
+  - oauthFlow: []
+
+tags:
+ - name: Identities
+ - name: Secure Access
+
+paths:
+  /identities/registrations/{type}:
+    get:
+      tags:
+        - Identities
+        - Secure Access
+      summary: List Identities
+      description: Get the list of identity endpoints or security group tags (SGTs) for the identities in the organization.
+      operationId: getIdentities
+      security:
+        - oauthFlow:
+          - deployments.identities:read
+      parameters:
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/label'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The metadata for the response and the list of identity endpoints or security group tags in the collection.
+                required: [total, limit, offset, data]
+                properties:
+                  total:
+                    $ref: '#/components/schemas/total'
+                  limit:
+                    $ref: '#/components/schemas/limit'
+                  offset:
+                    $ref: '#/components/schemas/offset'
+                  data:
+                    $ref: '#/components/schemas/IdentitiesGetResponse'
+              example:
+                total: 2
+                limit: 100
+                offset: 1
+                data:
+                  - key: 123e4567-e89b-12d3-a456-426614174001
+                    label: Device Alpha
+                    status: active
+                    authName: auth_device_alpha
+                    createdAt: 17538705252331595833
+                    modifiedAt: 1753870525233159583
+                  - key: 123e4567-e89b-12d3-a456-426614174002
+                    label: Device Beta
+                    status: inactive
+                    authName: auth_device_beta
+                    createdAt: 1753870525233159583
+                    modifiedAt: 1753870525233159583
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '405':
+          $ref: '#/components/responses/405Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+    put:
+      tags:
+        - Identities
+        - Secure Access
+      summary: Update Identities
+      description: |-
+        * Use the `PUT` operation to add a list of identity devices or security group tags (SGTs) in the organization. For each API operation, you can add 1–250 identity devices
+          or security group tags.
+        * Use the `PUT` operation to modify the properties of the identities registered in the organization.
+          When you set the `status` field of an identity endpoint or security group tag to `inactive`, Secure Access makes the identity inactive in the organization
+          and the identity is not managed or protected by the configured access rules and security controls in the Access policy.
+      operationId: updateIdentities
+      security:
+        - oauthFlow:
+          - deployments.identities:write
+      parameters:
+        - $ref: '#/components/parameters/type'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateIdentities'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            Date:
+              $ref: '#/components/headers/Date'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates whether the system updated the identities.
+                    example: false
+              example:
+                success: true
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '405':
+          $ref: '#/components/responses/405Error'
+        '500':
+          $ref: '#/components/responses/500Error'
+
+components:
+
+  headers:
+    Content-Type:
+      schema:
+        type: string
+      description: The MIME content type of the response body.
+      example: application/json
+    Date:
+      schema:
+        type: string
+        pattern: '^[0-90-90-90-9-0-90-9-0-90-9T0-90-9:0-90-9:0-90-9Z]+$'
+      description: The timestamp of the response.
+      example: '2023-03-14T18:34:25Z'
+      #'2023-03-14T18:34:25.412525046Z'
+
+  parameters:
+
+    type:
+      name: type
+      in: path
+      description: |-
+        Use `device` to query the collection for the identity endpoints in the organization.
+        Use `securityGroupTag` to query the collection for the security group tags in the organization.
+      required: true
+      schema:
+        type: string
+        enum:
+          - device
+          - securityGroupTag
+
+    label:
+      name: label
+      in: query
+      description: The descriptive name of the identity endpoint or security group tag (SGT).
+      schema:
+        type: string
+
+    offset:
+      in: query
+      name: offset
+      description: The place to start reading in the collection. The default offset is `0`.
+      schema:
+        type: integer
+        format: int64
+        default: 0
+      example: 1
+
+    limit:
+      in: query
+      name: limit
+      description: The number of items to return in the page. The default limit is `100`.
+      schema:
+        type: integer
+        format: int64
+        default: 100
+        minimum: 1
+        maximum: 250
+      example: 25
+
+  requestBodies:
+
+    UpdateIdentities:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: array
+            description: The list of the properties for the identity devices or security group tags.
+            maxItems: 250
+            items:
+              description: |-
+                Provide an identity device for the list of identity devices.
+                Provide a security group tag for the list of security group tags.
+              oneOf:
+                - $ref: '#/components/schemas/UpdateIdentityDevices'
+                - $ref: '#/components/schemas/UpdateSecurityGroupTags'
+          examples:
+            example-devices:
+              summary: Example of the list of identity devices.
+              value:
+                - key: 123e4567-e89b-12d3-a456-426614174001
+                  label: Device one
+                  status: active
+                  authName: auth_device_one
+            example-sgts:
+              summary: Example of the Security Group Tags.
+              value:
+                - key: 123e4567-e89b-12d3-a456-426614174001
+                  label: Device one
+                  status: active
+                  tagId: 12345671234564266
+
+  securitySchemes:
+
+    oauthFlow:
+      type: oauth2
+      description: The client credential flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.sse.cisco.com/auth/v2/token
+          scopes:
+            deployments.identities:read: 'Read the identity endpoint or security group tag.'
+            deployments.identities:write: 'Update the identity endpoint or security group tag.'
+
+  schemas:
+
+    total:
+      type: integer
+      description: The total number of identities provisioned in the organization.
+      example: 100
+
+    limit:
+      type: integer
+      description: The number of items returned in the page. The default value of the `limit` is `100`.
+      format: int64
+      default: 100
+      minimum: 1
+      maximum: 250
+      example: 25
+
+    offset:
+      type: integer
+      format: int64
+      default: 0
+      description: The place in the collection where the system started to read the resources. The default value of the `offset` is `0`.
+      example: 1
+
+    label:
+      type: string
+      description: The descriptive name assigned to the identity endpoint or security group tag.
+      example: device one
+
+    status:
+      type: string
+      description: The state of the identity endpoint or security group tag.
+      enum:
+        - active
+        - inactive
+      example: active
+
+    guidHash:
+      type: string
+      description: The globally unique identifier for the Active Directory integration.
+      example: 11223-asd-213-zaas123-nasmomc
+
+    authName:
+      type: string
+      description: The attribute used to authenticate the identity endpoint.
+      example: auth_device_beta
+
+    createdAt:
+      type: integer
+      description: The date and time in nanoseconds since the Unix Epoch when the system created the identity.
+      format: int64
+      example: 1753870525233159583
+
+    modifiedAt: 
+      type: integer
+      description: The date and time in nanoseconds since the Unix Epoch when the system updated the identity.
+      example: 1753870525233159583
+
+    key:
+      type: string
+      description: The unique identifier specified in the UUID4 format. The key is used for all identity endpoints or security group tags.
+      example: 123e4567-e89b-12d3-a456-426614174001
+
+    tagId:
+      type: integer
+      format: int64
+      description: The unique identifier of the security group tag.
+
+    UpdateIdentityDevices:
+      type: object
+      description: Update the properties of the identity device.
+      required: [key, label, status, authName]
+      properties:
+        key:
+          $ref: '#/components/schemas/key'
+        label:
+          $ref: '#/components/schemas/label'
+        status:
+          $ref: '#/components/schemas/status'
+        authName:
+          $ref: '#/components/schemas/authName'
+        guidHash:
+          $ref: '#/components/schemas/guidHash'
+        domainName:
+          type: string
+          description: The configured domain name for the identity device.
+          example: abc.com
+        samAccountName:
+          type: string
+          description: The configured SAM account name for the identity device.
+          example: account name
+      example:
+        key: 123e4567-e89b-12d3-a456-426614174001
+        label: Device one
+        status: active
+        authName: auth_device_one
+
+    UpdateSecurityGroupTags:
+      type: object
+      description: Update the properties of the security group tag.
+      required: [key, label, status, tagId]
+      properties:
+        key:
+          $ref: '#/components/schemas/key'
+        label:
+          $ref: '#/components/schemas/label'
+        status:
+          $ref: '#/components/schemas/status'
+        tagId:
+          $ref: '#/components/schemas/tagId'
+      example:
+        key: 123e4567-e89b-12d3-a456-426614174001
+        label: Device one
+        status: active
+        tagId: 12345671234564266
+
+    IdentitiesGetResponse:
+      type: array
+      maxItems: 250
+      description: The list of identities in the collection returned for either the `device` or `securityGroupTag` identity type.
+      items:
+        oneOf:
+          - $ref: '#/components/schemas/IdentityEndpointsGetResponse'
+          - $ref: '#/components/schemas/SecurityGroupTagIdentityGetResponse'
+      example:
+        - key: 123e4567-e89b-12d3-a456-426614174001
+          label: Device Alpha
+          status: active
+          authName: auth_device_alpha
+          createdAt: 17538705252331595833
+          modifiedAt: 1753870525233159583
+
+    IdentityEndpointsGetResponse:
+      type: object
+      description: The properties of the identity endpoint.
+      required: [key, label, status, authName, createdAt, modifiedAt]
+      properties:
+        key:
+          $ref: '#/components/schemas/key'
+        label:
+          $ref: '#/components/schemas/label'
+        status:
+          $ref: '#/components/schemas/status'
+        authName:
+          $ref: '#/components/schemas/authName'
+        createdAt:
+          $ref: '#/components/schemas/createdAt'
+        modifiedAt:
+          $ref: '#/components/schemas/modifiedAt'
+      example:
+        key: 123e4567-e89b-12d3-a456-426614174001
+        label: Device Alpha
+        status: active
+        authName: auth_device_alpha
+        createdAt: 17538705252331595833
+        modifiedAt: 1753870525233159583
+
+    SecurityGroupTagIdentityGetResponse:
+      type: object
+      description: The properties of the security group tag.
+      required: [key, label, status, tagId, createdAt, modifiedAt]
+      properties:
+        key:
+          $ref: '#/components/schemas/key'
+        label:
+          $ref: '#/components/schemas/label'
+        status:
+          $ref: '#/components/schemas/status'
+        tagId:
+          $ref: '#/components/schemas/tagId'
+        createdAt:
+          $ref: '#/components/schemas/createdAt'
+        modifiedAt:
+          $ref: '#/components/schemas/modifiedAt'
+      example:
+        key: 123e4567-e89b-12d3-a456-426614174001
+        label: Device Alpha
+        status: active
+        tagId: 12345671234564266
+        createdAt: 17538705252331595833
+        modifiedAt: 1753870525233159583
+
+  responses:
+
+    400Error:
+      description: Bad Request
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        text/plain:
+          example: Bad Request
+
+    401Error:
+      description: Unauthorized
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        text/plain:
+          example: Authentication failed.
+
+    403Error:
+      description: Forbidden
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        text/plain:
+          example: Access denied.
+
+    404Error:
+      description: Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        text/plain:
+          example: Not Found
+
+    405Error:
+      description: Method Not Allowed
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        text/plain:
+          example: Method Not Allowed
+
+    500Error:
+      description: Internal Server Error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        Date:
+          $ref: '#/components/headers/Date'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                description: Indicates if the request was successful.
+              error:
+                type: string
+                description: Error string translation if any.
+            example:
+              success: false
+              error: Internal server error.
+          example:
+            success: false
+            error: Internal server error.
