@@ -1,53 +1,104 @@
-# Terraform Provider Scaffolding (Terraform Plugin Framework)
+# Terraform/OpenTofu Provider for Cisco Secure Access (SSE)
 
-_This template repository is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework). The template repository built on the [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk) can be found at [terraform-provider-scaffolding](https://github.com/hashicorp/terraform-provider-scaffolding). See [Which SDK Should I Use?](https://developer.hashicorp.com/terraform/plugin/framework-benefits) in the Terraform documentation for additional information._
+This is a Terraform/OpenTofu provider for **Cisco Secure Access (SSE)**.
 
-This repository is a *template* for a [Terraform](https://www.terraform.io) provider. It is intended as a starting point for creating Terraform providers, containing:
+It allows you to manage resources such as:
+- Network Objects
+- Destination Lists
+- Access Policy Rules
+- Private Resources & Groups
+- Service Objects
+- Network Tunnel Groups (Data Source)
 
-- A resource and a data source (`internal/provider/`),
-- Examples (`examples/`) and generated documentation (`docs/`),
-- Miscellaneous meta files.
-
-These files contain boilerplate code that you will need to edit to create your own Terraform provider. Tutorials for creating Terraform providers can be found on the [HashiCorp Developer](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework) platform. _Terraform Plugin Framework specific guides are titled accordingly._
-
-Please see the [GitHub template repository documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template) for how to create a new repository from this template on GitHub.
-
-Once you've written your provider, you'll want to [publish it on the Terraform Registry](https://developer.hashicorp.com/terraform/registry/providers/publishing) so that others can use it.
+> **Note:** As of January 1, 2026, there is no official Terraform provider for Cisco Secure Access. This project was "vibe coded" using **Gemini 3 Pro** to fill that gap.
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0 or [OpenTofu](https://opentofu.org/)
 - [Go](https://golang.org/doc/install) >= 1.24
 
-## Building The Provider
+## Configuration
 
-1. Clone the repository
-1. Enter the repository directory
-1. Build the provider using the Go `install` command:
+The provider requires API credentials to communicate with Cisco Secure Access. You can set these via environment variables:
 
-```shell
-go install
+```bash
+export SSE_CLIENT_KEY="your_client_key"
+export SSE_CLIENT_SECRET="your_client_secret"
+# Optional: Defaults to https://api.sse.cisco.com/auth/v2/token
+# export SSE_TOKEN_URL="https://api.sse.cisco.com/auth/v2/token"
 ```
 
-## Adding Dependencies
+## API Rate Limiting and Locking
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+The Cisco Secure Access API enforces strict rate limits and locks the ruleset during modifications.
+To handle this, the provider implements automatic retries with exponential backoff for:
+- **429 Too Many Requests**: Retries after a delay.
+- **409 Conflict (Ruleset Locked)**: Retries if the API reports the ruleset is locked by another process.
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
+If you still encounter issues with large configurations, consider reducing the parallelism of Terraform/OpenTofu:
 
-```shell
-go get github.com/author/dependency
-go mod tidy
+```bash
+tofu apply -parallelism=1
 ```
 
-Then commit the changes to `go.mod` and `go.sum`.
+## Installation
 
-## Using the provider
+To install the provider locally for development:
 
-Fill this in for each provider
+```bash
+cd terraform-provider-sse
+go install .
+```
 
-## Developing the Provider
+This will build the binary and install it to your `$GOPATH/bin`.
+
+## Developer Mode
+
+To use the locally built provider without publishing it to a registry, you can configure Terraform/OpenTofu to use the binary from your Go bin directory.
+
+Create or edit your `$HOME/.terraformrc` (or `%APPDATA%\terraform.rc` on Windows) file:
+
+```hcl
+provider_installation {
+
+  dev_overrides {
+      "registry.opentofu.org/hashicorp/sse" = "/Users/<username>/go/bin"
+      "registry.terraform.io/cisco/sse" = "/Users/<username>/go/bin"
+  }
+
+  direct {}
+}
+```
+
+Replace `<username>` with your actual username.
+
+## Usage Example
+
+```hcl
+provider "sse" {}
+
+resource "sse_network_object" "example" {
+  name      = "example-network"
+  type      = "host"
+  addresses = ["192.168.1.1"]
+}
+
+resource "sse_destination_list" "blocklist" {
+  name   = "My Block List"
+  access = "block"
+  destinations = [
+    {
+      destination = "badsite.com"
+      type        = "domain"
+    }
+  ]
+}
+```
+
+## License
+
+This project is licensed under the **European Union Public Licence, version 1.2 (EUPL-1.2)**.
+See the [LICENSE](LICENSE) file for details or visit https://opensource.org/license/eupl-1-2.
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
 
@@ -60,5 +111,17 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 *Note:* Acceptance tests create real resources, and often cost money to run.
 
 ```shell
+$ make testacc
+```
+
+## OpenAPI Specifications
+
+The OpenAPI specifications for the Cisco Secure Access API have been included in this repository to assist with development and AI-assisted coding. These files were downloaded from [developer.cisco.com](https://developer.cisco.com) in December 2025.
+
+---
+May the power of AI save you from the perils of ClickOps.
+
+Best Regards,
+Gemini 3 Pro
 make testacc
 ```
