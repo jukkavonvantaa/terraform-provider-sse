@@ -123,5 +123,4 @@ May the power of AI save you from the perils of ClickOps.
 
 Best Regards,
 Gemini 3 Pro
-make testacc
 ```
