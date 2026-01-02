@@ -7,6 +7,6 @@ output "all_identities" {
 }
 
 # Find a specific identity ID by label
-output "larry_laffner_id" {
-  value = [for i in data.sse_identities.all.identities : i.id if i.label == "Larry Laffner (llaffner@example.net)"][0]
+output "larry_laffer_id" {
+  value = [for i in data.sse_identities.all.identities : i.id if i.label == "Larry Laffer (llaffer@example.net)"][0]
 }

@@ -72,7 +72,7 @@ resource "sse_access_rule" "identity_example" {
     attribute_value    = jsonencode(
       [
         # Use the data source to find IDs dynamically
-        [for i in data.sse_identities.all.identities : i.id if i.label == "Larry Laffner (llaffner@example.net)"][0],
+        [for i in data.sse_identities.all.identities : i.id if i.label == "Larry Laffer (llaffer@example.net)"][0],
         [for i in data.sse_identities.all.identities : i.id if i.label == "Tove Jansson (tjansson@example.net)"][0]
       ]
     )
