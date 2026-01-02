@@ -99,6 +99,15 @@ resource "sse_destination_list" "blocklist" {
     }
   ]
 }
+
+resource "sse_connector_group" "nyc_office" {
+  name        = "NYC Office Connector Group"
+  location    = "us-east-1"
+  environment = "aws"
+}
+
+# Fetch all connector groups
+data "sse_connector_groups" "all" {}
 ```
 
 ## License
@@ -129,4 +138,4 @@ May the power of AI save you from the perils of ClickOps.
 
 Best Regards,
 Gemini 3 Pro
-```
+
