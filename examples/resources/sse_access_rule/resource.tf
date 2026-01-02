@@ -56,8 +56,12 @@ resource "sse_access_rule" "complex_example" {
   }
 }
 
-# Example using dynamic identities
+# Example using identities, applications and category lists
 data "sse_identities" "all" {}
+data "sse_application" "facebook" {
+  name = "Facebook"
+}
+data "sse_content_category_lists" "all" {}
 
 resource "sse_access_rule" "identity_example" {
   name        = "Rule with Dynamic Identities"
@@ -79,9 +83,19 @@ resource "sse_access_rule" "identity_example" {
   }
 
   rule_conditions {
-    attribute_name     = "umbrella.destination.all"
-    attribute_value    = "true"
-    attribute_operator = "="
+    attribute_name     = "umbrella.destination.application_ids"
+    attribute_operator = "INTERSECT"
+    attribute_value    = jsonencode([
+      data.sse_application.facebook.id
+    ])
+  }
+
+  rule_conditions {
+    attribute_name     = "umbrella.destination.category_list_ids"
+    attribute_operator = "INTERSECT"
+    attribute_value    = jsonencode([
+      [for list in data.sse_content_category_lists.all.content_category_lists : list.id if list.name == "Banned content"][0]
+    ])
   }
 
   rule_settings {

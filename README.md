@@ -11,6 +11,9 @@ It allows you to manage resources such as:
 - Network Tunnel Groups (Data Source)
 - Identities (Data Source)
 - Resource Connector Groups (Resource & Data Source)
+- Applications (Data Source)
+- Application Categories (Data Source)
+- Content Category Lists (Data Source)
 
 > **Note:** As of January 1, 2026, there is no official Terraform provider for Cisco Secure Access. This project was "vibe coded" using **Gemini 3 Pro** to fill that gap.
 

@@ -1,3 +1,18 @@
+## 0.13.0 (2026-01-02)
+
+FEATURES:
+
+* **Data Sources:** Added `sse_content_category_lists` data source to fetch Content Category Lists.
+* **Data Sources:** Added `sse_application_categories` data source to fetch Application Categories.
+* **Data Sources:** Added `sse_applications` data source to fetch all available applications (using Reporting API for correct integer IDs).
+* **Data Sources:** Added `sse_application` (singular) data source to efficiently look up a single application by name.
+* **Data Sources:** Added `sse_identity` (singular) data source to efficiently look up a single identity by name.
+
+IMPROVEMENTS:
+
+* **Access Rules:** Updated examples to demonstrate using dynamic lookups for Applications, Content Categories, and Identities, avoiding hardcoded IDs.
+* **State Management:** Introduced singular data sources (`sse_application`, `sse_identity`) to prevent bloating the Terraform state with thousands of unused items.
+
 ## 0.12.0 (2026-01-02)
 
 FEATURES:
