@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -55,12 +56,14 @@ type APIClient struct {
 	TokenURL     string
 	ClientID     string
 	ClientSecret string
+	Scopes       []string
 	Token        *Token
 	HTTPClient   *http.Client
+	Region       string
 }
 
 // NewAPIClient creates a new API client instance
-func NewAPIClient(tokenURL, clientID, clientSecret string) *APIClient {
+func NewAPIClient(tokenURL, clientID, clientSecret string, scopes []string, region string) *APIClient {
 	if tokenURL == "" || clientID == "" || clientSecret == "" {
 		return nil
 	}
@@ -69,18 +72,26 @@ func NewAPIClient(tokenURL, clientID, clientSecret string) *APIClient {
 		TokenURL:     tokenURL,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
+		Scopes:       scopes,
 		HTTPClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		Region: region,
 	}
 }
 
 // GetToken fetches a new OAuth token
 func (c *APIClient) GetToken() error {
-	data := fmt.Sprintf("grant_type=client_credentials&client_id=%s&client_secret=%s",
-		c.ClientID, c.ClientSecret)
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", c.ClientID)
+	data.Set("client_secret", c.ClientSecret)
 
-	req, err := http.NewRequest("POST", c.TokenURL, strings.NewReader(data))
+	if len(c.Scopes) > 0 {
+		data.Set("scope", strings.Join(c.Scopes, " "))
+	}
+
+	req, err := http.NewRequest("POST", c.TokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create token request: %w", err)
 	}
@@ -120,6 +131,9 @@ func (c *APIClient) ensureToken() error {
 // Query executes an API request with automatic token refresh
 func (c *APIClient) Query(scope, endpoint, operation string, requestData interface{}) (*http.Response, error) {
 	baseURI := fmt.Sprintf("https://api.sse.cisco.com/%s/v2", scope)
+	if scope == ScopeReports && c.Region != "" {
+		baseURI = fmt.Sprintf("https://api.sse.cisco.com/%s.%s/v2", scope, c.Region)
+	}
 	url := fmt.Sprintf("%s/%s", baseURI, endpoint)
 
 	maxRetries := 10

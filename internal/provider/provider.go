@@ -73,6 +73,10 @@ func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.Config
 	}
 	clientSecret := os.Getenv("SSE_CLIENT_SECRET")
 	tokenURL := os.Getenv("SSE_TOKEN_URL")
+	region := os.Getenv("SSE_REGION")
+	if region == "" {
+		region = "us"
+	}
 
 	if tokenURL == "" {
 		tokenURL = "https://api.sse.cisco.com/auth/v2/token"
@@ -86,8 +90,24 @@ func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.Config
 		return
 	}
 
+	scopes := []string{
+		"policies.destinationlists:read", "policies.destinationlists:write",
+		"policies.objects.networkObjects:read", "policies.objects.networkObjects:write",
+		"policies.securityProfiles:read",
+		"policies.objects.serviceObjects:read", "policies.objects.serviceObjects:write",
+		"policies.rules:read", "policies.rules:write",
+		"policies.privateresources:read", "policies.privateresources:write",
+		"policies.privateresourcegroups:read", "policies.privateresourcegroups:write",
+		"deployments.privateresources:read", "deployments.privateresources:write",
+		"deployments.identities:read",
+		"deployments.networktunnelgroups:read",
+		"reports.utilities:read",
+		"admin.users:read",
+		"deployments.roamingcomputers:read",
+	}
+
 	// Create the API client
-	client := apiclient.NewAPIClient(tokenURL, clientID, clientSecret)
+	client := apiclient.NewAPIClient(tokenURL, clientID, clientSecret, scopes, region)
 	if client == nil {
 		resp.Diagnostics.AddError(
 			"Client Creation Failed",
@@ -118,6 +138,7 @@ func (p *ScaffoldingProvider) EphemeralResources(ctx context.Context) []func() e
 func (p *ScaffoldingProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewNetworkTunnelGroupsDataSource,
+		NewIdentitiesDataSource,
 	}
 }
 

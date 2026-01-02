@@ -16,9 +16,11 @@ fmt:
 	gofmt -s -w -e .
 
 test:
+	@echo "Running acceptance tests... (This may take several minutes)"
 	TF_ACC=1 go test -v -cover -timeout=120m ./...
 
 testacc:
+	@echo "Running acceptance tests... (This may take several minutes)"
 	TF_ACC=1 go test -v -cover -timeout 120m ./...
 
 .PHONY: fmt lint test testacc build install generate
