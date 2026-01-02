@@ -26,6 +26,8 @@ The provider requires API credentials to communicate with Cisco Secure Access. Y
 ```bash
 export SSE_CLIENT_KEY="your_client_key"
 export SSE_CLIENT_SECRET="your_client_secret"
+# Optional: Defaults to "us". Use "eu" for Europe region.
+# export SSE_REGION="us"
 # Optional: Defaults to https://api.sse.cisco.com/auth/v2/token
 # export SSE_TOKEN_URL="https://api.sse.cisco.com/auth/v2/token"
 ```
