@@ -14,6 +14,8 @@ It allows you to manage resources such as:
 - Applications (Data Source)
 - Application Categories (Data Source)
 - Content Category Lists (Data Source)
+- Security Profiles (Data Source)
+- IPS Profiles (Data Source)
 
 > **Note:** As of January 1, 2026, there is no official Terraform provider for Cisco Secure Access. This project was "vibe coded" using **Gemini 3 Pro** to fill that gap.
 

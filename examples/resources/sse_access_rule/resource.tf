@@ -62,6 +62,12 @@ data "sse_application" "facebook" {
   name = "Facebook"
 }
 data "sse_content_category_lists" "all" {}
+data "sse_security_profile" "web_profile" {
+  name = "Web Profile"
+}
+data "sse_ips_profile" "standard" {
+  name = "Standard IPS Profile"
+}
 
 resource "sse_access_rule" "identity_example" {
   name        = "Rule with Dynamic Identities"
@@ -101,5 +107,15 @@ resource "sse_access_rule" "identity_example" {
   rule_settings {
     setting_name  = "umbrella.default.traffic"
     setting_value = "PUBLIC_INTERNET"
+  }
+
+  rule_settings {
+    setting_name  = "umbrella.posture.webProfileId"
+    setting_value = data.sse_security_profile.web_profile.id
+  }
+
+  rule_settings {
+    setting_name  = "umbrella.posture.ipsProfileId"
+    setting_value = data.sse_ips_profile.standard.id
   }
 }

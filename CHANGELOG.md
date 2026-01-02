@@ -1,3 +1,10 @@
+## 0.4.0 (2026-01-02)
+
+FEATURES:
+
+* **Data Sources:** Added `sse_ips_profiles` (plural) and `sse_ips_profile` (singular) data sources to fetch IPS Profiles.
+* **Access Rules:** Updated examples to demonstrate using dynamic lookups for IPS Profiles.
+
 ## 0.3.0 (2026-01-02)
 
 FEATURES:
@@ -7,6 +14,7 @@ FEATURES:
 * **Data Sources:** Added `sse_applications` data source to fetch all available applications (using Reporting API for correct integer IDs).
 * **Data Sources:** Added `sse_application` (singular) data source to efficiently look up a single application by name.
 * **Data Sources:** Added `sse_identity` (singular) data source to efficiently look up a single identity by name.
+* **Data Sources:** Added `sse_security_profiles` (plural) and `sse_security_profile` (singular) data sources to fetch Security Profiles.
 
 IMPROVEMENTS:
 
