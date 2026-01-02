@@ -134,7 +134,16 @@ func (c *APIClient) Query(scope, endpoint, operation string, requestData interfa
 	if scope == ScopeReports && c.Region != "" {
 		baseURI = fmt.Sprintf("https://api.sse.cisco.com/%s.%s/v2", scope, c.Region)
 	}
-	url := fmt.Sprintf("%s/%s", baseURI, endpoint)
+
+	// Handle full URLs or relative paths
+	var url string
+	if strings.HasPrefix(endpoint, "http") {
+		url = endpoint
+	} else {
+		// Remove leading slash if present to avoid double slashes
+		endpoint = strings.TrimPrefix(endpoint, "/")
+		url = fmt.Sprintf("%s/%s", baseURI, endpoint)
+	}
 
 	maxRetries := 10
 	var lastErr error

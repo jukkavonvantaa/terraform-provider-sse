@@ -104,6 +104,7 @@ func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.Config
 		"reports.utilities:read",
 		"admin.users:read",
 		"deployments.roamingcomputers:read",
+		"deployments.resourceconnectors:read", "deployments.resourceconnectors:write",
 	}
 
 	// Create the API client
@@ -128,6 +129,7 @@ func (p *ScaffoldingProvider) Resources(ctx context.Context) []func() resource.R
 		NewServiceObjectResource,
 		NewPrivateResourceGroupResource,
 		NewPrivateResourceResource,
+		NewConnectorGroupResource,
 	}
 }
 
@@ -139,6 +141,7 @@ func (p *ScaffoldingProvider) DataSources(ctx context.Context) []func() datasour
 	return []func() datasource.DataSource{
 		NewNetworkTunnelGroupsDataSource,
 		NewIdentitiesDataSource,
+		NewConnectorGroupsDataSource,
 	}
 }
 

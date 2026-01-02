@@ -9,6 +9,8 @@ It allows you to manage resources such as:
 - Private Resources & Groups
 - Service Objects
 - Network Tunnel Groups (Data Source)
+- Identities (Data Source)
+- Resource Connector Groups (Resource & Data Source)
 
 > **Note:** As of January 1, 2026, there is no official Terraform provider for Cisco Secure Access. This project was "vibe coded" using **Gemini 3 Pro** to fill that gap.
 
@@ -71,6 +73,8 @@ provider_installation {
 ```
 
 Replace `<username>` with your actual username.
+
+Note that in developer mode you don't use `tofu init` command.
 
 ## Usage Example
 

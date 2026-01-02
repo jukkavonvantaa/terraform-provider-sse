@@ -1,3 +1,11 @@
+## 0.12.0 (2026-01-02)
+
+FEATURES:
+
+* **Resource Connector Groups:** Added `sse_connector_group` resource to manage Resource Connector Groups (CRUD).
+* **Resource Connector Groups:** Added `sse_connector_groups` data source to fetch all Resource Connector Groups.
+* **Import:** Added support for importing `sse_connector_group` by name (e.g., `terraform import sse_connector_group.example "My Group"`).
+
 ## 0.1.1 (2026-01-02)
 
 FEATURES:
