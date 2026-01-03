@@ -1,3 +1,12 @@
+## 0.4.1 (2026-01-02)
+
+BUG FIXES:
+
+* **Access Rules:** Fixed persistent drift in `sse_access_rule` caused by case sensitivity in `attribute_operator` and `protocol`.
+* **Access Rules:** Fixed "Provider returned invalid result object" error during creation by ensuring full resource state is read back from the API immediately after creation.
+* **Private Resources:** Fixed persistent drift in `sse_private_resource` caused by case sensitivity in `protocol` and missing default values for `external_fqdn_prefix`.
+* **Private Resources:** Fixed "Value Conversion Error" during plan/apply by properly handling computed fields like `resource_group_ids`.
+
 ## 0.4.0 (2026-01-02)
 
 FEATURES:

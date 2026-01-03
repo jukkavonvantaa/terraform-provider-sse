@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/cisco/terraform-provider-sse/internal/apiclient"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -34,14 +36,14 @@ type AccessRuleResource struct {
 
 // AccessRuleResourceModel describes the resource data model.
 type AccessRuleResourceModel struct {
-	ID             types.Int64     `tfsdk:"id"`
-	Name           types.String    `tfsdk:"name"`
-	Description    types.String    `tfsdk:"description"`
-	Action         types.String    `tfsdk:"action"`
-	Priority       types.Int64     `tfsdk:"priority"`
-	IsEnabled      types.Bool      `tfsdk:"is_enabled"`
-	RuleConditions []RuleCondition `tfsdk:"rule_conditions"`
-	RuleSettings   []RuleSetting   `tfsdk:"rule_settings"`
+	ID             types.Int64  `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	Description    types.String `tfsdk:"description"`
+	Action         types.String `tfsdk:"action"`
+	Priority       types.Int64  `tfsdk:"priority"`
+	IsEnabled      types.Bool   `tfsdk:"is_enabled"`
+	RuleConditions types.Set    `tfsdk:"rule_conditions"`
+	RuleSettings   types.Set    `tfsdk:"rule_settings"`
 }
 
 type RuleCondition struct {
@@ -53,6 +55,17 @@ type RuleCondition struct {
 type RuleSetting struct {
 	SettingName  types.String `tfsdk:"setting_name"`
 	SettingValue types.String `tfsdk:"setting_value"`
+}
+
+var ruleConditionAttrTypes = map[string]attr.Type{
+	"attribute_name":     types.StringType,
+	"attribute_value":    types.StringType,
+	"attribute_operator": types.StringType,
+}
+
+var ruleSettingAttrTypes = map[string]attr.Type{
+	"setting_name":  types.StringType,
+	"setting_value": types.StringType,
 }
 
 func (r *AccessRuleResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -87,44 +100,65 @@ func (r *AccessRuleResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:            true,
 				Computed:            true,
 				MarkdownDescription: "Access Rule Priority. Must be between 1 and the total number of rules + 1.",
+				PlanModifiers: []planmodifier.Int64{
+					useStateForUnknownOrNull{},
+				},
 			},
 			"is_enabled": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				MarkdownDescription: "Is Access Rule Enabled",
+				PlanModifiers: []planmodifier.Bool{
+					useStateForUnknownOrNull{},
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"rule_conditions": schema.ListNestedBlock{
+			"rule_conditions": schema.SetNestedBlock{
 				MarkdownDescription: "List of rule conditions",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"attribute_name": schema.StringAttribute{
 							Required:            true,
 							MarkdownDescription: "Attribute Name",
+							PlanModifiers: []planmodifier.String{
+								caseInsensitiveNormalizer{},
+							},
 						},
 						"attribute_value": schema.StringAttribute{
 							Required:            true,
 							MarkdownDescription: "Attribute Value",
+							PlanModifiers: []planmodifier.String{
+								jsonNormalizer{},
+							},
 						},
 						"attribute_operator": schema.StringAttribute{
 							Required:            true,
 							MarkdownDescription: "Attribute Operator",
+							PlanModifiers: []planmodifier.String{
+								caseInsensitiveNormalizer{},
+							},
 						},
 					},
 				},
 			},
-			"rule_settings": schema.ListNestedBlock{
+			"rule_settings": schema.SetNestedBlock{
 				MarkdownDescription: "List of rule settings",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"setting_name": schema.StringAttribute{
 							Required:            true,
 							MarkdownDescription: "Setting Name",
+							PlanModifiers: []planmodifier.String{
+								caseInsensitiveNormalizer{},
+							},
 						},
 						"setting_value": schema.StringAttribute{
 							Required:            true,
 							MarkdownDescription: "Setting Value",
+							PlanModifiers: []planmodifier.String{
+								jsonNormalizer{},
+							},
 						},
 					},
 				},
@@ -160,14 +194,26 @@ func (r *AccessRuleResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	if len(data.RuleSettings) == 0 {
+	var ruleSettings []RuleSetting
+	resp.Diagnostics.Append(data.RuleSettings.ElementsAs(ctx, &ruleSettings, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(ruleSettings) == 0 {
 		resp.Diagnostics.AddError("Missing Required Argument", "At least one rule_settings block is required.")
 		return
 	}
 
+	var ruleConditions []RuleCondition
+	resp.Diagnostics.Append(data.RuleConditions.ElementsAs(ctx, &ruleConditions, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Convert Terraform model to API request
-	conditions := make([]apiclient.RuleCondition, len(data.RuleConditions))
-	for i, c := range data.RuleConditions {
+	conditions := make([]apiclient.RuleCondition, len(ruleConditions))
+	for i, c := range ruleConditions {
 		valStr := c.AttributeValue.ValueString()
 		var val interface{} = valStr
 
@@ -191,8 +237,8 @@ func (r *AccessRuleResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 	}
 
-	settings := make([]apiclient.RuleSetting, len(data.RuleSettings))
-	for i, s := range data.RuleSettings {
+	settings := make([]apiclient.RuleSetting, len(ruleSettings))
+	for i, s := range ruleSettings {
 		valStr := s.SettingValue.ValueString()
 		var val interface{} = valStr
 
@@ -269,8 +315,21 @@ func (r *AccessRuleResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	// DEBUG: Print rule details
+	fmt.Printf("[DEBUG] AccessRule Read ID=%d Priority=%d\n", rule.RuleID, rule.RulePriority)
+	for i, c := range rule.RuleConditions {
+		fmt.Printf("[DEBUG] Condition[%d]: Name=%s Op=%s ValueType=%T Value=%v\n", i, c.AttributeName, c.AttributeOperator, c.AttributeValue, c.AttributeValue)
+	}
+	for i, s := range rule.RuleSettings {
+		fmt.Printf("[DEBUG] Setting[%d]: Name=%s ValueType=%T Value=%v\n", i, s.SettingName, s.SettingValue, s.SettingValue)
+	}
+
 	data.Name = types.StringValue(rule.RuleName)
-	data.Description = types.StringValue(rule.RuleDescription)
+	if rule.RuleDescription != "" {
+		data.Description = types.StringValue(rule.RuleDescription)
+	} else {
+		data.Description = types.StringNull()
+	}
 	data.Action = types.StringValue(rule.RuleAction)
 	data.Priority = types.Int64Value(int64(rule.RulePriority))
 	data.IsEnabled = types.BoolValue(rule.RuleIsEnabled)
@@ -306,9 +365,11 @@ func (r *AccessRuleResource) Read(ctx context.Context, req resource.ReadRequest,
 				AttributeOperator: types.StringValue(c.AttributeOperator),
 			}
 		}
-		data.RuleConditions = conditions
+		var diags diag.Diagnostics
+		data.RuleConditions, diags = types.SetValueFrom(ctx, types.ObjectType{AttrTypes: ruleConditionAttrTypes}, conditions)
+		resp.Diagnostics.Append(diags...)
 	} else {
-		data.RuleConditions = nil
+		data.RuleConditions = types.SetNull(types.ObjectType{AttrTypes: ruleConditionAttrTypes})
 	}
 
 	if len(rule.RuleSettings) > 0 {
@@ -340,9 +401,11 @@ func (r *AccessRuleResource) Read(ctx context.Context, req resource.ReadRequest,
 				SettingValue: types.StringValue(valStr),
 			}
 		}
-		data.RuleSettings = settings
+		var diags diag.Diagnostics
+		data.RuleSettings, diags = types.SetValueFrom(ctx, types.ObjectType{AttrTypes: ruleSettingAttrTypes}, settings)
+		resp.Diagnostics.Append(diags...)
 	} else {
-		data.RuleSettings = nil
+		data.RuleSettings = types.SetNull(types.ObjectType{AttrTypes: ruleSettingAttrTypes})
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -356,14 +419,26 @@ func (r *AccessRuleResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if len(data.RuleSettings) == 0 {
+	var ruleSettings []RuleSetting
+	resp.Diagnostics.Append(data.RuleSettings.ElementsAs(ctx, &ruleSettings, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(ruleSettings) == 0 {
 		resp.Diagnostics.AddError("Missing Required Argument", "At least one rule_settings block is required.")
 		return
 	}
 
+	var ruleConditions []RuleCondition
+	resp.Diagnostics.Append(data.RuleConditions.ElementsAs(ctx, &ruleConditions, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Convert Terraform model to API request
-	conditions := make([]apiclient.RuleCondition, len(data.RuleConditions))
-	for i, c := range data.RuleConditions {
+	conditions := make([]apiclient.RuleCondition, len(ruleConditions))
+	for i, c := range ruleConditions {
 		valStr := c.AttributeValue.ValueString()
 		var val interface{} = valStr
 
@@ -385,8 +460,8 @@ func (r *AccessRuleResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
-	settings := make([]apiclient.RuleSetting, len(data.RuleSettings))
-	for i, s := range data.RuleSettings {
+	settings := make([]apiclient.RuleSetting, len(ruleSettings))
+	for i, s := range ruleSettings {
 		valStr := s.SettingValue.ValueString()
 		var val interface{} = valStr
 
@@ -473,4 +548,98 @@ func (r *AccessRuleResource) ImportState(ctx context.Context, req resource.Impor
 		return
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idInt)...)
+}
+
+// jsonNormalizer normalizes JSON strings to compact format to avoid diffs due to whitespace.
+type jsonNormalizer struct{}
+
+func (m jsonNormalizer) Description(ctx context.Context) string {
+	return "Normalizes JSON strings to compact format."
+}
+
+func (m jsonNormalizer) MarkdownDescription(ctx context.Context) string {
+	return "Normalizes JSON strings to compact format."
+}
+
+func (m jsonNormalizer) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	// If the value is unknown or null, we don't need to do anything.
+	if req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull() {
+		return
+	}
+
+	val := req.ConfigValue.ValueString()
+
+	// Try to unmarshal as generic JSON
+	var tmp interface{}
+	if err := json.Unmarshal([]byte(val), &tmp); err != nil {
+		// Not valid JSON, leave as is
+		return
+	}
+
+	// Marshal back to compact JSON
+	compact, err := json.Marshal(tmp)
+	if err != nil {
+		// Should not happen if Unmarshal succeeded, but safe to ignore
+		return
+	}
+
+	resp.PlanValue = types.StringValue(string(compact))
+}
+
+// caseInsensitiveNormalizer normalizes string values to match state if they differ only by case.
+type caseInsensitiveNormalizer struct{}
+
+func (m caseInsensitiveNormalizer) Description(ctx context.Context) string {
+	return "Normalizes string values to match state if they differ only by case."
+}
+
+func (m caseInsensitiveNormalizer) MarkdownDescription(ctx context.Context) string {
+	return "Normalizes string values to match state if they differ only by case."
+}
+
+func (m caseInsensitiveNormalizer) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	// If config is null or unknown, do nothing
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	// If state is null or unknown, we can't normalize against it
+	if req.StateValue.IsNull() || req.StateValue.IsUnknown() {
+		return
+	}
+
+	configVal := req.ConfigValue.ValueString()
+	stateVal := req.StateValue.ValueString()
+
+	if strings.EqualFold(configVal, stateVal) {
+		resp.PlanValue = req.StateValue
+	}
+}
+
+// useStateForUnknownOrNull copies the state value to the plan if the config value is unknown or null.
+// This is useful for Computed fields that should persist their state if removed from config.
+type useStateForUnknownOrNull struct{}
+
+func (m useStateForUnknownOrNull) Description(ctx context.Context) string {
+	return "Copies the state value to the plan if the config value is unknown or null."
+}
+
+func (m useStateForUnknownOrNull) MarkdownDescription(ctx context.Context) string {
+	return "Copies the state value to the plan if the config value is unknown or null."
+}
+
+func (m useStateForUnknownOrNull) PlanModifyInt64(ctx context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	if req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull() {
+		if !req.StateValue.IsUnknown() && !req.StateValue.IsNull() {
+			resp.PlanValue = req.StateValue
+		}
+	}
+}
+
+func (m useStateForUnknownOrNull) PlanModifyBool(ctx context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
+	if req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull() {
+		if !req.StateValue.IsUnknown() && !req.StateValue.IsNull() {
+			resp.PlanValue = req.StateValue
+		}
+	}
 }

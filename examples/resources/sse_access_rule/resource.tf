@@ -2,9 +2,6 @@ resource "sse_access_rule" "example" {
   name        = "Terraform Example Rule"
   description = "Created via Terraform"
   action      = "allow"
-  # Priority must be sequential and within the range of existing rules.
-  # If you have 5 rules, the next priority can be 6.
-  priority   = 1
   is_enabled = true
 
   rule_conditions {
@@ -29,7 +26,6 @@ resource "sse_access_rule" "complex_example" {
   name        = "Terraform Complex Rule"
   description = "Complex rule with IP/Port/Protocol"
   action      = "allow"
-  priority    = 2
   is_enabled  = false
 
   rule_conditions {
@@ -73,7 +69,6 @@ resource "sse_access_rule" "identity_example" {
   name        = "Rule with Dynamic Identities"
   description = "Uses identities data source"
   action      = "allow"
-  priority    = 3
   is_enabled  = true
 
   rule_conditions {

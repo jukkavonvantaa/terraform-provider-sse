@@ -1,25 +1,9 @@
 # Known Issues
 
-## Spurious In-Place Updates
+## API Rate Limiting
 
-### Private Resources (`sse_private_resource`)
+The Cisco Secure Access API has strict rate limits. If you encounter `429 Too Many Requests` errors, the provider will automatically retry, but you may need to reduce parallelism (`-parallelism=1`) for large applies.
 
-Users may observe `tofu plan` or `terraform plan` showing in-place updates for `sse_private_resource` even when no configuration changes have been made. This typically manifests as the addition of computed fields (like `external_fqdn_prefix`) inside `access_types` that were not explicitly defined in the configuration but are returned by the API.
+## Ruleset Locking
 
-**Example:**
-```hcl
-  # sse_private_resource.ERP will be updated in-place
-  ~ resource "sse_private_resource" "ERP" {
-        id   = "284044"
-        name = "ERP"
-
-      ~ access_types {
-          + external_fqdn_prefix     = "erp-8337932"
-            # (4 unchanged attributes hidden)
-        }
-    }
-```
-
-### Access Rules (`sse_access_rule`)
-
-Similar behavior may be observed with `sse_access_rule` resources. The provider may detect differences between the local state and the API response for certain fields, causing Terraform/OpenTofu to propose an in-place update to reconcile the state, even if the logical configuration remains unchanged.
+The API locks the ruleset when a rule is being modified. If you see `409 Conflict` errors, the provider will retry, but concurrent modifications to rules are generally not supported by the API.
