@@ -1,3 +1,10 @@
+## 0.5.0 (2026-01-05)
+
+FEATURES:
+
+* **Data Sources:** Added `sse_tenant_controls_profiles` (plural) and `sse_tenant_controls_profile` (singular) data sources to fetch Tenant Controls Profiles.
+* **Access Rules:** Updated examples to demonstrate using Tenant Control Profiles in Access Rules.
+
 ## 0.4.7 (2026-01-05)
 
 BUG FIXES:

@@ -110,6 +110,7 @@ func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.Config
 		"policies.applicationCategories:read",
 		"reports.appDiscovery:read",
 		"policies.ipsconfig:read",
+		"policies.tenantControlsProfiles:read",
 	}
 
 	// Create the API client
@@ -158,6 +159,8 @@ func (p *ScaffoldingProvider) DataSources(ctx context.Context) []func() datasour
 		NewIPSProfilesDataSource,
 		NewPrivateResourcesDataSource,
 		NewPrivateResourceDataSource,
+		NewTenantControlsProfilesDataSource,
+		NewTenantControlsProfileDataSource,
 	}
 }
 
