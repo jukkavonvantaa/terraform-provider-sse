@@ -49,16 +49,17 @@ resource "sse_private_resource" "example" {
 
 ### Optional
 
-- `access_types` (Block List) (see [below for nested schema](#nestedblock--access_types))
+- `access_types` (Block Set) (see [below for nested schema](#nestedblock--access_types))
 - `certificate_id` (Number) Certificate ID
 - `description` (String) Private Resource Description
 - `dns_server_id` (Number) DNS Server ID
-- `resource_addresses` (Block List) (see [below for nested schema](#nestedblock--resource_addresses))
-- `resource_group_ids` (List of Number) List of Resource Group IDs
+- `resource_addresses` (Block Set) (see [below for nested schema](#nestedblock--resource_addresses))
+- `resource_group_ids` (Set of Number) List of Resource Group IDs
 
 ### Read-Only
 
 - `id` (String) Private Resource ID
+- `resource_id` (Number) Private Resource ID (Integer), useful for JSON encoding in rules.
 
 <a id="nestedblock--access_types"></a>
 ### Nested Schema for `access_types`
@@ -82,11 +83,11 @@ Optional:
 
 Required:
 
-- `destination_addr` (List of String)
+- `destination_addr` (Set of String)
 
 Optional:
 
-- `protocol_ports` (Block List) (see [below for nested schema](#nestedblock--resource_addresses--protocol_ports))
+- `protocol_ports` (Block Set) (see [below for nested schema](#nestedblock--resource_addresses--protocol_ports))
 
 <a id="nestedblock--resource_addresses--protocol_ports"></a>
 ### Nested Schema for `resource_addresses.protocol_ports`

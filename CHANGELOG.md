@@ -1,3 +1,41 @@
+## 0.4.7 (2026-01-05)
+
+BUG FIXES:
+
+* **Destination Lists:** Fixed "Provider produced inconsistent result" errors during updates by normalizing API responses (handling case sensitivity for `type` and null vs empty string for `comment`).
+* **Destination Lists:** Fixed "Access Forbidden" error when deleting destinations by adding missing `policies.destinations:read` and `policies.destinations:write` scopes.
+* **Destination Lists:** Added retry logic with fallback to plan data during creation to handle eventual consistency issues where the API is slow to index new destinations.
+
+## 0.4.6 (2026-01-05)
+
+FEATURES:
+
+* **Destination Lists:** Made `bundle_type_id` optional in `sse_destination_list`. It now defaults to `1` (DNS) if not specified, simplifying configuration for common use cases.
+
+## 0.4.5 (2026-01-05)
+
+FEATURES:
+
+* **Destination Lists:** Added `list_id` (integer) attribute to `sse_destination_list`. This allows referencing the list ID as a number in `sse_access_rule` without needing `tonumber()`.
+
+## 0.4.4 (2026-01-05)
+
+FEATURES:
+
+* **Network Objects:** Added `object_id` (integer) attribute to `sse_network_object`. This allows referencing the object ID as a number in `sse_access_rule` without needing `tonumber()`.
+
+## 0.4.3 (2026-01-05)
+
+FEATURES:
+
+* **Private Resources:** Added `resource_id` (integer) attribute to `sse_private_resource`. This allows referencing the resource ID as a number in `sse_access_rule` without needing `tonumber()`.
+
+## 0.4.2 (2026-01-04)
+
+FEATURES:
+
+* **Data Sources:** Added `sse_private_resources` (plural) and `sse_private_resource` (singular) data sources to fetch Private Resources. This allows referencing private resources by name in Access Rules.
+
 ## 0.4.1 (2026-01-02)
 
 BUG FIXES:

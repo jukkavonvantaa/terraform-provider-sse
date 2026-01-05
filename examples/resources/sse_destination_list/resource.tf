@@ -1,7 +1,8 @@
 resource "sse_destination_list" "example" {
-  name           = "Terraform Destination List"
-  access         = "allow"
-  is_global      = false
+  name      = "Terraform Destination List"
+  access    = "allow"
+  is_global = false
+  # bundle_type_id: 1 = DNS (Domains only), 2 = Web (Domains, URLs, IPs), 4 = SAML Bypass
   bundle_type_id = 1
   destinations = [
     {

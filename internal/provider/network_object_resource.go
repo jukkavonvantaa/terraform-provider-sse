@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/cisco/terraform-provider-sse/internal/apiclient"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -33,6 +34,7 @@ type NetworkObjectResource struct {
 // NetworkObjectResourceModel describes the resource data model.
 type NetworkObjectResourceModel struct {
 	ID          types.String   `tfsdk:"id"`
+	ObjectID    types.Int64    `tfsdk:"object_id"`
 	Name        types.String   `tfsdk:"name"`
 	Description types.String   `tfsdk:"description"`
 	Type        types.String   `tfsdk:"type"`
@@ -55,6 +57,10 @@ func (r *NetworkObjectResource) Schema(ctx context.Context, req resource.SchemaR
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"object_id": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "Network Object ID (Integer), useful for JSON encoding in rules.",
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -128,6 +134,14 @@ func (r *NetworkObjectResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	data.ID = types.StringValue(id)
+	if idInt, err := strconv.ParseInt(id, 10, 64); err == nil {
+		data.ObjectID = types.Int64Value(idInt)
+	} else {
+		// If ID is not an integer, set to null or handle accordingly
+		// For now, assuming IDs are numeric strings
+		data.ObjectID = types.Int64Null()
+	}
+
 	// Ensure description is known (if it was computed/optional and not set)
 	if data.Description.IsUnknown() {
 		data.Description = types.StringValue(data.Description.ValueString())
@@ -169,6 +183,14 @@ func (r *NetworkObjectResource) Read(ctx context.Context, req resource.ReadReque
 	if !ok {
 		resp.Diagnostics.AddError("Error reading network object", "Unexpected response format")
 		return
+	}
+
+	if id, ok := objMap["id"].(string); ok {
+		if idInt, err := strconv.ParseInt(id, 10, 64); err == nil {
+			data.ObjectID = types.Int64Value(idInt)
+		}
+	} else if id, ok := objMap["id"].(float64); ok {
+		data.ObjectID = types.Int64Value(int64(id))
 	}
 
 	if name, ok := objMap["name"].(string); ok {

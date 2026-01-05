@@ -92,6 +92,7 @@ func (p *ScaffoldingProvider) Configure(ctx context.Context, req provider.Config
 
 	scopes := []string{
 		"policies.destinationlists:read", "policies.destinationlists:write",
+		"policies.destinations:read", "policies.destinations:write",
 		"policies.objects.networkObjects:read", "policies.objects.networkObjects:write",
 		"policies.securityProfiles:read",
 		"policies.objects.serviceObjects:read", "policies.objects.serviceObjects:write",
@@ -155,6 +156,8 @@ func (p *ScaffoldingProvider) DataSources(ctx context.Context) []func() datasour
 		NewSecurityProfilesDataSource,
 		NewIPSProfileDataSource,
 		NewIPSProfilesDataSource,
+		NewPrivateResourcesDataSource,
+		NewPrivateResourceDataSource,
 	}
 }
 

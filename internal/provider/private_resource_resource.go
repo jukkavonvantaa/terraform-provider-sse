@@ -36,6 +36,7 @@ type PrivateResourceResource struct {
 
 type PrivateResourceResourceModel struct {
 	ID                types.String `tfsdk:"id"`
+	ResourceID        types.Int64  `tfsdk:"resource_id"`
 	Name              types.String `tfsdk:"name"`
 	Description       types.String `tfsdk:"description"`
 	DNSServerID       types.Int64  `tfsdk:"dns_server_id"`
@@ -100,6 +101,10 @@ func (r *PrivateResourceResource) Schema(ctx context.Context, req resource.Schem
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"resource_id": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "Private Resource ID (Integer), useful for JSON encoding in rules.",
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -358,6 +363,7 @@ func (r *PrivateResourceResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	data.ID = types.StringValue(strconv.Itoa(created.ID))
+	data.ResourceID = types.Int64Value(int64(created.ID))
 
 	// Refresh state from API to ensure all computed fields are populated
 	_, diags := r.refreshResource(ctx, data.ID.ValueString(), &data)
@@ -623,6 +629,7 @@ func (r *PrivateResourceResource) refreshResource(ctx context.Context, id string
 		return true, diags
 	}
 
+	data.ResourceID = types.Int64Value(int64(resourceObj.ID))
 	data.Name = types.StringValue(resourceObj.Name)
 	if resourceObj.Description != "" {
 		data.Description = types.StringValue(resourceObj.Description)

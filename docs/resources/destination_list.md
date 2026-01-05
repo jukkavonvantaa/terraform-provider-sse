@@ -14,9 +14,10 @@ Destination List resource
 
 ```terraform
 resource "sse_destination_list" "example" {
-  name           = "Terraform Destination List"
-  access         = "allow"
-  is_global      = false
+  name      = "Terraform Destination List"
+  access    = "allow"
+  is_global = false
+  # bundle_type_id: 1 = DNS (Domains only), 2 = Web (Domains, URLs, IPs), 4 = SAML Bypass
   bundle_type_id = 1
   destinations = [
     {
@@ -39,17 +40,18 @@ resource "sse_destination_list" "example" {
 ### Required
 
 - `access` (String)
-- `bundle_type_id` (Number)
 - `is_global` (Boolean)
 - `name` (String)
 
 ### Optional
 
+- `bundle_type_id` (Number) Bundle Type ID. Available values: `1` (DNS - Domains), `2` (Web - Domains, URLs, IPs), `4` (SAML Bypass). Defaults to `1`. **Note:** When you create a destination list for Web policies, set the `bundle_type_id` to `2`.
 - `destinations` (Attributes List) (see [below for nested schema](#nestedatt--destinations))
 
 ### Read-Only
 
 - `id` (String) Destination List ID
+- `list_id` (Number) Destination List ID (Integer), useful for JSON encoding in rules.
 
 <a id="nestedatt--destinations"></a>
 ### Nested Schema for `destinations`
@@ -62,7 +64,4 @@ Required:
 Optional:
 
 - `comment` (String)
-
-Read-Only:
-
 - `id` (Number)

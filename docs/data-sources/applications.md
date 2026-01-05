@@ -3,27 +3,20 @@
 page_title: "sse_applications Data Source - sse"
 subcategory: ""
 description: |-
-  Applications data source
+  Fetches the list of Applications.
 ---
 
 # sse_applications (Data Source)
 
-Applications data source. Use this data source to retrieve the list of available applications, which can be used in access rules.
+Fetches the list of Applications.
 
 ## Example Usage
 
 ```terraform
-# Fetch all applications
 data "sse_applications" "all" {}
 
-# Output all applications
 output "all_applications" {
   value = data.sse_applications.all.applications
-}
-
-# Find a specific application ID by label (name)
-output "facebook_id" {
-  value = [for a in data.sse_applications.all.applications : a.id if a.label == "Facebook"][0]
 }
 ```
 
@@ -39,7 +32,7 @@ output "facebook_id" {
 
 Read-Only:
 
-- `id` (Number) The ID of the application.
-- `name` (String) The name of the application (same as label).
-- `label` (String) The label of the application.
-- `app_type` (String) The type of the application.
+- `app_type` (String)
+- `id` (Number)
+- `label` (String)
+- `name` (String)

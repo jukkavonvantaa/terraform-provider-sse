@@ -3,27 +3,20 @@
 page_title: "sse_content_category_lists Data Source - sse"
 subcategory: ""
 description: |-
-  Content Category Lists data source
+  Fetches the list of Content Category Lists.
 ---
 
 # sse_content_category_lists (Data Source)
 
-Content Category Lists data source. Use this data source to retrieve the list of available content category lists (e.g. "Default Settings", "Banned content"), which can be used in access rules.
+Fetches the list of Content Category Lists.
 
 ## Example Usage
 
 ```terraform
-# Fetch all content category lists
 data "sse_content_category_lists" "all" {}
 
-# Output all content category lists
 output "all_content_category_lists" {
   value = data.sse_content_category_lists.all.content_category_lists
-}
-
-# Find a specific content category list ID by name
-output "banned_content_id" {
-  value = [for c in data.sse_content_category_lists.all.content_category_lists : c.id if c.name == "Banned content"][0]
 }
 ```
 
@@ -39,5 +32,5 @@ output "banned_content_id" {
 
 Read-Only:
 
-- `id` (Number) The ID of the content category list.
-- `name` (String) The name of the content category list.
+- `id` (Number)
+- `name` (String)

@@ -37,3 +37,4 @@ resource "sse_network_object" "example" {
 ### Read-Only
 
 - `id` (String) Network Object ID
+- `object_id` (Number) Network Object ID (Integer), useful for JSON encoding in rules.

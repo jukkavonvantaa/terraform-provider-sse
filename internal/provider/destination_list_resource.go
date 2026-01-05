@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/cisco/terraform-provider-sse/internal/apiclient"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -34,7 +36,8 @@ type DestinationListResource struct {
 
 // DestinationListResourceModel describes the resource data model.
 type DestinationListResourceModel struct {
-	ID types.String `tfsdk:"id"`
+	ID     types.String `tfsdk:"id"`
+	ListID types.Int64  `tfsdk:"list_id"`
 	// OrganizationID       types.Int64  `tfsdk:"organization_id"`
 	Access   types.String `tfsdk:"access"`
 	IsGlobal types.Bool   `tfsdk:"is_global"`
@@ -71,6 +74,10 @@ func (r *DestinationListResource) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"list_id": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "Destination List ID (Integer), useful for JSON encoding in rules.",
+			},
 			// "organization_id": schema.Int64Attribute{
 			// 	Computed: true,
 			// },
@@ -105,13 +112,16 @@ func (r *DestinationListResource) Schema(ctx context.Context, req resource.Schem
 			// 	Computed: true,
 			// },
 			"bundle_type_id": schema.Int64Attribute{
-				Required: true,
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "Bundle Type ID. Available values: `1` (DNS - Domains), `2` (Web - Domains, URLs, IPs), `4` (SAML Bypass). Defaults to `1`. **Note:** When you create a destination list for Web policies, set the `bundle_type_id` to `2`.",
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 			},
 			"destinations": schema.ListNestedAttribute{
 				Optional: true,
+				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.Int64Attribute{
@@ -163,10 +173,16 @@ func (r *DestinationListResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	payload := apiclient.CreateDestinationListPayload{
-		Access:       data.Access.ValueString(),
-		IsGlobal:     data.IsGlobal.ValueBool(),
-		Name:         data.Name.ValueString(),
-		BundleTypeID: int(data.BundleTypeID.ValueInt64()),
+		Access:   data.Access.ValueString(),
+		IsGlobal: data.IsGlobal.ValueBool(),
+		Name:     data.Name.ValueString(),
+	}
+
+	if !data.BundleTypeID.IsNull() {
+		payload.BundleTypeID = int(data.BundleTypeID.ValueInt64())
+	} else {
+		// Default to 1 (DNS) if not specified
+		payload.BundleTypeID = 1
 	}
 
 	list, err := apiclient.PostDestinationList(r.client, payload)
@@ -179,6 +195,8 @@ func (r *DestinationListResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	data.ID = types.StringValue(strconv.FormatInt(list.ID, 10))
+	data.ListID = types.Int64Value(list.ID)
+	data.BundleTypeID = types.Int64Value(int64(list.BundleTypeID))
 	// data.OrganizationID = types.Int64Value(list.OrganizationID)
 	// data.ThirdpartyCategoryID = types.Int64Value(int64(list.ThirdpartyCategoryID))
 	// data.CreatedAt = types.Int64Value(list.CreatedAt)
@@ -211,29 +229,47 @@ func (r *DestinationListResource) Create(ctx context.Context, req resource.Creat
 
 	// Read back to get IDs of destinations
 	// We need to populate the IDs in the state
+	// Always read back destinations, even if we didn't add any, to ensure state consistency
+	// But only if the plan had destinations or we added some
 	if len(data.Destinations) > 0 {
-		dests, err := apiclient.GetDestinationsDetails(r.client, list.ID)
-		if err != nil {
-			resp.Diagnostics.AddWarning(
-				"Error reading back destinations",
-				"Could not read back destinations to populate IDs: "+err.Error(),
-			)
-		} else {
-			// Map back to model
-			// Note: The order might not be preserved, so we might need to match by content
-			// For simplicity, we'll just replace the list with what we got back
-			var destModels []DestinationModel
-			for _, d := range dests {
-				id, _ := strconv.ParseInt(d.ID, 10, 64)
-				destModels = append(destModels, DestinationModel{
-					ID:          types.Int64Value(id),
-					Destination: types.StringValue(d.Destination),
-					Type:        types.StringValue(d.Type),
-					Comment:     types.StringValue(d.Comment),
-				})
+		var dests []apiclient.Destination
+		var err error
+
+		// Retry loop to handle eventual consistency
+		// Increased to 30 seconds as API can be slow to index
+		for i := 0; i < 30; i++ {
+			dests, err = apiclient.GetDestinationsDetails(r.client, list.ID)
+			if err == nil && len(dests) >= len(data.Destinations) {
+				break
 			}
-			data.Destinations = destModels
+			time.Sleep(1 * time.Second)
 		}
+
+		if err != nil || len(dests) < len(data.Destinations) {
+			resp.Diagnostics.AddWarning(
+				"Consistency Warning",
+				"Could not read back all created destinations from API immediately. State may be incomplete. Please run 'tofu apply' again later to refresh state.",
+			)
+			// Fallback: use plan data but set IDs to null where unknown
+			// This prevents "inconsistent result" error by providing the expected list structure
+			var fallbackDests []DestinationModel
+			for _, d := range data.Destinations {
+				newD := d
+				if newD.ID.IsUnknown() {
+					newD.ID = types.Int64Null()
+				}
+				fallbackDests = append(fallbackDests, newD)
+			}
+			data.Destinations = fallbackDests
+		} else {
+			// Map back to model using helper to ensure consistency
+			data.Destinations = mapDestinationsToModel(dests, data.Destinations)
+		}
+	} else {
+		// If no destinations in plan, ensure state is empty list, not null, if that's what schema expects?
+		// Actually, if plan was null/empty, we should probably set it to null or empty.
+		// But if the API returns something (e.g. default destinations?), we might have a drift.
+		// For now, let's trust the plan if it was empty.
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -264,6 +300,7 @@ func (r *DestinationListResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	data.Name = types.StringValue(list.Name)
+	data.ListID = types.Int64Value(list.ID)
 	data.Access = types.StringValue(list.Access)
 	data.IsGlobal = types.BoolValue(list.IsGlobal)
 	data.BundleTypeID = types.Int64Value(int64(list.BundleTypeID))
@@ -284,17 +321,8 @@ func (r *DestinationListResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	var destModels []DestinationModel
-	for _, d := range dests {
-		id, _ := strconv.ParseInt(d.ID, 10, 64)
-		destModels = append(destModels, DestinationModel{
-			ID:          types.Int64Value(id),
-			Destination: types.StringValue(d.Destination),
-			Type:        types.StringValue(d.Type),
-			Comment:     types.StringValue(d.Comment),
-		})
-	}
-	data.Destinations = destModels
+	// Map back to model using helper to ensure consistency with state
+	data.Destinations = mapDestinationsToModel(dests, data.Destinations)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -435,11 +463,12 @@ func (r *DestinationListResource) Update(ctx context.Context, req resource.Updat
 
 	// Refresh state
 	// Read back everything
-	_, err = apiclient.GetDestinationListDetails(r.client, id)
+	list, err := apiclient.GetDestinationListDetails(r.client, id)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading updated destination list", err.Error())
 		return
 	}
+	data.ListID = types.Int64Value(list.ID)
 
 	// data.ModifiedAt = types.Int64Value(list.ModifiedAt)
 
@@ -449,17 +478,8 @@ func (r *DestinationListResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	var destModels []DestinationModel
-	for _, d := range dests {
-		id, _ := strconv.ParseInt(d.ID, 10, 64)
-		destModels = append(destModels, DestinationModel{
-			ID:          types.Int64Value(id),
-			Destination: types.StringValue(d.Destination),
-			Type:        types.StringValue(d.Type),
-			Comment:     types.StringValue(d.Comment),
-		})
-	}
-	data.Destinations = destModels
+	// Map back to model using helper to ensure consistency with plan
+	data.Destinations = mapDestinationsToModel(dests, data.Destinations)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -504,4 +524,46 @@ func (r *DestinationListResource) ImportState(ctx context.Context, req resource.
 		req.ID = fmt.Sprintf("%d", foundID)
 	}
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func mapDestinationsToModel(apiDests []apiclient.Destination, refDests []DestinationModel) []DestinationModel {
+	var destModels []DestinationModel
+	for _, d := range apiDests {
+		id, _ := strconv.ParseInt(d.ID, 10, 64)
+
+		// Handle comment being empty string vs null
+		comment := types.StringValue(d.Comment)
+		if d.Comment == "" {
+			comment = types.StringNull()
+		}
+
+		destType := types.StringValue(d.Type)
+
+		// Find matching destination in reference to check what user provided
+		for _, refDest := range refDests {
+			if refDest.Destination.ValueString() == d.Destination {
+				// If types match case-insensitively, use the reference's value
+				if strings.EqualFold(refDest.Type.ValueString(), d.Type) {
+					destType = refDest.Type
+				}
+				// Also try to preserve comment null-ness if it matches empty string
+				if d.Comment == "" {
+					if refDest.Comment.IsNull() {
+						comment = types.StringNull()
+					} else {
+						comment = types.StringValue("")
+					}
+				}
+				break
+			}
+		}
+
+		destModels = append(destModels, DestinationModel{
+			ID:          types.Int64Value(id),
+			Destination: types.StringValue(d.Destination),
+			Type:        destType,
+			Comment:     comment,
+		})
+	}
+	return destModels
 }

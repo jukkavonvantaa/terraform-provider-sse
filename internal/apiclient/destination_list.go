@@ -4,6 +4,7 @@
 package apiclient
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -341,10 +342,15 @@ func PostDestinationList(client *APIClient, payload CreateDestinationListPayload
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+	// Re-create body for decoder
+	resp.Body = io.NopCloser(bytes.NewBuffer(body))
+
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("failed to create destination list. Status code: %d, Response: %s", resp.StatusCode, string(body))
 	}
+
+	fmt.Printf("[DEBUG] Create Destination List Response: %s\n", string(body))
 
 	var result DestinationListDetailsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {

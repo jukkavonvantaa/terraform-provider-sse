@@ -3,27 +3,20 @@
 page_title: "sse_application_categories Data Source - sse"
 subcategory: ""
 description: |-
-  Application Categories data source
+  Fetches the list of Application Categories.
 ---
 
 # sse_application_categories (Data Source)
 
-Application Categories data source. Use this data source to retrieve the list of available application categories, which can be used in access rules.
+Fetches the list of Application Categories.
 
 ## Example Usage
 
 ```terraform
-# Fetch all application categories
 data "sse_application_categories" "all" {}
 
-# Output all application categories
 output "all_application_categories" {
   value = data.sse_application_categories.all.application_categories
-}
-
-# Find a specific application category ID by label
-output "anonymizers_id" {
-  value = [for c in data.sse_application_categories.all.application_categories : c.id if c.label == "Anonymizers"][0]
 }
 ```
 
@@ -39,5 +32,7 @@ output "anonymizers_id" {
 
 Read-Only:
 
-- `id` (Number) The ID of the application category.
-- `label` (String) The descriptive label for the application category.
+- `applications_count` (Number)
+- `description` (String)
+- `id` (Number)
+- `name` (String)

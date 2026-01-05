@@ -2,7 +2,7 @@ resource "sse_access_rule" "example" {
   name        = "Terraform Example Rule"
   description = "Created via Terraform"
   action      = "allow"
-  is_enabled = true
+  is_enabled  = true
 
   rule_conditions {
     attribute_name     = "umbrella.destination.all"
@@ -74,7 +74,7 @@ resource "sse_access_rule" "identity_example" {
   rule_conditions {
     attribute_name     = "umbrella.source.identity_ids"
     attribute_operator = "INTERSECT"
-    attribute_value    = jsonencode(
+    attribute_value = jsonencode(
       [
         # Use the data source to find IDs dynamically
         [for i in data.sse_identities.all.identities : i.id if i.label == "Larry Laffer (llaffer@example.net)"][0],
@@ -86,7 +86,7 @@ resource "sse_access_rule" "identity_example" {
   rule_conditions {
     attribute_name     = "umbrella.destination.application_ids"
     attribute_operator = "INTERSECT"
-    attribute_value    = jsonencode([
+    attribute_value = jsonencode([
       data.sse_application.facebook.id
     ])
   }
@@ -94,7 +94,7 @@ resource "sse_access_rule" "identity_example" {
   rule_conditions {
     attribute_name     = "umbrella.destination.category_list_ids"
     attribute_operator = "INTERSECT"
-    attribute_value    = jsonencode([
+    attribute_value = jsonencode([
       [for list in data.sse_content_category_lists.all.content_category_lists : list.id if list.name == "Banned content"][0]
     ])
   }
@@ -112,5 +112,71 @@ resource "sse_access_rule" "identity_example" {
   rule_settings {
     setting_name  = "umbrella.posture.ipsProfileId"
     setting_value = data.sse_ips_profile.standard.id
+  }
+}
+
+# Example using Network Objects, Destination Lists, and Private Resources
+resource "sse_network_object" "example_subnet" {
+  name      = "Example Subnet"
+  type      = "network"
+  addresses = ["10.0.0.0/24"]
+}
+
+resource "sse_destination_list" "example_list" {
+  name      = "Example Block List"
+  access    = "block"
+  is_global = false
+  destinations = [
+    {
+      destination = "example.com"
+      type        = "DOMAIN"
+    }
+  ]
+}
+
+resource "sse_private_resource" "example_app" {
+  name = "Example App"
+  access_types {
+    type = "network"
+  }
+  resource_addresses {
+    destination_addr = ["192.168.1.10"]
+    protocol_ports {
+      protocol = "TCP"
+      ports    = "80"
+    }
+  }
+}
+
+resource "sse_access_rule" "resource_example" {
+  name        = "Rule with Resources"
+  description = "Uses Network Objects, Destination Lists, and Private Resources"
+  action      = "allow"
+  is_enabled  = true
+
+  # Source: Network Object
+  rule_conditions {
+    attribute_name     = "umbrella.source.networkObjectIds"
+    attribute_operator = "IN"
+    attribute_value = jsonencode([
+      # Use object_id (integer) instead of id (string)
+      sse_network_object.example_subnet.object_id
+    ])
+  }
+
+  # Destination: Destination List
+  rule_conditions {
+    attribute_name     = "umbrella.destination.destination_list_ids"
+    attribute_operator = "IN"
+    attribute_value = jsonencode([
+      # Use list_id (integer) instead of id (string)
+      sse_destination_list.example_list.list_id
+    ])
+  }
+
+
+  rule_settings {
+    setting_name  = "umbrella.default.traffic"
+    setting_value = "PUBLIC_INTERNET"
   }
 }
