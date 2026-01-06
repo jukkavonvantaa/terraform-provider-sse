@@ -1,3 +1,13 @@
+## 0.5.1 (January 06, 2026)
+
+ENHANCEMENT:
+
+* Added `object_id` field to `sse_service_object` resource to support integer-based ID references in Access Rules (consistent with `sse_network_object`).
+
+DOCS:
+
+* Added comprehensive access rule example `comprehensive.tf`.
+
 ## 0.5.0 (2026-01-05)
 
 FEATURES:

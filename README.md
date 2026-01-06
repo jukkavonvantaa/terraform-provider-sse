@@ -18,6 +18,8 @@ It allows you to manage resources such as:
 - IPS Profiles (Data Source)
 - Tenant Controls Profiles (Data Source)
 
+The guiding principle has been to implement things that are updated frequently as resources (access rules, objects, private resources, lists) and rest as data sources. Data sources you need to manage with ClickOps but you can use those in access rules (Content categories, Tenant Controls, IPS profiles, Applications, Identities). 
+
 > **Note:** As of January 1, 2026, there is no official Terraform provider for Cisco Secure Access. This project was "vibe coded" using **Gemini 3 Pro** to fill that gap.
 
 ## Requirements

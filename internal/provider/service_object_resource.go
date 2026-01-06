@@ -33,6 +33,7 @@ type ServiceObjectResource struct {
 // ServiceObjectResourceModel describes the resource data model.
 type ServiceObjectResourceModel struct {
 	ID          types.String   `tfsdk:"id"`
+	ObjectID    types.Int64    `tfsdk:"object_id"`
 	Name        types.String   `tfsdk:"name"`
 	Description types.String   `tfsdk:"description"`
 	Protocol    types.String   `tfsdk:"protocol"`
@@ -54,6 +55,10 @@ func (r *ServiceObjectResource) Schema(ctx context.Context, req resource.SchemaR
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"object_id": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "Service Object ID (Integer), useful for JSON encoding in rules.",
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -128,8 +133,7 @@ func (r *ServiceObjectResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	data.ID = types.StringValue(strconv.FormatInt(object.ID, 10))
-	// Ensure we write back what we got, although for input fields we usually keep plan values unless computed
-	// But here we can confirm creation success.
+	data.ObjectID = types.Int64Value(object.ID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -158,6 +162,7 @@ func (r *ServiceObjectResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
+	data.ObjectID = types.Int64Value(object.ID)
 	data.Name = types.StringValue(object.Name)
 	data.Description = types.StringValue(object.Description)
 	data.Protocol = types.StringValue(object.Value.Protocol)
