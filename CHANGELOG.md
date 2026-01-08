@@ -1,3 +1,15 @@
+## 0.5.2 (January 08, 2026)
+
+NOTES:
+
+* Added note about official Cisco Secure Access Terraform provider release.
+
+BUG FIXES:
+
+* Fix: `sse_destination_list` resource handles unknown values correctly during plan/apply.
+* Fix: `sse_private_resource_group` resource handles unknown values correctly during plan/apply.
+* Fix: `sse_network_object` and `sse_service_object` resources correctly set `object_id` during updates.
+
 ## 0.5.1 (January 06, 2026)
 
 ENHANCEMENT:

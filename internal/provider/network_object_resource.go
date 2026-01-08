@@ -248,6 +248,15 @@ func (r *NetworkObjectResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Ensure ObjectID is set (calculated from ID)
+	if data.ObjectID.IsUnknown() {
+		if idInt, err := strconv.ParseInt(data.ID.ValueString(), 10, 64); err == nil {
+			data.ObjectID = types.Int64Value(idInt)
+		} else {
+			data.ObjectID = types.Int64Null()
+		}
+	}
+
 	// Ensure description is known (if it was computed/optional and not set)
 	if data.Description.IsUnknown() {
 		data.Description = types.StringValue(data.Description.ValueString())

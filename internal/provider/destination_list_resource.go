@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cisco/terraform-provider-sse/internal/apiclient"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -47,8 +48,8 @@ type DestinationListResourceModel struct {
 	// ModifiedAt           types.Int64        `tfsdk:"modified_at"`
 	// IsMspDefault      types.Bool         `tfsdk:"is_msp_default"`
 	// MarkedForDeletion types.Bool         `tfsdk:"marked_for_deletion"`
-	BundleTypeID types.Int64        `tfsdk:"bundle_type_id"`
-	Destinations []DestinationModel `tfsdk:"destinations"`
+	BundleTypeID types.Int64 `tfsdk:"bundle_type_id"`
+	Destinations types.List  `tfsdk:"destinations"`
 }
 
 type DestinationModel struct {
@@ -205,9 +206,15 @@ func (r *DestinationListResource) Create(ctx context.Context, req resource.Creat
 	// data.MarkedForDeletion = types.BoolValue(list.MarkedForDeletion)
 
 	// Handle destinations
-	if len(data.Destinations) > 0 {
+	var planDestinations []DestinationModel
+	if !data.Destinations.IsNull() && !data.Destinations.IsUnknown() {
+		resp.Diagnostics.Append(data.Destinations.ElementsAs(ctx, &planDestinations, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		var destinations []apiclient.Destination
-		for _, d := range data.Destinations {
+		for _, d := range planDestinations {
 			destinations = append(destinations, apiclient.Destination{
 				Destination: d.Destination.ValueString(),
 				Type:        d.Type.ValueString(),
@@ -227,11 +234,7 @@ func (r *DestinationListResource) Create(ctx context.Context, req resource.Creat
 		}
 	}
 
-	// Read back to get IDs of destinations
-	// We need to populate the IDs in the state
-	// Always read back destinations, even if we didn't add any, to ensure state consistency
-	// But only if the plan had destinations or we added some
-	if len(data.Destinations) > 0 {
+	if len(planDestinations) > 0 {
 		var dests []apiclient.Destination
 		var err error
 
@@ -239,13 +242,13 @@ func (r *DestinationListResource) Create(ctx context.Context, req resource.Creat
 		// Increased to 30 seconds as API can be slow to index
 		for i := 0; i < 30; i++ {
 			dests, err = apiclient.GetDestinationsDetails(r.client, list.ID)
-			if err == nil && len(dests) >= len(data.Destinations) {
+			if err == nil && len(dests) >= len(planDestinations) {
 				break
 			}
 			time.Sleep(1 * time.Second)
 		}
 
-		if err != nil || len(dests) < len(data.Destinations) {
+		if err != nil || len(dests) < len(planDestinations) {
 			resp.Diagnostics.AddWarning(
 				"Consistency Warning",
 				"Could not read back all created destinations from API immediately. State may be incomplete. Please run 'tofu apply' again later to refresh state.",
@@ -253,23 +256,30 @@ func (r *DestinationListResource) Create(ctx context.Context, req resource.Creat
 			// Fallback: use plan data but set IDs to null where unknown
 			// This prevents "inconsistent result" error by providing the expected list structure
 			var fallbackDests []DestinationModel
-			for _, d := range data.Destinations {
+			for _, d := range planDestinations {
 				newD := d
 				if newD.ID.IsUnknown() {
 					newD.ID = types.Int64Null()
 				}
 				fallbackDests = append(fallbackDests, newD)
 			}
-			data.Destinations = fallbackDests
+			data.Destinations, _ = types.ListValueFrom(ctx, types.ObjectType{AttrTypes: map[string]attr.Type{
+				"id":          types.Int64Type,
+				"destination": types.StringType,
+				"type":        types.StringType,
+				"comment":     types.StringType,
+			}}, fallbackDests)
 		} else {
 			// Map back to model using helper to ensure consistency
-			data.Destinations = mapDestinationsToModel(dests, data.Destinations)
+			data.Destinations = mapDestinationsToModel(ctx, dests, planDestinations)
 		}
 	} else {
-		// If no destinations in plan, ensure state is empty list, not null, if that's what schema expects?
-		// Actually, if plan was null/empty, we should probably set it to null or empty.
-		// But if the API returns something (e.g. default destinations?), we might have a drift.
-		// For now, let's trust the plan if it was empty.
+		data.Destinations = types.ListNull(types.ObjectType{AttrTypes: map[string]attr.Type{
+			"id":          types.Int64Type,
+			"destination": types.StringType,
+			"type":        types.StringType,
+			"comment":     types.StringType,
+		}})
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -321,8 +331,13 @@ func (r *DestinationListResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	var stateDestinations []DestinationModel
+	if !data.Destinations.IsNull() && !data.Destinations.IsUnknown() {
+		data.Destinations.ElementsAs(ctx, &stateDestinations, false)
+	}
+
 	// Map back to model using helper to ensure consistency with state
-	data.Destinations = mapDestinationsToModel(dests, data.Destinations)
+	data.Destinations = mapDestinationsToModel(ctx, dests, stateDestinations)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -364,9 +379,19 @@ func (r *DestinationListResource) Update(ctx context.Context, req resource.Updat
 	// To delete: IDs in state but not in plan (or matching content not in plan)
 	// To add: Content in plan not in state
 
+	var stateDestinations []DestinationModel
+	if !state.Destinations.IsNull() && !state.Destinations.IsUnknown() {
+		state.Destinations.ElementsAs(ctx, &stateDestinations, false)
+	}
+
+	var planDests []DestinationModel
+	if !data.Destinations.IsNull() && !data.Destinations.IsUnknown() {
+		data.Destinations.ElementsAs(ctx, &planDests, false)
+	}
+
 	// Map state destinations by ID for easy lookup
 	stateDestMap := make(map[int64]DestinationModel)
-	for _, d := range state.Destinations {
+	for _, d := range stateDestinations {
 		if !d.ID.IsNull() {
 			stateDestMap[d.ID.ValueInt64()] = d
 		}
@@ -395,8 +420,6 @@ func (r *DestinationListResource) Update(ctx context.Context, req resource.Updat
 
 	// Let's try to match by (Destination, Type).
 
-	planDests := data.Destinations
-
 	toAdd := []apiclient.Destination{}
 	toDeleteIDs := []int64{}
 
@@ -414,7 +437,7 @@ func (r *DestinationListResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// Find items in state that are NOT in plan -> Delete
-	for _, sd := range state.Destinations {
+	for _, sd := range stateDestinations {
 		if !existsInPlan(sd) {
 			if !sd.ID.IsNull() {
 				toDeleteIDs = append(toDeleteIDs, sd.ID.ValueInt64())
@@ -424,7 +447,7 @@ func (r *DestinationListResource) Update(ctx context.Context, req resource.Updat
 
 	// Helper to check if a destination exists in state
 	existsInState := func(d DestinationModel) bool {
-		for _, sd := range state.Destinations {
+		for _, sd := range stateDestinations {
 			if sd.Destination.Equal(d.Destination) && sd.Type.Equal(d.Type) {
 				if sd.Comment.Equal(d.Comment) {
 					return true
@@ -479,7 +502,7 @@ func (r *DestinationListResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// Map back to model using helper to ensure consistency with plan
-	data.Destinations = mapDestinationsToModel(dests, data.Destinations)
+	data.Destinations = mapDestinationsToModel(ctx, dests, planDests)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -526,7 +549,7 @@ func (r *DestinationListResource) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func mapDestinationsToModel(apiDests []apiclient.Destination, refDests []DestinationModel) []DestinationModel {
+func mapDestinationsToModel(ctx context.Context, apiDests []apiclient.Destination, refDests []DestinationModel) types.List {
 	var destModels []DestinationModel
 	for _, d := range apiDests {
 		id, _ := strconv.ParseInt(d.ID, 10, 64)
@@ -565,5 +588,13 @@ func mapDestinationsToModel(apiDests []apiclient.Destination, refDests []Destina
 			Comment:     comment,
 		})
 	}
-	return destModels
+
+	result, _ := types.ListValueFrom(ctx, types.ObjectType{AttrTypes: map[string]attr.Type{
+		"id":          types.Int64Type,
+		"destination": types.StringType,
+		"type":        types.StringType,
+		"comment":     types.StringType,
+	}}, destModels)
+
+	return result
 }

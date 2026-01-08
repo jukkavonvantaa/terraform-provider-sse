@@ -1,5 +1,7 @@
 # Terraform/OpenTofu Provider for Cisco Secure Access (SSE)
 
+> **Note:** An official Terraform provider was released 7.1.2026: https://community.cisco.com/t5/secure-access-announcements/announcement-ga-release-of-the-secure-access-terraform-provider/ta-p/5359642
+
 This is a Terraform/OpenTofu provider for **Cisco Secure Access (SSE)**.
 
 It allows you to manage resources such as:

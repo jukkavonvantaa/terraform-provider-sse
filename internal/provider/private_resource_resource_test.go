@@ -4,21 +4,27 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccPrivateResourceResource(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := fmt.Sprintf("test-pr-%s", rName)
+	updatedName := fmt.Sprintf("test-pr-updated-%s", rName)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccPrivateResourceResourceConfig("test-pr"),
+				Config: testAccPrivateResourceResourceConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("sse_private_resource.test", "name", "test-pr"),
+					resource.TestCheckResourceAttr("sse_private_resource.test", "name", name),
 					resource.TestCheckResourceAttrSet("sse_private_resource.test", "id"),
 					resource.TestCheckResourceAttr("sse_private_resource.test", "resource_addresses.0.destination_addr.0", "1.2.3.4"),
 				),
@@ -31,9 +37,9 @@ func TestAccPrivateResourceResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccPrivateResourceResourceConfig("test-pr-updated"),
+				Config: testAccPrivateResourceResourceConfig(updatedName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("sse_private_resource.test", "name", "test-pr-updated"),
+					resource.TestCheckResourceAttr("sse_private_resource.test", "name", updatedName),
 				),
 			},
 		},

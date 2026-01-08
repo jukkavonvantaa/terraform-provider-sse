@@ -35,10 +35,10 @@ type PrivateResourceGroupResource struct {
 
 // PrivateResourceGroupResourceModel describes the resource data model.
 type PrivateResourceGroupResourceModel struct {
-	ID          types.String  `tfsdk:"id"`
-	Name        types.String  `tfsdk:"name"`
-	Description types.String  `tfsdk:"description"`
-	ResourceIDs []types.Int64 `tfsdk:"resource_ids"`
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	ResourceIDs types.List   `tfsdk:"resource_ids"`
 }
 
 func (r *PrivateResourceGroupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -107,7 +107,11 @@ func (r *PrivateResourceGroupResource) Create(ctx context.Context, req resource.
 	}
 
 	resourceIDs := make([]int, 0)
-	for _, id := range data.ResourceIDs {
+	var planResourceIDs []types.Int64
+	if !data.ResourceIDs.IsNull() && !data.ResourceIDs.IsUnknown() {
+		data.ResourceIDs.ElementsAs(ctx, &planResourceIDs, false)
+	}
+	for _, id := range planResourceIDs {
 		resourceIDs = append(resourceIDs, int(id.ValueInt64()))
 	}
 
@@ -169,7 +173,7 @@ func (r *PrivateResourceGroupResource) Create(ctx context.Context, req resource.
 	for _, id := range createdGroup.ResourceIDs {
 		resIDs = append(resIDs, types.Int64Value(int64(id)))
 	}
-	data.ResourceIDs = resIDs
+	data.ResourceIDs, _ = types.ListValueFrom(ctx, types.Int64Type, resIDs)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -227,9 +231,9 @@ func (r *PrivateResourceGroupResource) Read(ctx context.Context, req resource.Re
 		for _, id := range group.ResourceIDs {
 			resIDs = append(resIDs, types.Int64Value(int64(id)))
 		}
-		data.ResourceIDs = resIDs
+		data.ResourceIDs, _ = types.ListValueFrom(ctx, types.Int64Type, resIDs)
 	} else {
-		data.ResourceIDs = nil
+		data.ResourceIDs = types.ListNull(types.Int64Type)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -245,7 +249,11 @@ func (r *PrivateResourceGroupResource) Update(ctx context.Context, req resource.
 	}
 
 	resourceIDs := make([]int, 0)
-	for _, id := range data.ResourceIDs {
+	var planResourceIDs []types.Int64
+	if !data.ResourceIDs.IsNull() && !data.ResourceIDs.IsUnknown() {
+		data.ResourceIDs.ElementsAs(ctx, &planResourceIDs, false)
+	}
+	for _, id := range planResourceIDs {
 		resourceIDs = append(resourceIDs, int(id.ValueInt64()))
 	}
 
@@ -293,7 +301,7 @@ func (r *PrivateResourceGroupResource) Update(ctx context.Context, req resource.
 	for _, id := range group.ResourceIDs {
 		resIDs = append(resIDs, types.Int64Value(int64(id)))
 	}
-	data.ResourceIDs = resIDs
+	data.ResourceIDs, _ = types.ListValueFrom(ctx, types.Int64Type, resIDs)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

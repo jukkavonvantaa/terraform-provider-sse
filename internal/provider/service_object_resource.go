@@ -214,6 +214,15 @@ func (r *ServiceObjectResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Ensure ObjectID is set (calculated from ID)
+	if data.ObjectID.IsUnknown() {
+		if idInt, err := strconv.ParseInt(data.ID.ValueString(), 10, 64); err == nil {
+			data.ObjectID = types.Int64Value(idInt)
+		} else {
+			data.ObjectID = types.Int64Null()
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
